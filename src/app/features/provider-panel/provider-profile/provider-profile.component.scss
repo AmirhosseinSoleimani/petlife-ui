@@ -1,10 +1,10 @@
 .provider-page { display: grid; gap: 18px; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
-.panel { display: grid; gap: 14px; padding: 22px; border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
+.panel { display: grid; gap: 14px; padding: 22px; border: 1px solid var(--color-border); border-radius: 20px; background: radial-gradient(circle at 100% 0%, rgba(7,156,145,.08), transparent 32%), rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 h3, p { margin: 0; }
-.detail { display: grid; gap: 12px; }
+.detail { display: grid; gap: 12px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(240,253,250,.84)); }
 .detail p, dd { color: var(--color-muted); line-height: 1.55; }
 dl { display: grid; gap: 12px; margin: 0; }
 dt { color: #667085; font-size: 12px; font-weight: 900; }

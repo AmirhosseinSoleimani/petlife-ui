@@ -6,7 +6,7 @@ h2, h3, p { margin: 0; }
 h2 { margin-top: 10px; font-size: 34px; color: #111827; }
 .page-head p, .expense p, .notes { margin-top: 8px; color: var(--color-muted); }
 .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.summary article { padding: 20px; display: grid; gap: 8px; }
+.summary article { padding: 20px; display: grid; gap: 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,247,237,.84)); }
 .summary span { color: var(--color-muted); font-size: 13px; font-weight: 800; }
 .summary strong { color: #111827; font-size: 20px; }
 .layout { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 22px; align-items: start; }
@@ -15,9 +15,10 @@ h2 { margin-top: 10px; font-size: 34px; color: #111827; }
 label { display: grid; gap: 7px; color: #344054; font-size: 13px; font-weight: 700; }
 input, select, textarea { border: 1px solid var(--color-border); border-radius: 13px; padding: 11px 12px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7,156,145,.12); }
-.expense { display: grid; grid-template-columns: 1fr auto; gap: 8px 18px; padding: 20px; transition: transform .18s ease, box-shadow .18s ease; }
-.expense:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.expense strong { color: #111827; font-size: 22px; }
+.expense { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px 18px; padding: 20px; transition: transform .18s ease, box-shadow .18s ease; }
+.expense::before { content: ""; position: absolute; inset-block-start: 18px; inset-inline-start: 0; width: 4px; height: 46px; border-radius: 999px; background: linear-gradient(#f59e0b, #ff765c); }
+.expense:hover { transform: translateY(-4px); box-shadow: var(--shadow-premium); }
+.expense strong { color: var(--color-primary-dark); font-size: 24px; }
 .notes, .actions { grid-column: 1 / -1; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 button { border: 0; border-radius: 13px; padding: 10px 13px; background: linear-gradient(135deg, var(--color-primary), var(--color-blue)); color: #fff; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-sm); }

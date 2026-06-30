@@ -1,11 +1,11 @@
-.request-page { display: grid; gap: 18px; max-width: 920px; }
+.request-page { display: grid; gap: 18px; max-width: 960px; }
 .page-head, .panel, .state { border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
 .page-head { padding: 26px; background: linear-gradient(135deg, #fff, #effdf9); }
 .eyebrow, h2, p { margin: 0; }
 .eyebrow { color: #0f766e; font-size: 12px; font-weight: 900; text-transform: uppercase; }
 h2 { margin-top: 6px; color: #101828; font-size: 36px; }
 .page-head p { margin-top: 8px; color: var(--color-muted); line-height: 1.55; }
-.panel { display: grid; gap: 16px; padding: 24px; background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.86)); }
+.panel { display: grid; gap: 16px; padding: 26px; background: radial-gradient(circle at 100% 0%, rgba(7,156,145,.08), transparent 32%), linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.86)); }
 label { display: grid; gap: 8px; color: #344054; font-size: 13px; font-weight: 900; }
 input, select, textarea { border: 1px solid var(--color-border); border-radius: 13px; padding: 12px; color: var(--color-text); resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7,156,145,.12); }

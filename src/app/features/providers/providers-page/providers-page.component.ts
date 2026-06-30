@@ -35,6 +35,10 @@ export class ProvidersPageComponent implements OnInit {
     return provider.businessName || provider.name || 'Provider';
   }
 
+  getProviderRouteId(provider: Provider): string {
+    return provider.id || provider.providerId || provider.providerProfileId || provider.userId || '';
+  }
+
   isVerified(provider: Provider): boolean {
     return !!(provider.isVerified || provider.verified);
   }

@@ -9,8 +9,8 @@
   justify-content: center;
   gap: 9px;
   border: 0;
-  border-radius: 13px;
-  padding: 10px 14px;
+  border-radius: 999px;
+  padding: 10px 16px;
   font-weight: 900;
   cursor: pointer;
   transition: transform 170ms ease, box-shadow 170ms ease, filter 170ms ease, background 170ms ease;
@@ -27,8 +27,8 @@
 
 .primary {
   color: #fff;
-  background: linear-gradient(135deg, #12303b, var(--color-primary) 48%, var(--color-blue));
-  box-shadow: var(--shadow-sm);
+  background: var(--gradient-brand);
+  box-shadow: 0 13px 28px rgba(7, 156, 145, .18);
 }
 
 .primary:hover:not(:disabled) {
@@ -37,8 +37,9 @@
 
 .secondary,
 .ghost {
-  color: #344054;
-  background: rgba(238, 247, 245, 0.92);
+  color: var(--color-navy);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(7, 156, 145, .16);
 }
 
 .ghost {
@@ -46,8 +47,8 @@
 }
 
 .danger {
-  color: #b91c1c;
-  background: #fee2e2;
+  color: #ffffff;
+  background: linear-gradient(135deg, #dc2626, #f97360);
 }
 
 .spinner {

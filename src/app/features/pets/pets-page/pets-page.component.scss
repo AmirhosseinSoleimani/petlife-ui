@@ -6,7 +6,7 @@
 h2 { margin-top: 6px; font-size: 34px; color: #111827; }
 .muted { margin-top: 8px; color: var(--color-muted); }
 .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 22px; align-items: start; }
-.panel { display: grid; gap: 14px; padding: 22px; }
+.panel { position: sticky; top: 108px; display: grid; gap: 14px; padding: 22px; }
 label { display: grid; gap: 7px; color: #344054; font-size: 13px; font-weight: 700; }
 input, select, textarea { width: 100%; border: 1px solid var(--color-border); border-radius: 13px; padding: 11px 12px; color: var(--color-text); resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7, 156, 145, .12); }
@@ -21,8 +21,9 @@ button:hover, .card-actions a:hover { transform: translateY(-2px); box-shadow: v
 .content { min-width: 0; }
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .pet-card, .state { padding: 20px; }
-.pet-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-.pet-card:hover { border-color: rgba(7,156,145,.35); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.pet-card { position: relative; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.pet-card::before { content: ""; position: absolute; inset-block-start: 0; inset-inline: 22px; height: 4px; border-radius: 999px; background: var(--gradient-brand); }
+.pet-card:hover { border-color: rgba(7,156,145,.35); transform: translateY(-5px); box-shadow: var(--shadow-premium); }
 .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .card-head p, .notes, dd { color: var(--color-muted); }
 .badge { align-self: start; border-radius: 999px; padding: 6px 10px; background: #e6fffa; color: #04706b; font-size: 12px; font-weight: 900; }
@@ -37,9 +38,10 @@ button:hover, .card-actions a:hover { transform: translateY(-2px); box-shadow: v
   color: var(--color-primary-dark);
   font-size: 20px;
   font-weight: 900;
+  box-shadow: var(--shadow-sm);
 }
 dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0; }
 dt { color: #667085; font-size: 12px; font-weight: 800; }
 dd { margin: 4px 0 0; }
 .notes { margin-bottom: 18px; line-height: 1.5; }
-@media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } .cards { grid-template-columns: 1fr; } }
+@media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } .panel { position: static; } .cards { grid-template-columns: 1fr; } }

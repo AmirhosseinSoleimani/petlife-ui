@@ -1,5 +1,7 @@
 export interface Provider {
   id: string;
+  providerId?: string;
+  providerProfileId?: string;
   userId?: string;
   businessName?: string;
   businessDescription?: string;
@@ -44,7 +46,11 @@ export interface ProviderProfilePayload {
 export interface ProviderService {
   id: string;
   providerId?: string;
+  providerProfileId?: string;
   providerUserId?: string;
+  providerName?: string;
+  businessName?: string;
+  providerBusinessName?: string;
   provider?: Provider;
   name?: string;
   serviceName?: string;
@@ -101,6 +107,8 @@ export interface ServiceRequest {
   scheduledDate?: string;
   petId?: string;
   petName?: string;
+  providerId?: string;
+  providerProfileId?: string;
   pet?: {
     id?: string;
     petName?: string;
@@ -109,6 +117,9 @@ export interface ServiceRequest {
   providerServiceId?: string;
   providerService?: ProviderService;
   serviceName?: string;
+  providerServiceName?: string;
+  providerBusinessName?: string;
+  businessName?: string;
   providerName?: string;
   provider?: Provider;
   customerUserId?: string;

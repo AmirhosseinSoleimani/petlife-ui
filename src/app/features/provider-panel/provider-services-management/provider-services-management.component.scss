@@ -3,7 +3,8 @@
 .panel, .list { display: grid; gap: 14px; }
 .panel { padding: 22px; border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.service-card { display: grid; gap: 14px; }
+.service-card { position: relative; display: grid; gap: 14px; }
+.service-card::before { content: ""; position: absolute; inset-block-start: 0; inset-inline: 20px; height: 4px; border-radius: 999px; background: linear-gradient(90deg, var(--color-primary), var(--color-blue)); }
 .card-head, .meta, .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 h3, p { margin: 0; }
 p, .meta span { color: var(--color-muted); line-height: 1.55; }

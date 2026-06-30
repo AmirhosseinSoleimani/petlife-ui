@@ -2,8 +2,9 @@
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
 .list { display: grid; gap: 14px; }
 .request-card { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; }
+.request-card::before { content: ""; position: absolute; inset-block-start: 18px; inset-inline-start: 0; width: 4px; height: 52px; border-radius: 999px; background: linear-gradient(#4f7df3, #079c91); }
 .message { grid-column: 1 / -1; }
-.detail { position: sticky; top: 104px; display: grid; gap: 12px; }
+.detail { position: sticky; top: 104px; display: grid; gap: 12px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(240,253,250,.84)); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 h3, p { margin: 0; }
 p, dd { color: var(--color-muted); line-height: 1.55; }

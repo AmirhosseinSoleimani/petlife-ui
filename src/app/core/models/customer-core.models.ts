@@ -107,14 +107,25 @@ export interface ReminderPayload {
 
 export interface EmergencyVet {
   id: string;
-  name: string;
+  name?: string;
+  clinicName?: string;
+  vetClinicName?: string;
+  businessName?: string;
   suburb?: string;
   state?: string;
   phone?: string;
+  phoneNumber?: string;
+  email?: string;
+  website?: string;
   address?: string;
   afterHours?: boolean;
+  isAfterHours?: boolean;
   is24Hours?: boolean;
+  is24h?: boolean;
+  open24Hours?: boolean;
   instructions?: string;
+  description?: string;
+  notes?: string;
 }
 
 export const PET_TYPE_OPTIONS = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Reptile', 'Fish', 'Other'];

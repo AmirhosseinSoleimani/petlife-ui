@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
-import { ProviderService, ServiceRequest, ServiceRequestPayload } from '../../../core/models/marketplace.models';
+import { Provider, ProviderService, ServiceRequest, ServiceRequestPayload } from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 
 @Component({
@@ -14,6 +15,7 @@ import { AppInputOption } from '../../../shared/components/app-input/app-input.c
 export class CreateServiceRequestComponent implements OnInit {
   pets: Pet[] = [];
   services: ProviderService[] = [];
+  providerNameById: Record<string, string> = {};
   form: ServiceRequestPayload = {
     petId: null,
     providerServiceId: null,
@@ -25,7 +27,10 @@ export class CreateServiceRequestComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly i18nService: I18nService
+  ) {}
 
   get petOptions(): AppInputOption[] {
     return this.pets.map((pet) => ({
@@ -36,7 +41,7 @@ export class CreateServiceRequestComponent implements OnInit {
 
   get serviceOptions(): AppInputOption[] {
     return this.services.map((service) => ({
-      label: `${this.getServiceName(service)} - ${this.getProviderName(service)}`,
+      label: `${this.getServiceName(service)} - ${this.getProviderName(service) || this.i18nService.translate('services.providerUnavailable')}`,
       value: service.id
     }));
   }
@@ -50,7 +55,13 @@ export class CreateServiceRequestComponent implements OnInit {
   }
 
   getProviderName(service: ProviderService): string {
-    return service.provider?.businessName || service.provider?.name || 'Provider';
+    return service.providerBusinessName
+      || service.businessName
+      || service.providerName
+      || service.provider?.businessName
+      || service.provider?.name
+      || this.lookupProviderName(service)
+      || '';
   }
 
   loadFormData(): void {
@@ -73,6 +84,7 @@ export class CreateServiceRequestComponent implements OnInit {
     this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
       next: (response) => {
         this.services = response.data || [];
+        this.loadProviders();
         this.isLoading = false;
       },
       error: () => {
@@ -80,6 +92,49 @@ export class CreateServiceRequestComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private loadProviders(): void {
+    this.apiService.get<ApiResponse<Provider[]>>('/providers').subscribe({
+      next: (response) => {
+        this.providerNameById = (response.data || []).reduce<Record<string, string>>((map, provider) => {
+          const providerName = provider.businessName || provider.name || '';
+          const providerIds = this.getProviderIds(provider);
+
+          if (providerName) {
+            providerIds.forEach((id) => map[id] = providerName);
+          }
+
+          return map;
+        }, {});
+      }
+    });
+  }
+
+  private lookupProviderName(service: ProviderService): string {
+    const matchedId = this.getServiceProviderIds(service).find((id) => this.providerNameById[id]);
+    return matchedId ? this.providerNameById[matchedId] : '';
+  }
+
+  private getServiceProviderIds(service: ProviderService): string[] {
+    return [
+      service.providerId,
+      service.providerProfileId,
+      service.providerUserId,
+      service.provider?.id,
+      service.provider?.providerId,
+      service.provider?.providerProfileId,
+      service.provider?.userId
+    ].filter((id): id is string => !!id);
+  }
+
+  private getProviderIds(provider: Provider): string[] {
+    return [
+      provider.id,
+      provider.providerId,
+      provider.providerProfileId,
+      provider.userId
+    ].filter((id): id is string => !!id);
   }
 
   submitRequest(): void {

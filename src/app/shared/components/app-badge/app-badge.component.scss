@@ -4,8 +4,8 @@
   width: fit-content;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
-  padding: 6px 10px;
-  background: #eef2ff;
+  padding: 7px 11px;
+  background: linear-gradient(135deg, #eef2ff, #f8fbff);
   color: #3730a3;
   font-size: 12px;
   font-weight: 900;
@@ -13,21 +13,21 @@
 }
 
 .success {
-  background: #e6fffa;
+  background: linear-gradient(135deg, #e6fffa, #ecfdf3);
   color: #04706b;
 }
 
 .warning {
-  background: #fff7ed;
+  background: linear-gradient(135deg, #fff7ed, #fef3c7);
   color: #c2410c;
 }
 
 .danger {
-  background: #fef2f2;
+  background: linear-gradient(135deg, #fef2f2, #ffe4e6);
   color: #b91c1c;
 }
 
 .info {
-  background: #eff6ff;
+  background: linear-gradient(135deg, #eff6ff, #eef2ff);
   color: #1d4ed8;
 }

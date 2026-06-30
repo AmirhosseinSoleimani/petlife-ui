@@ -11,8 +11,9 @@ h2 { margin-top: 6px; font-size: 34px; color: #111827; }
 label { display: grid; gap: 7px; color: #344054; font-size: 13px; font-weight: 700; }
 input, select, textarea { border: 1px solid var(--color-border); border-radius: 13px; padding: 11px 12px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7,156,145,.12); }
-.reminder { display: grid; grid-template-columns: 1fr auto; gap: 8px 18px; transition: transform .18s ease, box-shadow .18s ease; }
-.reminder:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.reminder { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px 18px; transition: transform .18s ease, box-shadow .18s ease; }
+.reminder::before { content: ""; position: absolute; inset-block-start: 18px; inset-inline-start: 0; width: 4px; height: 48px; border-radius: 999px; background: linear-gradient(#f59e0b, #fde68a); }
+.reminder:hover { transform: translateY(-4px); box-shadow: var(--shadow-premium); }
 .badge { align-self: start; border-radius: 999px; padding: 6px 10px; background: #fff7ed; color: #c2410c; font-size: 12px; font-weight: 800; }
 .notes, .actions { grid-column: 1 / -1; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }

@@ -1,7 +1,7 @@
 .field {
   display: grid;
-  gap: 7px;
-  color: #344054;
+  gap: 8px;
+  color: var(--color-navy);
   font-size: 13px;
   font-weight: 800;
 }
@@ -24,12 +24,13 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: 13px;
-  padding: 11px 12px;
+  border: 1px solid rgba(7, 156, 145, .16);
+  border-radius: 16px;
+  padding: 12px 13px;
   color: var(--color-text);
-  background: #fff;
+  background: rgba(255,255,255,.88);
   resize: vertical;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
 input[type="checkbox"] {
@@ -43,7 +44,8 @@ select:focus,
 textarea:focus {
   outline: 0;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(7, 156, 145, 0.12);
+  box-shadow: 0 0 0 4px rgba(7, 156, 145, 0.13), var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 small {

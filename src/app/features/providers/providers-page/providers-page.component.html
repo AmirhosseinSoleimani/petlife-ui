@@ -34,7 +34,7 @@
           <span>{{ provider.email || ('Email N/A' | translate) }}</span>
         </div>
 
-        <a [routerLink]="['/providers', provider.id, 'services']" (click)="$event.stopPropagation()">{{ 'View services' | translate }}</a>
+        <a [routerLink]="['/providers', getProviderRouteId(provider), 'services']" (click)="$event.stopPropagation()">{{ 'View services' | translate }}</a>
       </app-card>
     </div>
 
@@ -48,7 +48,7 @@
         <div><dt>{{ 'Email' | translate }}</dt><dd>{{ selectedProvider.email || ('N/A' | translate) }}</dd></div>
         <div><dt>{{ 'Website' | translate }}</dt><dd>{{ selectedProvider.website || ('N/A' | translate) }}</dd></div>
       </dl>
-      <a [routerLink]="['/providers', selectedProvider.id, 'services']">{{ 'Browse services' | translate }}</a>
+      <a [routerLink]="['/providers', getProviderRouteId(selectedProvider), 'services']">{{ 'Browse services' | translate }}</a>
     </app-card>
   </div>
 </section>

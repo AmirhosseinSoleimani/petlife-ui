@@ -1,8 +1,8 @@
 <section class="market-page">
   <app-page-header
     eyebrow="Marketplace ecosystem"
-    title="Service Catalog"
-    description="The monetizable layer: customer intent, clear pricing, provider context, and request conversion."
+    [title]="pageTitle"
+    [description]="pageDescription"
   ></app-page-header>
 
   <div class="filters">
@@ -12,7 +12,7 @@
 
   <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'Loading services...' | translate }}</div>
-  <div *ngIf="!isLoading && !filteredServices.length" class="state">{{ 'No services are available in this catalog view yet.' | translate }}</div>
+  <div *ngIf="!isLoading && !filteredServices.length" class="state">{{ emptyStateKey | translate }}</div>
 
   <div class="cards" *ngIf="!isLoading && filteredServices.length">
     <app-card class="service-card" [interactive]="true" *ngFor="let service of filteredServices">
@@ -21,7 +21,10 @@
         <app-badge tone="info">{{ (service.category || 'Pet care') | translate }}</app-badge>
       </div>
       <h3>{{ getServiceName(service) }}</h3>
-      <p class="provider">{{ getProviderName(service) }}</p>
+      <p class="provider">
+        <span>{{ (('services.providerLabel' | translate) === 'services.providerLabel' ? ('Provider' | translate) : ('services.providerLabel' | translate)) }}:</span>
+        {{ getProviderName(service) || ('services.providerUnavailable' | translate) }}
+      </p>
       <p class="description">{{ service.description || ('No description provided.' | translate) }}</p>
       <div class="meta">
         <span>{{ service.price || 0 | currency:(service.currency || 'USD') }}</span>

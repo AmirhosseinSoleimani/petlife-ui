@@ -18,30 +18,51 @@
 
   <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'Loading emergency vets...' | translate }}</div>
-  <div *ngIf="!isLoading && !filteredVets.length" class="state">{{ 'No emergency vets match the current filters.' | translate }}</div>
+  <div *ngIf="!isLoading && !errorMessage && !vets.length" class="state">{{ 'emergencyVets.noClinics' | translate }}</div>
+  <div *ngIf="!isLoading && vets.length && !filteredVets.length" class="state">{{ 'emergencyVets.noFilterResults' | translate }}</div>
 
   <div class="layout" *ngIf="!isLoading && filteredVets.length">
     <div class="cards">
       <app-card class="vet" [interactive]="true" *ngFor="let vet of filteredVets" (click)="selectVet(vet)">
         <div>
-          <h3>{{ vet.name }}</h3>
-          <p>{{ vet.suburb || ('Suburb N/A' | translate) }}, {{ vet.state || ('State N/A' | translate) }}</p>
+          <h3>{{ vet.clinicName || ('emergencyVets.clinicName' | translate) }}</h3>
+          <p *ngIf="vet.address">{{ vet.address }}</p>
+          <p *ngIf="vet.suburb || vet.state">{{ vet.suburb || ('Suburb N/A' | translate) }}, {{ vet.state || ('State N/A' | translate) }}</p>
         </div>
         <div class="badges">
-          <app-badge tone="success" *ngIf="vet.afterHours">{{ 'After hours' | translate }}</app-badge>
-          <app-badge tone="info" *ngIf="vet.is24Hours">{{ '24h' | translate }}</app-badge>
+          <app-badge tone="danger">{{ 'emergencyVets.emergencyCare' | translate }}</app-badge>
+          <app-badge tone="success" *ngIf="vet.isAfterHours">{{ 'emergencyVets.afterHours' | translate }}</app-badge>
+          <app-badge tone="info" *ngIf="vet.is24Hours">{{ 'emergencyVets.open24h' | translate }}</app-badge>
         </div>
-        <p class="contact">{{ vet.phone || ('Phone not available' | translate) }}</p>
+        <p class="contact" *ngIf="vet.phone"><strong>{{ 'emergencyVets.phone' | translate }}:</strong> {{ vet.phone }}</p>
+        <p class="contact muted" *ngIf="!vet.phone">{{ 'Phone not available' | translate }}</p>
+        <p *ngIf="vet.website"><strong>{{ 'emergencyVets.website' | translate }}:</strong> {{ vet.website }}</p>
+        <p *ngIf="vet.email"><strong>{{ 'emergencyVets.email' | translate }}:</strong> {{ vet.email }}</p>
+        <div class="card-actions" *ngIf="vet.phone || vet.website">
+          <a *ngIf="vet.phone" [href]="'tel:' + vet.phone" (click)="$event.stopPropagation()">{{ 'emergencyVets.callClinic' | translate }}</a>
+          <a *ngIf="vet.website" [href]="websiteUrl(vet)" target="_blank" rel="noopener" (click)="$event.stopPropagation()">{{ 'emergencyVets.openWebsite' | translate }}</a>
+        </div>
       </app-card>
     </div>
 
     <app-card class="detail" *ngIf="selectedVet">
       <app-badge tone="danger">{{ 'Selected clinic' | translate }}</app-badge>
-      <h3>{{ selectedVet.name }}</h3>
-      <p>{{ selectedVet.address || ('Address not available' | translate) }}</p>
-      <p><strong>{{ 'Phone' | translate }}:</strong> {{ selectedVet.phone || ('N/A' | translate) }}</p>
+      <h3>{{ selectedVet.clinicName || ('emergencyVets.clinicName' | translate) }}</h3>
+      <p><strong>{{ 'emergencyVets.address' | translate }}:</strong> {{ selectedVet.address || ('Address not available' | translate) }}</p>
+      <p><strong>{{ 'emergencyVets.phone' | translate }}:</strong> {{ selectedVet.phone || ('N/A' | translate) }}</p>
       <p><strong>{{ 'Area' | translate }}:</strong> {{ selectedVet.suburb || ('N/A' | translate) }}, {{ selectedVet.state || ('N/A' | translate) }}</p>
-      <div class="instruction">{{ selectedVet.instructions || ('Call ahead and describe the emergency before arrival.' | translate) }}</div>
+      <p *ngIf="selectedVet.website"><strong>{{ 'emergencyVets.website' | translate }}:</strong> {{ selectedVet.website }}</p>
+      <p *ngIf="selectedVet.email"><strong>{{ 'emergencyVets.email' | translate }}:</strong> {{ selectedVet.email }}</p>
+      <div class="badges">
+        <app-badge tone="danger">{{ 'emergencyVets.emergencyCare' | translate }}</app-badge>
+        <app-badge tone="success" *ngIf="selectedVet.isAfterHours">{{ 'emergencyVets.afterHours' | translate }}</app-badge>
+        <app-badge tone="info" *ngIf="selectedVet.is24Hours">{{ 'emergencyVets.open24h' | translate }}</app-badge>
+      </div>
+      <div class="detail-actions" *ngIf="selectedVet.phone || selectedVet.website">
+        <a *ngIf="selectedVet.phone" [href]="'tel:' + selectedVet.phone">{{ 'emergencyVets.callClinic' | translate }}</a>
+        <a *ngIf="selectedVet.website" [href]="websiteUrl(selectedVet)" target="_blank" rel="noopener">{{ 'emergencyVets.openWebsite' | translate }}</a>
+      </div>
+      <div class="instruction">{{ selectedVet.description || ('Call ahead and describe the emergency before arrival.' | translate) }}</div>
     </app-card>
   </div>
 </section>

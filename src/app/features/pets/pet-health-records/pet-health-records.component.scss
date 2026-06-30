@@ -6,7 +6,7 @@ h2, h3, p { margin: 0; }
 h2 { margin-top: 10px; font-size: 34px; color: #111827; }
 .page-head p, .record-head p, .description { margin-top: 8px; color: var(--color-muted); }
 .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.summary article { padding: 20px; display: grid; gap: 8px; }
+.summary article { padding: 20px; display: grid; gap: 8px; background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(239,246,255,.78)); }
 .summary span { color: var(--color-muted); font-size: 13px; font-weight: 800; }
 .summary strong { color: #111827; font-size: 20px; }
 .layout { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 22px; align-items: start; }
@@ -14,10 +14,11 @@ h2 { margin-top: 10px; font-size: 34px; color: #111827; }
 label { display: grid; gap: 7px; color: #344054; font-size: 13px; font-weight: 700; }
 input, select, textarea { border: 1px solid var(--color-border); border-radius: 13px; padding: 11px 12px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7,156,145,.12); }
-.timeline { display: grid; gap: 14px; }
+.timeline { position: relative; display: grid; gap: 14px; }
+.timeline::before { content: ""; position: absolute; inset-block: 8px; inset-inline-start: 9px; width: 2px; background: linear-gradient(#ccfbf1, #dbeafe); }
 .record { position: relative; display: grid; grid-template-columns: 20px 1fr; gap: 12px; padding: 20px; transition: transform .18s ease, box-shadow .18s ease; }
-.record:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.dot { width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 5px #d1fae5; }
+.record:hover { transform: translateY(-4px); box-shadow: var(--shadow-premium); }
+.dot { z-index: 1; width: 12px; height: 12px; margin-top: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 6px #d1fae5; }
 .record-head { display: flex; justify-content: space-between; gap: 16px; }
 .badge { align-self: start; border-radius: 999px; padding: 6px 10px; background: #ecfdf3; color: #047857; font-size: 12px; font-weight: 800; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
