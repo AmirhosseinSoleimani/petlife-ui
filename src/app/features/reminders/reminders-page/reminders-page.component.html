@@ -1,0 +1,39 @@
+<section class="page">
+  <app-page-header
+    eyebrow="Customer Core"
+    title="Reminders"
+    description="Prioritize daily care, upcoming appointments, and completed tasks at a glance."
+  ></app-page-header>
+
+  <div class="layout">
+    <form class="panel" (ngSubmit)="createReminder()" #reminderForm="ngForm">
+      <h3>{{ 'Create reminder' | translate }}</h3>
+      <app-input name="petId" label="Pet" type="select" placeholder="Select a pet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
+      <app-input name="title" label="Title" required [(ngModel)]="form.title"></app-input>
+      <app-input name="reminderType" label="Type" type="select" placeholder="Select type" [options]="reminderTypeOptions" [(ngModel)]="form.reminderType"></app-input>
+      <app-input name="dueDate" label="Due date" required type="date" [(ngModel)]="form.dueDate"></app-input>
+      <app-input name="description" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+      <app-button type="submit" [loading]="isSaving" [disabled]="reminderForm.invalid">{{ (isSaving ? 'Creating...' : 'Create reminder') | translate }}</app-button>
+    </form>
+
+    <div class="list">
+      <div *ngIf="isLoading" class="state">{{ 'Loading reminders...' | translate }}</div>
+      <div *ngIf="!isLoading && !reminders.length" class="state">{{ 'No upcoming reminders.' | translate }}</div>
+
+      <app-card class="reminder" [interactive]="true" *ngFor="let reminder of reminders">
+        <div>
+          <h3>{{ reminder.title }}</h3>
+          <p>{{ reminder.dueDate || ('No due date' | translate) }}</p>
+        </div>
+        <app-badge [tone]="getPriorityTone(reminder)">{{ getPriorityLabel(reminder) | translate }}</app-badge>
+        <p class="notes">{{ reminder.description || ('No notes.' | translate) }}</p>
+        <div class="actions">
+          <app-button type="button" (buttonClick)="markDone(reminder)">{{ 'Done' | translate }}</app-button>
+          <app-button type="button" variant="secondary" (buttonClick)="snooze(reminder)">{{ 'Snooze' | translate }}</app-button>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</section>

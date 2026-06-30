@@ -1,0 +1,24 @@
+.market-page { display: grid; gap: 18px; }
+.page-head, .filters, .service-card, .state { border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
+.page-head { padding: 26px; background: linear-gradient(135deg, #fff, #f0f7ff); }
+.eyebrow, h2, h3, p { margin: 0; }
+.eyebrow { color: #2563eb; font-size: 12px; font-weight: 900; text-transform: uppercase; }
+h2 { margin-top: 6px; color: #101828; font-size: 36px; }
+.page-head p, .provider, .description { margin-top: 8px; color: var(--color-muted); line-height: 1.55; }
+.filters { display: flex; justify-content: space-between; gap: 14px; padding: 16px; align-items: flex-end; }
+label { display: grid; gap: 7px; min-width: 280px; color: #344054; font-size: 13px; font-weight: 800; }
+input { border: 1px solid var(--color-border); border-radius: 13px; padding: 11px 12px; }
+input:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(7,156,145,.12); }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.service-card { position: relative; display: grid; gap: 14px; padding: 20px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.service-card:hover { transform: translateY(-3px); border-color: rgba(59,130,246,.35); box-shadow: var(--shadow-md); }
+.card-head, .meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.service-icon { width: 40px; height: 40px; border-radius: 14px; background: linear-gradient(135deg, #ccfbf1, #dbeafe); box-shadow: var(--shadow-sm); }
+.badge { border-radius: 999px; padding: 6px 10px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 900; }
+.meta { padding-top: 12px; border-top: 1px solid var(--color-border); color: #101828; font-weight: 900; }
+a { width: fit-content; border-radius: 13px; padding: 10px 13px; background: linear-gradient(135deg, #12303b, var(--color-primary)); color: #fff; font-weight: 900; box-shadow: var(--shadow-sm); }
+a:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+.state, .error { padding: 18px; border-radius: 16px; }
+.error { background: #fef2f2; color: var(--color-danger); }
+@media (max-width: 1120px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } .filters { display: grid; } label { min-width: 0; } }

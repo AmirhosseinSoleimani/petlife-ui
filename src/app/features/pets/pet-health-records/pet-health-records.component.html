@@ -1,0 +1,56 @@
+<section class="page">
+  <app-page-header
+    title="Health Records"
+    description="Track care events, visits, and upcoming medical due dates."
+    backLink="/pets"
+    backLabel="Back to pets"
+  ></app-page-header>
+
+  <div class="summary">
+    <app-card><span>{{ 'Total records' | translate }}</span><strong>{{ summary?.totalRecords || records.length || 0 }}</strong></app-card>
+    <app-card><span>{{ 'Last visit' | translate }}</span><strong>{{ summary?.lastVisitDate || ('N/A' | translate) }}</strong></app-card>
+    <app-card><span>{{ 'Next due' | translate }}</span><strong>{{ summary?.upcomingDueDate || ('N/A' | translate) }}</strong></app-card>
+  </div>
+
+  <div class="layout">
+    <form class="panel" (ngSubmit)="saveRecord()" #recordForm="ngForm">
+      <h3>{{ (editingId ? 'Edit record' : 'Create record') | translate }}</h3>
+      <app-input name="title" label="Title" required [(ngModel)]="form.title"></app-input>
+      <app-input name="recordType" label="Type" type="select" placeholder="Select type" [options]="recordTypeOptions" [(ngModel)]="form.recordType"></app-input>
+      <app-input name="recordDate" label="Record date" type="date" required [(ngModel)]="form.recordDate"></app-input>
+      <app-input name="vetName" label="Veterinarian" [(ngModel)]="form.vetName"></app-input>
+      <app-input name="nextDueDate" label="Next due" type="date" [(ngModel)]="form.nextDueDate"></app-input>
+      <app-input name="description" label="Description" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+      <div class="actions">
+        <app-button type="submit" [loading]="isSaving" [disabled]="recordForm.invalid">{{ (isSaving ? 'Saving...' : 'Save record') | translate }}</app-button>
+        <app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
+      </div>
+    </form>
+
+    <div class="timeline">
+      <div *ngIf="isLoading" class="state">{{ 'Loading health records...' | translate }}</div>
+      <div *ngIf="!isLoading && !records.length" class="state">{{ 'No health records yet.' | translate }}</div>
+
+      <app-card *ngFor="let record of records" class="record" [interactive]="true">
+        <span class="dot"></span>
+        <div>
+          <div class="record-head">
+            <div>
+              <h3>{{ record.title || (record.recordType | translate) || ('Health record' | translate) }}</h3>
+              <p>{{ record.recordDate || ('Date not set' | translate) }} - {{ record.vetName || record.vetClinicName || ('No veterinarian' | translate) }}</p>
+            </div>
+            <app-badge tone="success">{{ (record.recordType || 'Care') | translate }}</app-badge>
+          </div>
+          <p class="description">{{ record.description || ('No description provided.' | translate) }}</p>
+          <div class="actions">
+            <app-button type="button" variant="secondary" (buttonClick)="editRecord(record)">{{ 'Edit' | translate }}</app-button>
+            <app-button type="button" variant="danger" (buttonClick)="deleteRecord(record)">{{ 'Delete' | translate }}</app-button>
+          </div>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</section>
+

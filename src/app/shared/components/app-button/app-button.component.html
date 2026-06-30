@@ -1,0 +1,13 @@
+<button
+  class="app-button"
+  [class.primary]="variant === 'primary'"
+  [class.secondary]="variant === 'secondary'"
+  [class.danger]="variant === 'danger'"
+  [class.ghost]="variant === 'ghost'"
+  [type]="type"
+  [disabled]="isDisabled"
+  (click)="onClick($event)"
+>
+  <span *ngIf="loading" class="spinner" aria-hidden="true"></span>
+  <span><ng-content></ng-content></span>
+</button>

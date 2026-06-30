@@ -1,0 +1,11 @@
+<header class="page-head">
+  <div>
+    <a *ngIf="backLink" [routerLink]="backLink">{{ backLabel | translate }}</a>
+    <p *ngIf="eyebrow" class="eyebrow">{{ eyebrow | translate }}</p>
+    <h2>{{ title | translate }}</h2>
+    <p *ngIf="description" class="description">{{ description | translate }}</p>
+  </div>
+  <div class="actions">
+    <ng-content></ng-content>
+  </div>
+</header>

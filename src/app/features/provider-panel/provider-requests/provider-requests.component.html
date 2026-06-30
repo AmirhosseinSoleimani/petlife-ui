@@ -1,0 +1,67 @@
+<section class="requests-page">
+  <app-page-header
+    eyebrow="Provider business engine"
+    title="Incoming Revenue Workflow"
+    description="Demand triage for accepting work, protecting capacity, and closing completed pet-care services."
+  ></app-page-header>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading incoming requests...' | translate }}</div>
+  <div *ngIf="!isLoading && !requests.length" class="state">{{ 'No incoming requests yet. New customer demand will appear here.' | translate }}</div>
+
+  <div class="layout" *ngIf="!isLoading && requests.length">
+    <div class="list">
+      <app-card class="request-card" [interactive]="true" *ngFor="let request of requests" (click)="selectRequest(request)">
+        <div>
+          <h3>{{ getServiceName(request) }}</h3>
+          <p>{{ getPetLabel(request) }} - {{ request.requestedDate || request.createdAt || ('Date N/A' | translate) }}</p>
+        </div>
+        <app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge>
+        <p class="message">{{ request.requestMessage || ('No message supplied.' | translate) }}</p>
+      </app-card>
+    </div>
+
+    <app-card class="detail" *ngIf="selectedRequest">
+      <app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge>
+      <h3>{{ getServiceName(selectedRequest) }}</h3>
+      <dl>
+        <div><dt>{{ 'Pet' | translate }}</dt><dd>{{ getPetLabel(selectedRequest) }}</dd></div>
+        <div><dt>{{ 'Customer' | translate }}</dt><dd>{{ getCustomerLabel(selectedRequest) }}</dd></div>
+        <div><dt>{{ 'Requested' | translate }}</dt><dd>{{ selectedRequest.requestedDate || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Scheduled' | translate }}</dt><dd>{{ selectedRequest.scheduledDate || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Completed' | translate }}</dt><dd>{{ selectedRequest.completedDate || ('N/A' | translate) }}</dd></div>
+      </dl>
+      <p>{{ selectedRequest.requestMessage || ('No message supplied.' | translate) }}</p>
+
+      <app-input
+        name="rejectionReason"
+        label="Rejection reason"
+        type="textarea"
+        [rows]="3"
+        [(ngModel)]="rejectionReason"
+      ></app-input>
+
+      <div class="actions">
+        <app-button
+          type="button"
+          [loading]="isUpdating"
+          [disabled]="!canAccept(selectedRequest)"
+          (buttonClick)="acceptRequest(selectedRequest)"
+        >{{ 'Accept' | translate }}</app-button>
+        <app-button
+          type="button"
+          variant="danger"
+          [disabled]="isUpdating || !canReject(selectedRequest)"
+          (buttonClick)="rejectRequest(selectedRequest)"
+        >{{ 'Reject' | translate }}</app-button>
+        <app-button
+          type="button"
+          variant="secondary"
+          [disabled]="isUpdating || !canComplete(selectedRequest)"
+          (buttonClick)="completeRequest(selectedRequest)"
+        >{{ 'Complete' | translate }}</app-button>
+      </div>
+    </app-card>
+  </div>
+</section>

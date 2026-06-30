@@ -1,0 +1,52 @@
+<label class="field" [class.checkbox]="isCheckbox">
+  <span *ngIf="label">{{ label | translate }}</span>
+
+  <input
+    *ngIf="isCheckbox"
+    type="checkbox"
+    [required]="isRequired"
+    [disabled]="isDisabled"
+    [checked]="!!value"
+    (change)="updateValue($any($event.target).checked)"
+    (blur)="markTouched()"
+  />
+
+  <textarea
+    *ngIf="isTextarea && !isCheckbox"
+    [rows]="rows"
+    [placeholder]="placeholder | translate"
+    [required]="isRequired"
+    [disabled]="isDisabled"
+    [ngModel]="value"
+    (ngModelChange)="updateValue($event)"
+    (blur)="markTouched()"
+  ></textarea>
+
+  <select
+    *ngIf="isSelect && !isCheckbox"
+    [required]="isRequired"
+    [disabled]="isDisabled"
+    [ngModel]="value"
+    (ngModelChange)="updateValue($event)"
+    (blur)="markTouched()"
+  >
+    <option [ngValue]="placeholderValue">{{ (placeholder || 'Select an option') | translate }}</option>
+    <option *ngFor="let option of normalizedOptions" [ngValue]="option.value">{{ option.label | translate }}</option>
+  </select>
+
+  <input
+    *ngIf="!isTextarea && !isSelect && !isCheckbox"
+    [type]="type"
+    [placeholder]="placeholder | translate"
+    [required]="isRequired"
+    [disabled]="isDisabled"
+    [min]="min"
+    [step]="step"
+    [ngModel]="value"
+    (ngModelChange)="updateValue($event)"
+    (blur)="markTouched()"
+  />
+
+  <small *ngIf="helper && !error">{{ helper | translate }}</small>
+  <small *ngIf="error" class="error-text">{{ error | translate }}</small>
+</label>

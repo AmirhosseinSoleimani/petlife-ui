@@ -1,0 +1,56 @@
+.field {
+  display: grid;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  min-height: 44px;
+}
+
+.checkbox span {
+  order: 2;
+}
+
+.checkbox input {
+  order: 1;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  padding: 11px 12px;
+  color: var(--color-text);
+  background: #fff;
+  resize: vertical;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--color-primary);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 0;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(7, 156, 145, 0.12);
+}
+
+small {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.error-text {
+  color: var(--color-danger);
+}

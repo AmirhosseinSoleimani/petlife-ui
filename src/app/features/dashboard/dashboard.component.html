@@ -1,0 +1,46 @@
+<section class="dashboard">
+  <app-page-header
+    eyebrow="PetLife value center"
+    title="A vertical SaaS operating system for pet care"
+    description="One workspace connects care identity, health tracking, spend visibility, and marketplace execution."
+  >
+    <div class="hero-badge" aria-hidden="true">
+      <span class="paw-dot one"></span>
+      <span class="paw-dot two"></span>
+      <span class="paw-dot three"></span>
+      <span class="paw-pad"></span>
+    </div>
+  </app-page-header>
+
+  <div class="status-row">
+    <app-card class="status-card">
+      <span>{{ 'dashboard.activeWorkspace' | translate }}</span>
+      <strong>{{ (userRole || 'Customer') | translate }}</strong>
+    </app-card>
+    <app-card class="status-card warm">
+      <span>{{ 'dashboard.productStage' | translate }}</span>
+      <strong>{{ 'dashboard.pitchReady' | translate }}</strong>
+    </app-card>
+  </div>
+
+  <div class="summary-grid">
+    <app-card class="summary-card" [interactive]="true" *ngFor="let card of kpiCards" [ngClass]="card.accent">
+      <span class="summary-icon"></span>
+      <div>
+        <h3>{{ card.title | translate }}</h3>
+        <strong>{{ card.value | translate }}</strong>
+        <p>{{ card.text | translate }}</p>
+      </div>
+    </app-card>
+  </div>
+
+  <app-card class="journey-card">
+    <div>
+      <p class="eyebrow">{{ 'dashboard.platformLoop' | translate }}</p>
+      <h3>{{ 'dashboard.platformLoopTitle' | translate }}</h3>
+    </div>
+    <div class="journey-steps">
+      <span *ngFor="let step of workflowSteps">{{ step | translate }}</span>
+    </div>
+  </app-card>
+</section>

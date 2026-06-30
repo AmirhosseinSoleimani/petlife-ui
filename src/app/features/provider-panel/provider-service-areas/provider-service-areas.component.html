@@ -1,0 +1,43 @@
+<section class="provider-page">
+  <app-page-header
+    eyebrow="Provider Panel"
+    title="Service Areas"
+    description="Tell PetLife customers where your team can provide pet-care services."
+  ></app-page-header>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+
+  <div class="layout">
+    <form class="panel" (ngSubmit)="addArea()" #areaForm="ngForm">
+      <h3>{{ 'Add service area' | translate }}</h3>
+      <app-input name="suburb" label="Suburb" required [(ngModel)]="form.suburb"></app-input>
+      <div class="two">
+        <app-input name="state" label="State" required [(ngModel)]="form.state"></app-input>
+        <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
+      </div>
+      <app-input name="radiusKm" label="Radius km" type="number" min="0" required [(ngModel)]="form.radiusKm"></app-input>
+      <app-input name="isActive" label="Area active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="areaForm.invalid">
+        {{ (isSaving ? 'Adding...' : 'Add area') | translate }}
+      </app-button>
+    </form>
+
+    <div class="list">
+      <div *ngIf="isLoading" class="state">{{ 'Loading service areas...' | translate }}</div>
+      <div *ngIf="!isLoading && !areas.length" class="state">{{ 'No service areas yet. Add the suburbs you cover.' | translate }}</div>
+
+      <app-card class="area-card" [interactive]="true" *ngFor="let area of areas">
+        <div>
+          <h3>{{ area.suburb || ('Service area' | translate) }}</h3>
+          <p>{{ area.state || ('State N/A' | translate) }} {{ area.postcode || '' }}</p>
+        </div>
+        <app-badge [tone]="area.isActive === false ? 'neutral' : 'success'">
+          {{ (area.isActive === false ? 'Inactive' : 'Active') | translate }}
+        </app-badge>
+        <p class="radius">{{ area.radiusKm || 0 }} {{ 'km coverage radius' | translate }}</p>
+        <app-button type="button" variant="danger" (buttonClick)="deleteArea(area)">{{ 'Delete' | translate }}</app-button>
+      </app-card>
+    </div>
+  </div>
+</section>

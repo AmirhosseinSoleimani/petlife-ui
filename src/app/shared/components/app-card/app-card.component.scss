@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  border: 1px solid rgba(215, 231, 228, 0.82);
+  border-radius: 20px;
+  padding: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), var(--glass-surface)),
+    var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+}
+
+:host(.interactive-card) {
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+:host(.interactive-card:hover) {
+  border-color: rgba(7, 156, 145, 0.35);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-premium);
+}

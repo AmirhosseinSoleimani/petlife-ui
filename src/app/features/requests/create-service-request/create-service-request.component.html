@@ -1,0 +1,32 @@
+<section class="request-page">
+  <app-page-header
+    eyebrow="Marketplace conversion"
+    title="Request a Service"
+    description="Capture structured demand so providers can accept, reject, schedule, and complete work with clarity."
+  ></app-page-header>
+
+  <div *ngIf="isLoading" class="state">{{ 'Loading request form...' | translate }}</div>
+
+  <form *ngIf="!isLoading" class="panel" (ngSubmit)="submitRequest()" #requestForm="ngForm">
+    <app-input name="petId" label="Pet" type="select" placeholder="Select a pet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
+    <app-input name="providerServiceId" label="Provider service" type="select" placeholder="Select a service" [placeholderValue]="null" [options]="serviceOptions" required [(ngModel)]="form.providerServiceId"></app-input>
+
+    <app-input name="requestedDate" label="Requested date" required type="date" [(ngModel)]="form.requestedDate"></app-input>
+
+    <app-input
+      name="requestMessage"
+      label="Message"
+      type="textarea"
+      [rows]="5"
+      placeholder="Share timing, care notes or special requirements."
+      [(ngModel)]="form.requestMessage"
+    ></app-input>
+
+    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+    <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+
+    <app-button type="submit" [loading]="isSubmitting" [disabled]="requestForm.invalid">
+      {{ (isSubmitting ? 'Submitting...' : 'Submit request') | translate }}
+    </app-button>
+  </form>
+</section>

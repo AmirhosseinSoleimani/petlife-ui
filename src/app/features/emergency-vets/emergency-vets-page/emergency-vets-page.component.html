@@ -1,0 +1,47 @@
+<section class="page">
+  <app-page-header
+    eyebrow="Customer Core"
+    title="Emergency Vets"
+    description="Find urgent care contacts quickly when a pet needs help."
+  ></app-page-header>
+
+  <div class="alert">
+    {{ 'If this is a life-threatening emergency, call the clinic before travel and follow their instructions.' | translate }}
+  </div>
+
+  <div class="filters">
+    <app-input label="Suburb" placeholder="Search suburb" [(ngModel)]="suburbFilter"></app-input>
+    <app-input label="State" placeholder="Search state" [(ngModel)]="stateFilter"></app-input>
+    <app-input label="After hours" type="checkbox" [(ngModel)]="afterHoursOnly"></app-input>
+    <app-input label="24h" type="checkbox" [(ngModel)]="twentyFourHoursOnly"></app-input>
+  </div>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading emergency vets...' | translate }}</div>
+  <div *ngIf="!isLoading && !filteredVets.length" class="state">{{ 'No emergency vets match the current filters.' | translate }}</div>
+
+  <div class="layout" *ngIf="!isLoading && filteredVets.length">
+    <div class="cards">
+      <app-card class="vet" [interactive]="true" *ngFor="let vet of filteredVets" (click)="selectVet(vet)">
+        <div>
+          <h3>{{ vet.name }}</h3>
+          <p>{{ vet.suburb || ('Suburb N/A' | translate) }}, {{ vet.state || ('State N/A' | translate) }}</p>
+        </div>
+        <div class="badges">
+          <app-badge tone="success" *ngIf="vet.afterHours">{{ 'After hours' | translate }}</app-badge>
+          <app-badge tone="info" *ngIf="vet.is24Hours">{{ '24h' | translate }}</app-badge>
+        </div>
+        <p class="contact">{{ vet.phone || ('Phone not available' | translate) }}</p>
+      </app-card>
+    </div>
+
+    <app-card class="detail" *ngIf="selectedVet">
+      <app-badge tone="danger">{{ 'Selected clinic' | translate }}</app-badge>
+      <h3>{{ selectedVet.name }}</h3>
+      <p>{{ selectedVet.address || ('Address not available' | translate) }}</p>
+      <p><strong>{{ 'Phone' | translate }}:</strong> {{ selectedVet.phone || ('N/A' | translate) }}</p>
+      <p><strong>{{ 'Area' | translate }}:</strong> {{ selectedVet.suburb || ('N/A' | translate) }}, {{ selectedVet.state || ('N/A' | translate) }}</p>
+      <div class="instruction">{{ selectedVet.instructions || ('Call ahead and describe the emergency before arrival.' | translate) }}</div>
+    </app-card>
+  </div>
+</section>

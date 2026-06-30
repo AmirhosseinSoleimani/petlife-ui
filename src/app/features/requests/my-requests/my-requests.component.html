@@ -1,0 +1,38 @@
+<section class="requests-page">
+  <app-page-header
+    eyebrow="Marketplace lifecycle"
+    title="My Requests"
+    description="A customer-facing view of marketplace status from intent to provider outcome."
+  >
+    <a routerLink="/service-requests/new">{{ 'New request' | translate }}</a>
+  </app-page-header>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading requests...' | translate }}</div>
+  <div *ngIf="!isLoading && !requests.length" class="state">{{ 'No service requests yet. Start one to see the lifecycle in motion.' | translate }}</div>
+
+  <div class="layout" *ngIf="!isLoading && requests.length">
+    <div class="list">
+      <app-card class="request-card" [interactive]="true" *ngFor="let request of requests" (click)="selectRequest(request)">
+        <div>
+          <h3>{{ getServiceName(request) }}</h3>
+          <p>{{ getPetName(request) }} - {{ getProviderName(request) }}</p>
+        </div>
+        <app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge>
+        <p class="message">{{ request.requestMessage || ('No message supplied.' | translate) }}</p>
+      </app-card>
+    </div>
+
+    <app-card class="detail" *ngIf="selectedRequest">
+      <app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge>
+      <h3>{{ getServiceName(selectedRequest) }}</h3>
+      <dl>
+        <div><dt>{{ 'Pet' | translate }}</dt><dd>{{ getPetName(selectedRequest) }}</dd></div>
+        <div><dt>{{ 'Provider' | translate }}</dt><dd>{{ getProviderName(selectedRequest) }}</dd></div>
+        <div><dt>{{ 'Created' | translate }}</dt><dd>{{ selectedRequest.createdAt || ('N/A' | translate) }}</dd></div>
+      </dl>
+      <p>{{ selectedRequest.requestMessage || ('No message supplied.' | translate) }}</p>
+    </app-card>
+  </div>
+</section>
+

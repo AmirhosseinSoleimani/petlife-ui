@@ -1,0 +1,70 @@
+<div class="shell">
+  <aside class="sidebar" [attr.aria-label]="'Main navigation' | translate">
+    <div class="brand-panel">
+      <span class="brand-mark" aria-hidden="true">
+        <span class="paw-dot top-left"></span>
+        <span class="paw-dot top-right"></span>
+        <span class="paw-dot middle"></span>
+        <span class="paw-pad"></span>
+      </span>
+      <div>
+        <strong>PetLife</strong>
+        <small>{{ 'app.tagline' | translate }}</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="item.enabled ? item.path : null"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+        [class.disabled]="!item.enabled"
+      >
+        <span class="nav-icon" [ngSwitch]="item.icon">
+          <svg *ngSwitchCase="'dashboard'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>
+          <svg *ngSwitchCase="'pets'" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
+          <svg *ngSwitchCase="'reminders'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.8 2.8 0 0 0 2.6-1.8H9.4A2.8 2.8 0 0 0 12 22Zm7-5-1.8-2.1V10a5.2 5.2 0 0 0-4-5.1V3a1.2 1.2 0 0 0-2.4 0v1.9a5.2 5.2 0 0 0-4 5.1v4.9L5 17v1h14v-1Z"/></svg>
+          <svg *ngSwitchCase="'expenses'" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2L6 21V3Zm3 5h6V6H9v2Zm0 4h8v-2H9v2Zm0 4h5v-2H9v2Z"/></svg>
+          <svg *ngSwitchCase="'emergency'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.4-9.3-9A5.6 5.6 0 0 1 12 5.8 5.6 5.6 0 0 1 21.3 12C19 16.6 12 21 12 21Zm-1-12v2H9v2h2v2h2v-2h2v-2h-2V9h-2Z"/></svg>
+          <svg *ngSwitchCase="'providers'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11h-5v-6H9v6H4Zm7-8h2V9h3V7h-3V5h-2v2H8v2h3v3Z"/></svg>
+          <svg *ngSwitchCase="'services'" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v4H5V5Zm0 6h14v8H5v-8Zm3 2v4h2v-4H8Zm4 0v4h4v-4h-4Z"/></svg>
+          <svg *ngSwitchCase="'requests'" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6V3Zm8 1.8V7h2.2L14 4.8ZM8 10h8V8H8v2Zm0 4h8v-2H8v2Zm0 4h5v-2H8v2Z"/></svg>
+        </span>
+        <span>{{ item.labelKey | translate }}</span>
+        <span *ngIf="!item.enabled" class="soon">{{ 'common.soon' | translate }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="service-badge">{{ 'shell.workspaceBadge' | translate }}</span>
+        <h1>{{ 'shell.title' | translate }}</h1>
+      </div>
+
+      <div class="user-actions">
+        <label class="language-switcher">
+          <span>{{ 'language.label' | translate }}</span>
+          <select [ngModel]="i18nService.currentLanguage" (ngModelChange)="changeLanguage($event)">
+            <option *ngFor="let option of languageOptions" [ngValue]="option.value">{{ option.label }}</option>
+          </select>
+        </label>
+        <div class="user-card">
+          <span class="avatar">{{ displayName.charAt(0) }}</span>
+          <div>
+            <strong>{{ displayName }}</strong>
+            <small>{{ currentUser?.email || ('shell.defaultWorkspace' | translate) }}</small>
+          </div>
+        </div>
+        <span class="role-badge">{{ displayRole | translate }}</span>
+        <app-button type="button" (buttonClick)="logout()">{{ 'auth.logout' | translate }}</app-button>
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

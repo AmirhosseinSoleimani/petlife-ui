@@ -1,0 +1,67 @@
+<section class="page">
+  <app-page-header
+    eyebrow="Customer identity layer"
+    title="Pets"
+    description="Each pet becomes the customer identity layer for records, spend, reminders, and services."
+  ></app-page-header>
+
+  <div class="layout">
+    <form class="panel" (ngSubmit)="savePet()" #petForm="ngForm">
+      <h3>{{ (editingPetId ? 'Edit pet' : 'Create pet') | translate }}</h3>
+
+      <app-input name="petName" label="Name" required [(ngModel)]="form.petName"></app-input>
+      <app-input name="species" label="Species" type="select" placeholder="Select species" [options]="petTypeOptions" required [(ngModel)]="form.species"></app-input>
+      <app-input name="breed" label="Breed" [(ngModel)]="form.breed"></app-input>
+
+      <div class="two">
+        <app-input name="approxAge" label="Age" [(ngModel)]="form.approxAge"></app-input>
+        <app-input name="weight" label="Weight" type="number" min="0" step="0.1" [(ngModel)]="form.weight"></app-input>
+      </div>
+
+      <app-input name="gender" label="Gender" type="select" placeholder="Select gender" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
+      <app-input name="behaviourNotes" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.behaviourNotes"></app-input>
+
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+
+      <div class="actions">
+        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid">
+          {{ (isSaving ? 'Saving...' : editingPetId ? 'Save changes' : 'Create pet') | translate }}
+        </app-button>
+        <app-button type="button" variant="secondary" *ngIf="editingPetId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
+      </div>
+    </form>
+
+    <div class="content">
+      <div *ngIf="isLoading" class="state">{{ 'Loading pets...' | translate }}</div>
+      <div *ngIf="!isLoading && !pets.length" class="state">{{ 'No pet profiles yet. Add one to unlock the full PetLife care loop.' | translate }}</div>
+
+      <div class="cards" *ngIf="!isLoading && pets.length">
+        <app-card class="pet-card" [interactive]="true" *ngFor="let pet of pets">
+          <div class="card-head">
+            <span class="pet-avatar">{{ (pet.petName || 'P').charAt(0) }}</span>
+            <div>
+              <h3>{{ pet.petName }}</h3>
+              <p>{{ (pet.species || 'Pet') | translate }}<span *ngIf="pet.breed"> - {{ pet.breed }}</span></p>
+            </div>
+            <app-badge tone="success">{{ (pet.gender || 'Profile') | translate }}</app-badge>
+          </div>
+
+          <dl>
+            <div><dt>{{ 'Age' | translate }}</dt><dd>{{ pet.approxAge || ('N/A' | translate) }}</dd></div>
+            <div><dt>{{ 'Weight' | translate }}</dt><dd>{{ pet.weight || ('N/A' | translate) }}</dd></div>
+          </dl>
+
+          <p class="notes">{{ pet.behaviourNotes || pet.medicalNotes || ('No notes available.' | translate) }}</p>
+
+          <div class="card-actions">
+            <a [routerLink]="['/pets', pet.id, 'health-records']">{{ 'Health' | translate }}</a>
+            <a [routerLink]="['/pets', pet.id, 'expenses']">{{ 'Expenses' | translate }}</a>
+            <app-button type="button" variant="ghost" (buttonClick)="editPet(pet)">{{ 'Edit' | translate }}</app-button>
+            <app-button type="button" variant="danger" (buttonClick)="deletePet(pet)">{{ 'Delete' | translate }}</app-button>
+          </div>
+        </app-card>
+      </div>
+    </div>
+  </div>
+</section>

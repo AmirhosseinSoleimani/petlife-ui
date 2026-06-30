@@ -1,0 +1,54 @@
+<section class="provider-page">
+  <app-page-header
+    eyebrow="Provider Panel"
+    title="Provider Profile"
+    description="Keep your business profile ready for PetLife customers searching for trusted care."
+  ></app-page-header>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading provider profile...' | translate }}</div>
+
+  <div class="layout" *ngIf="!isLoading">
+    <form class="panel" (ngSubmit)="saveProfile()" #profileForm="ngForm">
+      <h3>{{ (hasProfile ? 'Update business profile' : 'Create business profile') | translate }}</h3>
+      <app-input name="businessName" label="Business name" required [(ngModel)]="form.businessName"></app-input>
+      <app-input name="contactName" label="Contact name" [(ngModel)]="form.contactName"></app-input>
+      <div class="two">
+        <app-input name="phoneNumber" label="Phone" [(ngModel)]="form.phoneNumber"></app-input>
+        <app-input name="email" label="Email" type="email" [(ngModel)]="form.email"></app-input>
+      </div>
+      <app-input name="websiteUrl" label="Website" [(ngModel)]="form.websiteUrl"></app-input>
+      <app-input name="businessDescription" label="Description" type="textarea" [rows]="4" [(ngModel)]="form.businessDescription"></app-input>
+      <app-input name="addressLine1" label="Address" [(ngModel)]="form.addressLine1"></app-input>
+      <div class="three">
+        <app-input name="suburb" label="Suburb" [(ngModel)]="form.suburb"></app-input>
+        <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
+        <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
+      </div>
+      <app-input name="isActive" label="Profile active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid">
+        {{ (isSaving ? 'Saving...' : hasProfile ? 'Save profile' : 'Create profile') | translate }}
+      </app-button>
+    </form>
+
+    <app-card class="detail" *ngIf="profile">
+      <app-badge [tone]="statusTone">{{ statusLabel | translate }}</app-badge>
+      <h3>{{ profile.businessName || ('Provider profile' | translate) }}</h3>
+      <p>{{ profile.businessDescription || profile.description || ('No business description yet.' | translate) }}</p>
+      <dl>
+        <div><dt>{{ 'Contact' | translate }}</dt><dd>{{ profile.contactName || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Phone' | translate }}</dt><dd>{{ profile.phoneNumber || profile.phone || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Email' | translate }}</dt><dd>{{ profile.email || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Website' | translate }}</dt><dd>{{ profile.websiteUrl || profile.website || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Area' | translate }}</dt><dd>{{ profile.suburb || ('N/A' | translate) }}, {{ profile.state || ('N/A' | translate) }}</dd></div>
+      </dl>
+    </app-card>
+
+    <app-card class="detail" *ngIf="!profile">
+      <app-badge tone="warning">{{ 'Profile needed' | translate }}</app-badge>
+      <h3>{{ 'Create your marketplace presence' | translate }}</h3>
+      <p>{{ 'Add business details so customers know who they are requesting care from.' | translate }}</p>
+    </app-card>
+  </div>
+</section>

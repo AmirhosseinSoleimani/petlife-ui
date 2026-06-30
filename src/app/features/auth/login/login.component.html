@@ -1,0 +1,61 @@
+<section class="login-page">
+  <label class="login-language">
+    <span>{{ 'language.label' | translate }}</span>
+    <select [ngModel]="i18nService.currentLanguage" (ngModelChange)="changeLanguage($event)">
+      <option *ngFor="let option of languageOptions" [ngValue]="option.value">{{ option.label }}</option>
+    </select>
+  </label>
+
+  <div class="login-copy" aria-hidden="true">
+    <div class="brand">
+      <span class="brand-mark">P</span>
+      <span>{{ 'app.name' | translate }}</span>
+    </div>
+    <p class="pitch-label">{{ 'auth.pitchLabel' | translate }}</p>
+    <h1>{{ 'auth.heroTitle' | translate }}</h1>
+    <p>{{ 'auth.heroDescription' | translate }}</p>
+    <div class="value-strip">
+      <span>{{ 'auth.valueCare' | translate }}</span>
+      <span>{{ 'auth.valueNetwork' | translate }}</span>
+      <span>{{ 'auth.valueLifecycle' | translate }}</span>
+    </div>
+  </div>
+
+  <div class="login-panel">
+    <div class="brand compact">
+      <span class="brand-mark">P</span>
+      <span>{{ 'app.name' | translate }}</span>
+    </div>
+
+    <div class="heading">
+      <h2>{{ 'auth.loginTitle' | translate }}</h2>
+      <p>{{ 'auth.loginSubtitle' | translate }}</p>
+    </div>
+
+    <form (ngSubmit)="login()" #loginForm="ngForm">
+      <app-input
+        name="email"
+        label="auth.email"
+        type="email"
+        placeholder="auth.emailPlaceholder"
+        required
+        [(ngModel)]="credentials.email"
+      ></app-input>
+
+      <app-input
+        name="password"
+        label="auth.password"
+        type="password"
+        placeholder="auth.passwordPlaceholder"
+        required
+        [(ngModel)]="credentials.password"
+      ></app-input>
+
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+
+      <app-button type="submit" [loading]="isSubmitting" [disabled]="loginForm.invalid">
+        {{ (isSubmitting ? 'auth.signingIn' : 'auth.signIn') | translate }}
+      </app-button>
+    </form>
+  </div>
+</section>

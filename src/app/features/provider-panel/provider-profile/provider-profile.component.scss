@@ -1,0 +1,15 @@
+.provider-page { display: grid; gap: 18px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.panel { display: grid; gap: 14px; padding: 22px; border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-sm); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+h3, p { margin: 0; }
+.detail { display: grid; gap: 12px; }
+.detail p, dd { color: var(--color-muted); line-height: 1.55; }
+dl { display: grid; gap: 12px; margin: 0; }
+dt { color: #667085; font-size: 12px; font-weight: 900; }
+dd { margin: 2px 0 0; }
+.error, .success, .state { padding: 14px 16px; border-radius: 14px; }
+.error { background: #fef2f2; color: var(--color-danger); }
+.success { background: #ecfdf3; color: #047857; }
+@media (max-width: 980px) { .layout, .two, .three { grid-template-columns: 1fr; } }

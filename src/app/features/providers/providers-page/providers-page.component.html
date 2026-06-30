@@ -1,0 +1,54 @@
+<section class="market-page">
+  <app-page-header
+    eyebrow="Marketplace ecosystem"
+    title="Provider Network"
+    description="A trusted care supply layer where customers discover providers and move directly into bookable services."
+  ></app-page-header>
+
+  <div class="filters">
+    <app-input label="Suburb" placeholder="Search suburb" [(ngModel)]="suburbFilter"></app-input>
+    <app-input label="State" placeholder="Search state" [(ngModel)]="stateFilter"></app-input>
+  </div>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading providers...' | translate }}</div>
+  <div *ngIf="!isLoading && !filteredProviders.length" class="state">{{ 'No providers match this market filter yet.' | translate }}</div>
+
+  <div class="directory" *ngIf="!isLoading && filteredProviders.length">
+    <div class="cards">
+      <app-card class="provider-card" [interactive]="true" *ngFor="let provider of filteredProviders" (click)="selectProvider(provider)">
+        <div class="card-top">
+          <span class="provider-icon" aria-hidden="true">+</span>
+          <div class="badges">
+            <app-badge tone="info" *ngIf="isVerified(provider)">{{ 'Verified' | translate }}</app-badge>
+            <app-badge [tone]="isAvailable(provider) ? 'success' : 'neutral'">{{ (isAvailable(provider) ? 'Available' : 'Inactive') | translate }}</app-badge>
+          </div>
+        </div>
+
+        <h3>{{ getProviderName(provider) }}</h3>
+        <p class="location">{{ provider.suburb || ('Suburb N/A' | translate) }}, {{ provider.state || ('State N/A' | translate) }}</p>
+        <p class="description">{{ provider.description || ('Provider details available on selection.' | translate) }}</p>
+
+        <div class="contact">
+          <span>{{ provider.phone || ('Phone N/A' | translate) }}</span>
+          <span>{{ provider.email || ('Email N/A' | translate) }}</span>
+        </div>
+
+        <a [routerLink]="['/providers', provider.id, 'services']" (click)="$event.stopPropagation()">{{ 'View services' | translate }}</a>
+      </app-card>
+    </div>
+
+    <app-card class="detail" *ngIf="selectedProvider">
+      <app-badge tone="info" *ngIf="isVerified(selectedProvider)">{{ 'Verified provider' | translate }}</app-badge>
+      <h3>{{ getProviderName(selectedProvider) }}</h3>
+      <p>{{ selectedProvider.description || ('No description provided.' | translate) }}</p>
+      <dl>
+        <div><dt>{{ 'Area' | translate }}</dt><dd>{{ selectedProvider.suburb || ('N/A' | translate) }}, {{ selectedProvider.state || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Phone' | translate }}</dt><dd>{{ selectedProvider.phone || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Email' | translate }}</dt><dd>{{ selectedProvider.email || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'Website' | translate }}</dt><dd>{{ selectedProvider.website || ('N/A' | translate) }}</dd></div>
+      </dl>
+      <a [routerLink]="['/providers', selectedProvider.id, 'services']">{{ 'Browse services' | translate }}</a>
+    </app-card>
+  </div>
+</section>

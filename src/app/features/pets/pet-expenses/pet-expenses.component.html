@@ -1,0 +1,50 @@
+<section class="page">
+  <app-page-header
+    title="Pet Expenses"
+    description="Capture recurring and one-off costs for each pet."
+    backLink="/pets"
+    backLabel="Back to pets"
+  ></app-page-header>
+
+  <div class="summary">
+    <app-card><span>{{ 'Total' | translate }}</span><strong>{{ summary?.totalAmount || 0 | currency }}</strong></app-card>
+    <app-card><span>{{ 'This month' | translate }}</span><strong>{{ summary?.thisMonthAmount || 0 | currency }}</strong></app-card>
+    <app-card><span>{{ 'Top category' | translate }}</span><strong>{{ (summary?.topCategory || 'N/A') | translate }}</strong></app-card>
+  </div>
+
+  <div class="layout">
+    <form class="panel" (ngSubmit)="saveExpense()" #expenseForm="ngForm">
+      <h3>{{ (editingId ? 'Edit expense' : 'Add expense') | translate }}</h3>
+      <app-input name="description" label="Description" required [(ngModel)]="form.description"></app-input>
+      <app-input name="category" label="Category" type="select" placeholder="Select category" [options]="categoryOptions" [(ngModel)]="form.category"></app-input>
+      <app-input name="amount" label="Amount" type="number" min="0" step="0.01" required [(ngModel)]="form.amount"></app-input>
+      <app-input name="expenseDate" label="Date" type="date" required [(ngModel)]="form.expenseDate"></app-input>
+      <app-input name="currency" label="Currency" required [(ngModel)]="form.currency"></app-input>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+      <div class="actions">
+        <app-button type="submit" [loading]="isSaving" [disabled]="expenseForm.invalid">{{ (isSaving ? 'Saving...' : 'Save expense') | translate }}</app-button>
+        <app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
+      </div>
+    </form>
+
+    <div class="list">
+      <div *ngIf="isLoading" class="state">{{ 'Loading expenses...' | translate }}</div>
+      <div *ngIf="!isLoading && !expenses.length" class="state">{{ 'No expenses recorded yet.' | translate }}</div>
+
+      <app-card class="expense" [interactive]="true" *ngFor="let expense of expenses">
+        <div>
+          <h3>{{ expense.description || (expense.category | translate) || ('Expense' | translate) }}</h3>
+          <p>{{ (expense.category || 'Uncategorized') | translate }} - {{ expense.expenseDate || ('Date not set' | translate) }}</p>
+        </div>
+        <strong>{{ expense.amount | currency:(expense.currency || 'AUD') }}</strong>
+        <p class="notes">{{ expense.description || ('No notes.' | translate) }}</p>
+        <div class="actions">
+          <app-button type="button" variant="secondary" (buttonClick)="editExpense(expense)">{{ 'Edit' | translate }}</app-button>
+          <app-button type="button" variant="danger" (buttonClick)="deleteExpense(expense)">{{ 'Delete' | translate }}</app-button>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</section>
+
