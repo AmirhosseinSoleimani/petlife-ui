@@ -26,6 +26,7 @@ import { AppBadgeComponent } from './shared/components/app-badge/app-badge.compo
 import { AppButtonComponent } from './shared/components/app-button/app-button.component';
 import { AppCardComponent } from './shared/components/app-card/app-card.component';
 import { AppInputComponent } from './shared/components/app-input/app-input.component';
+import { AppFileUploadComponent } from './shared/components/app-file-upload/app-file-upload.component';
 import { AppPageHeaderComponent } from './shared/components/app-page-header/app-page-header.component';
 import { AppShellComponent } from './shared/layout/app-shell/app-shell.component';
 
@@ -51,6 +52,7 @@ import { AppShellComponent } from './shared/layout/app-shell/app-shell.component
     AppButtonComponent,
     AppCardComponent,
     AppInputComponent,
+    AppFileUploadComponent,
     AppBadgeComponent,
     AppPageHeaderComponent,
     TranslatePipe

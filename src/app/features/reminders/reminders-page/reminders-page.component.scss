@@ -21,4 +21,24 @@ button { border: 0; border-radius: 13px; padding: 10px 13px; background: linear-
 button:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
 .secondary { background: #eef2f7; color: #344054; }
 .error { padding: 10px 12px; border-radius: 8px; background: #fef2f2; color: var(--color-danger); }
-@media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+@media (max-width: 767px) {
+  .reminder { grid-template-columns: 1fr; padding-inline-start: 20px; }
+  .badge { justify-self: start; }
+}
+
+@media (max-width: 560px) {
+  .page-head, .panel, .reminder, .state {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  .actions button {
+    flex: 1 1 100%;
+  }
+}

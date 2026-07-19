@@ -1,6 +1,7 @@
 :host {
   display: block;
   position: relative;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(234, 223, 208, 0.78);
   border-radius: 22px;
@@ -22,4 +23,11 @@
   border-color: rgba(7, 156, 145, 0.35);
   transform: translateY(-5px);
   box-shadow: var(--shadow-premium);
+}
+
+@media (max-width: 430px) {
+  :host {
+    padding: 16px;
+    border-radius: 18px;
+  }
 }

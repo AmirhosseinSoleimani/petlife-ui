@@ -1,5 +1,5 @@
-<div class="shell">
-  <aside class="sidebar" [attr.aria-label]="'Main navigation' | translate">
+<div class="shell" [class.drawer-open]="isDrawerOpen">
+  <aside id="app-main-nav" class="sidebar" [attr.aria-label]="'Main navigation' | translate">
     <div class="brand-panel">
       <span class="brand-mark" aria-hidden="true">
         <span class="paw-dot top-left"></span>
@@ -20,6 +20,7 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
         [class.disabled]="!item.enabled"
+        (click)="item.enabled && closeDrawer()"
       >
         <span class="nav-icon" [ngSwitch]="item.icon">
           <svg *ngSwitchCase="'dashboard'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>
@@ -37,8 +38,29 @@
     </nav>
   </aside>
 
+  <button
+    *ngIf="isDrawerOpen"
+    type="button"
+    class="drawer-backdrop"
+    [attr.aria-label]="'Close navigation' | translate"
+    (click)="closeDrawer()"
+  ></button>
+
   <div class="workspace">
     <header class="topbar">
+      <button
+        type="button"
+        class="mobile-menu"
+        aria-controls="app-main-nav"
+        [attr.aria-expanded]="isDrawerOpen"
+        [attr.aria-label]="'Main navigation' | translate"
+        (click)="toggleDrawer()"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
       <div class="topbar-title">
         <span class="service-badge">{{ 'shell.workspaceBadge' | translate }}</span>
         <h1>{{ 'shell.title' | translate }}</h1>

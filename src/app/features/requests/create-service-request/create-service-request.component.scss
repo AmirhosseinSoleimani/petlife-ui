@@ -16,3 +16,22 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .state { color: var(--color-muted); }
 .error { background: #fef2f2; color: var(--color-danger); }
 .success { background: #ecfdf3; color: #047857; }
+
+@media (max-width: 560px) {
+  .request-page {
+    max-width: 100%;
+  }
+
+  .page-head, .panel, .state {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  button {
+    width: 100%;
+  }
+}

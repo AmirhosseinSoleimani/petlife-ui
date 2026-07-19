@@ -28,6 +28,53 @@ export class ApiService {
     return this.http.delete<T>(this.buildUrl(endpoint));
   }
 
+  uploadPetProfileImage<T>(petId: string, file: File): Observable<T> {
+    return this.postFile<T>(`/pets/${petId}/profile-image`, file);
+  }
+
+  deletePetProfileImage<T>(petId: string): Observable<T> {
+    return this.delete<T>(`/pets/${petId}/profile-image`);
+  }
+
+  getHealthRecordAttachments<T>(recordId: string): Observable<T> {
+    return this.get<T>(`/health-records/${recordId}/attachments`);
+  }
+
+  uploadHealthRecordAttachment<T>(recordId: string, file: File): Observable<T> {
+    return this.postFile<T>(`/health-records/${recordId}/attachments`, file);
+  }
+
+  deleteHealthRecordAttachment<T>(recordId: string, attachmentId: string): Observable<T> {
+    return this.delete<T>(`/health-records/${recordId}/attachments/${attachmentId}`);
+  }
+
+  downloadHealthRecordAttachment(recordId: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(
+      this.buildUrl(`/health-records/${recordId}/attachments/${attachmentId}/download`),
+      { responseType: 'blob' }
+    );
+  }
+
+  resolvePublicUrl(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+
+    const apiOrigin = this.baseUrl.replace(/\/api\/?$/i, '');
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${apiOrigin}${normalizedUrl}`;
+  }
+
+  private postFile<T>(endpoint: string, file: File): Observable<T> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<T>(this.buildUrl(endpoint), formData);
+  }
+
   private buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     return `${this.baseUrl}${normalizedEndpoint}`;

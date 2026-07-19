@@ -32,6 +32,16 @@
   line-height: 1.2;
 }
 
+.brand-panel > div,
+.user-card > div {
+  min-width: 0;
+}
+
+.user-card > div {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
 .brand-mark {
   position: relative;
   width: 44px;
@@ -84,6 +94,7 @@
   border-radius: 18px;
   color: #cde2e0;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .nav a:hover {
@@ -135,6 +146,10 @@
   backdrop-filter: blur(18px);
 }
 
+.topbar-title {
+  min-width: 0;
+}
+
 .topbar-title h1 { margin: 5px 0 0; font-size: 25px; }
 
 .service-badge,
@@ -160,6 +175,7 @@
 }
 
 .user-actions {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -178,6 +194,7 @@
 }
 
 .user-card {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -212,11 +229,15 @@
 
 .user-card strong {
   display: block;
+  overflow: hidden;
   color: #111827;
   font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-card small {
+  display: block;
   max-width: 210px;
   overflow: hidden;
   color: var(--color-muted);
@@ -228,42 +249,4 @@
   width: 100%;
   max-width: 1260px;
   padding: 34px;
-}
-
-@media (max-width: 980px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    height: auto;
-    padding: 16px;
-  }
-
-  .nav {
-    display: flex;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-
-  .nav a {
-    flex: 0 0 auto;
-    min-width: 148px;
-  }
-
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 18px;
-  }
-
-  .user-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .content {
-    padding: 18px;
-  }
 }

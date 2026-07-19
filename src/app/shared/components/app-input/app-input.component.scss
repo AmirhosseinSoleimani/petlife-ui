@@ -1,5 +1,6 @@
 .field {
   display: grid;
+  min-width: 0;
   gap: 8px;
   color: var(--color-navy);
   font-size: 13px;
@@ -26,11 +27,20 @@ textarea {
   width: 100%;
   border: 1px solid rgba(7, 156, 145, .16);
   border-radius: 16px;
-  padding: 12px 13px;
+  padding-block: 12px;
+  padding-inline: 13px;
   color: var(--color-text);
   background: rgba(255,255,255,.88);
   resize: vertical;
   transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+select {
+  padding-inline-end: 34px;
+}
+
+:host-context([dir='rtl']) select {
+  padding-inline: 13px 34px;
 }
 
 input[type="checkbox"] {

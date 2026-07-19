@@ -21,6 +21,61 @@
       <app-input name="vetName" label="Veterinarian" [(ngModel)]="form.vetName"></app-input>
       <app-input name="nextDueDate" label="Next due" type="date" [(ngModel)]="form.nextDueDate"></app-input>
       <app-input name="description" label="Description" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
+
+      <section class="attachments form-attachments">
+        <h4>{{ 'healthRecords.attachments' | translate }}</h4>
+
+        <ng-container *ngIf="editingRecord as recordBeingEdited">
+          <strong class="attachment-subheading">{{ 'healthRecords.existingAttachments' | translate }}</strong>
+          <div *ngIf="loadingAttachmentRecordIds.has(recordBeingEdited.id)" class="attachment-state">
+            {{ 'files.loadingAttachments' | translate }}
+          </div>
+          <div
+            *ngIf="!loadingAttachmentRecordIds.has(recordBeingEdited.id) && !(attachments[recordBeingEdited.id] || []).length"
+            class="attachment-state"
+          >{{ 'files.noAttachments' | translate }}</div>
+          <ul class="attachment-list" *ngIf="(attachments[recordBeingEdited.id] || []).length">
+            <li *ngFor="let attachment of attachments[recordBeingEdited.id]">
+              <div class="attachment-info">
+                <app-badge>{{ attachmentTypeKey(attachment) | translate }}</app-badge>
+                <span class="attachment-name">{{ attachment.originalFileName }}</span>
+                <small>{{ attachmentSize(attachment) | number:'1.0-1' }} {{ attachmentSizeUnitKey(attachment) | translate }}</small>
+              </div>
+              <div class="attachment-actions">
+                <app-button type="button" variant="secondary" (buttonClick)="downloadAttachment(recordBeingEdited, attachment)">
+                  {{ 'files.download' | translate }}
+                </app-button>
+                <app-button
+                  type="button"
+                  variant="danger"
+                  [loading]="deletingAttachmentIds.has(attachment.id)"
+                  (buttonClick)="deleteAttachment(recordBeingEdited, attachment)"
+                >{{ 'files.deleteAttachment' | translate }}</app-button>
+              </div>
+            </li>
+          </ul>
+          <p *ngIf="attachmentErrors[recordBeingEdited.id]" class="error">
+            {{ attachmentErrors[recordBeingEdited.id] | translate }}
+          </p>
+        </ng-container>
+
+        <strong class="attachment-subheading">
+          {{ (editingId ? 'healthRecords.addAttachments' : 'healthRecords.attachments') | translate }}
+        </strong>
+        <app-file-upload
+          #attachmentUpload
+          [accept]="attachmentExtensions.join(',')"
+          [allowedExtensions]="attachmentExtensions"
+          [allowedContentTypes]="attachmentContentTypes"
+          allowedTypesLabelKey="files.healthAttachmentTypes"
+          [maxSizeBytes]="attachmentMaxSize"
+          [multiple]="true"
+          [showImagePreview]="true"
+          [loading]="isSaving"
+          (filesChange)="onAttachmentFilesChange($event)"
+        ></app-file-upload>
+      </section>
+
       <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
       <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
       <div class="actions">
@@ -44,6 +99,39 @@
             <app-badge tone="success">{{ (record.recordType || 'Care') | translate }}</app-badge>
           </div>
           <p class="description">{{ record.description || ('No description provided.' | translate) }}</p>
+
+          <section class="attachments">
+            <h4>{{ 'files.attachments' | translate }}</h4>
+
+            <div *ngIf="loadingAttachmentRecordIds.has(record.id)" class="attachment-state">
+              {{ 'files.loadingAttachments' | translate }}
+            </div>
+
+            <div
+              *ngIf="!loadingAttachmentRecordIds.has(record.id) && !(attachments[record.id] || []).length"
+              class="attachment-state"
+            >{{ 'files.noAttachments' | translate }}</div>
+
+            <ul class="attachment-list" *ngIf="(attachments[record.id] || []).length">
+              <li *ngFor="let attachment of attachments[record.id]">
+                <div class="attachment-info">
+                  <app-badge>{{ attachmentTypeKey(attachment) | translate }}</app-badge>
+                  <span class="attachment-name">{{ attachment.originalFileName }}</span>
+                  <small>{{ attachmentSize(attachment) | number:'1.0-1' }} {{ attachmentSizeUnitKey(attachment) | translate }}</small>
+                </div>
+                <div class="attachment-actions">
+                  <app-button type="button" variant="secondary" (buttonClick)="downloadAttachment(record, attachment)">
+                    {{ 'files.download' | translate }}
+                  </app-button>
+                </div>
+              </li>
+            </ul>
+
+            <p *ngIf="attachmentErrors[record.id]" class="error">
+              {{ attachmentErrors[record.id] | translate }}
+            </p>
+          </section>
+
           <div class="actions">
             <app-button type="button" variant="secondary" (buttonClick)="editRecord(record)">{{ 'Edit' | translate }}</app-button>
             <app-button type="button" variant="danger" (buttonClick)="deleteRecord(record)">{{ 'Delete' | translate }}</app-button>

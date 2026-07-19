@@ -1,0 +1,36 @@
+<div class="file-upload">
+  <label class="file-picker">
+    <span>{{ (multiple ? 'files.chooseFiles' : 'files.chooseFile') | translate }}</span>
+    <input
+      #fileInput
+      type="file"
+      [accept]="accept"
+      [multiple]="multiple"
+      [disabled]="loading"
+      (change)="onFileSelected($event)"
+    />
+  </label>
+
+  <div class="file-guidance">
+    <span>{{ 'files.allowedTypes' | translate }}: {{ allowedTypesLabelKey | translate }}</span>
+    <span>{{ 'files.maxSize' | translate }}: {{ maxSizeMegabytes | number:'1.0-0' }} {{ 'files.megabytes' | translate }}</span>
+  </div>
+
+  <div class="selections" *ngIf="selectedFileViews.length">
+    <strong class="selection-heading">
+      {{ (multiple ? 'files.selectedFiles' : 'files.selectedFile') | translate }}
+    </strong>
+    <div class="selection" *ngFor="let item of selectedFileViews; let index = index">
+      <img *ngIf="item.previewUrl" class="preview" [src]="item.previewUrl" [alt]="'files.imagePreview' | translate" />
+      <div class="selection-details">
+        <strong>{{ item.file.name }}</strong>
+        <span>{{ item.file.size / 1024 | number:'1.0-1' }} {{ 'files.kilobytes' | translate }}</span>
+      </div>
+      <button type="button" class="clear-action" [disabled]="loading" (click)="removeSelectedFile(index)">
+        {{ 'files.removeSelectedFile' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <p class="file-error" *ngIf="errorKey">{{ errorKey | translate }}</p>
+</div>

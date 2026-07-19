@@ -17,6 +17,7 @@ input:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 
 .vet, .detail, .state { padding: 20px; }
 .vet { position: relative; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
 .vet::before { content: "+"; position: absolute; inset-block-start: 18px; inset-inline-end: 18px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 12px; background: #fee2e2; color: #b91c1c; font-weight: 900; }
+.vet > div:first-child { padding-inline-end: 42px; }
 .vet:hover { transform: translateY(-4px); border-color: rgba(220,38,38,.28); box-shadow: var(--shadow-premium); }
 .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .badges span, .badge { border-radius: 999px; padding: 6px 10px; background: #ecfdf3; color: #047857; font-size: 12px; font-weight: 800; }
@@ -29,3 +30,35 @@ input:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 
 .instruction { margin-top: 8px; padding: 14px; border-radius: 14px; background: #fffbeb; color: #92400e; font-weight: 800; line-height: 1.5; }
 .error { padding: 10px 12px; border-radius: 8px; background: #fef2f2; color: var(--color-danger); }
 @media (max-width: 1100px) { .layout, .filters, .cards { grid-template-columns: 1fr; } .detail { position: static; } }
+
+@media (max-width: 560px) {
+  .page-head, .filters, .vet, .detail, .state, .alert {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  .filters {
+    gap: 12px;
+  }
+
+  .check {
+    align-items: flex-start;
+  }
+
+  .card-actions a,
+  .detail-actions a {
+    flex: 1 1 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .detail {
+    gap: 12px;
+  }
+}

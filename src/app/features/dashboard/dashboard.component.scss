@@ -229,7 +229,7 @@ h2 {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 767px) {
   .hero {
     min-height: auto;
     padding: 24px;
@@ -243,5 +243,34 @@ h2 {
   .summary-grid,
   .journey-steps {
     grid-template-columns: 1fr;
+  }
+
+  .status-card,
+  .summary-card {
+    min-height: 0;
+    padding: 18px;
+  }
+
+  .summary-card {
+    gap: 14px;
+  }
+
+  .summary-card strong {
+    font-size: 22px;
+  }
+
+  .journey-card {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard {
+    gap: 16px;
+  }
+
+  .status-row,
+  .summary-grid {
+    gap: 12px;
   }
 }

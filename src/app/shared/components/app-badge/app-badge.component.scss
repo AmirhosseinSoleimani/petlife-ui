@@ -1,6 +1,7 @@
 .app-badge {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   width: fit-content;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
@@ -9,6 +10,7 @@
   color: #3730a3;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1.25;
   box-shadow: 0 8px 18px rgba(15, 37, 48, 0.06);
 }
 

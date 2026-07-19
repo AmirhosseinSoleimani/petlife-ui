@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppLanguage, I18nService } from '../../../core/i18n/i18n.service';
@@ -16,7 +16,9 @@ interface NavItem {
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.scss']
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnDestroy {
+  isDrawerOpen = false;
+
   private readonly customerNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
     { labelKey: 'nav.pets', path: '/pets', icon: 'pets', enabled: true },
@@ -63,10 +65,41 @@ export class AppShellComponent {
   }
 
   logout(): void {
+    this.closeDrawer();
     this.authService.logout();
   }
 
   changeLanguage(language: AppLanguage): void {
     this.i18nService.useLanguage(language);
+  }
+
+  toggleDrawer(): void {
+    this.isDrawerOpen = !this.isDrawerOpen;
+    this.syncPageScroll();
+  }
+
+  closeDrawer(): void {
+    this.isDrawerOpen = false;
+    this.syncPageScroll();
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove('app-drawer-open');
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeDrawer();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth >= 1024) {
+      this.closeDrawer();
+    }
+  }
+
+  private syncPageScroll(): void {
+    document.body.classList.toggle('app-drawer-open', this.isDrawerOpen && window.innerWidth < 1024);
   }
 }

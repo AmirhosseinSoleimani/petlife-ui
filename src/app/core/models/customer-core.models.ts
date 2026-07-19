@@ -19,6 +19,7 @@ export interface Pet {
   primaryVetPhone?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface PetPayload {
@@ -52,6 +53,15 @@ export interface HealthRecordPayload {
   nextDueDate?: string;
   vetName?: string;
   reminderRequired: boolean;
+}
+
+export interface FileAsset {
+  id: string;
+  originalFileName: string;
+  contentType: string;
+  sizeBytes: number;
+  url?: string | null;
+  createdAt: string;
 }
 
 export interface HealthSummary {

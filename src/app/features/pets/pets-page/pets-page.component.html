@@ -21,6 +21,39 @@
       <app-input name="gender" label="Gender" type="select" placeholder="Select gender" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
       <app-input name="behaviourNotes" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.behaviourNotes"></app-input>
 
+      <section class="profile-image-section">
+        <h4>{{ 'pets.profileImage' | translate }}</h4>
+        <ng-container *ngIf="editingPet as petBeingEdited">
+          <div class="current-profile-image" *ngIf="petBeingEdited.profileImageUrl">
+            <img
+              *ngIf="profileImageSource(petBeingEdited) as profileImage"
+              class="pet-avatar pet-photo"
+              [src]="profileImage"
+              [alt]="'pets.currentProfileImage' | translate"
+            />
+            <span>{{ 'pets.currentProfileImage' | translate }}</span>
+          </div>
+        </ng-container>
+        <app-file-upload
+          #petImageUpload
+          [accept]="profileImageExtensions.join(',')"
+          [allowedExtensions]="profileImageExtensions"
+          [allowedContentTypes]="profileImageContentTypes"
+          allowedTypesLabelKey="files.petImageTypes"
+          [maxSizeBytes]="profileImageMaxSize"
+          [showImagePreview]="true"
+          [loading]="isSaving"
+          (filesChange)="onPetImageFilesChange($event)"
+        ></app-file-upload>
+        <app-button
+          *ngIf="editingPet?.profileImageUrl"
+          type="button"
+          variant="danger"
+          [loading]="removingImagePetId === editingPetId"
+          (buttonClick)="removeProfileImage()"
+        >{{ 'pets.removeProfileImage' | translate }}</app-button>
+      </section>
+
       <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
       <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
 
@@ -39,7 +72,13 @@
       <div class="cards" *ngIf="!isLoading && pets.length">
         <app-card class="pet-card" [interactive]="true" *ngFor="let pet of pets">
           <div class="card-head">
-            <span class="pet-avatar">{{ (pet.petName || 'P').charAt(0) }}</span>
+            <img
+              *ngIf="profileImageSource(pet) as profileImage"
+              class="pet-avatar pet-photo"
+              [src]="profileImage"
+              [alt]="pet.petName + ' - ' + ('pets.profileImage' | translate)"
+            />
+            <span *ngIf="!profileImageSource(pet)" class="pet-avatar">{{ (pet.petName || 'P').charAt(0) }}</span>
             <div>
               <h3>{{ pet.petName }}</h3>
               <p>{{ (pet.species || 'Pet') | translate }}<span *ngIf="pet.breed"> - {{ pet.breed }}</span></p>

@@ -200,6 +200,8 @@ form { display: grid; gap: 18px; }
     grid-template-columns: 1fr;
     gap: 28px;
     place-items: center;
+    align-content: start;
+    padding-top: 92px;
   }
 
   .login-copy {
@@ -216,5 +218,65 @@ form { display: grid; gap: 18px; }
   .login-panel {
     max-width: 440px;
     padding: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-page {
+    min-height: 100dvh;
+    gap: 18px;
+    padding: 78px 14px 24px;
+  }
+
+  .login-language {
+    inset-block-start: 12px;
+    inset-inline: 14px;
+  }
+
+  .login-language select {
+    width: 100%;
+  }
+
+  .login-copy {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .login-copy h1 {
+    font-size: clamp(32px, 11vw, 44px);
+  }
+
+  .login-copy p {
+    font-size: 15px;
+  }
+
+  .value-strip {
+    margin-top: 18px;
+  }
+
+  .benefit-grid {
+    display: none;
+  }
+
+  .brand:not(.compact) {
+    display: none;
+  }
+
+  .pitch-label {
+    margin-top: 0;
+  }
+
+  .login-panel {
+    max-width: 100%;
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .brand.compact {
+    margin-bottom: 22px;
+  }
+
+  h2 {
+    font-size: 25px;
   }
 }

@@ -28,4 +28,55 @@ button:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
 .danger { background: #fee2e2; color: #b91c1c; }
 .error { padding: 10px 12px; border-radius: 8px; background: #fef2f2; color: var(--color-danger); }
 .state { padding: 18px; color: var(--color-muted); }
-@media (max-width: 1020px) { .layout, .summary { grid-template-columns: 1fr; } }
+.attachments { display: grid; gap: 11px; min-width: 0; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.form-attachments { margin-top: 0; }
+.attachments h4 { margin: 0; color: #344054; }
+.attachment-subheading { color: #344054; font-size: 12px; }
+.attachment-state { color: var(--color-muted); font-size: 13px; }
+.attachment-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.attachment-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 10px; border-radius: 12px; background: #f8fafc; }
+.attachment-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.attachment-name { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.attachment-info small { flex: 0 0 auto; color: var(--color-muted); }
+.attachment-actions { display: flex; flex: 0 0 auto; gap: 7px; }
+@media (max-width: 1100px) { .layout, .summary { grid-template-columns: 1fr; } }
+
+@media (max-width: 560px) {
+  .page-head, .summary article, .panel, .record, .state {
+    border-radius: 18px;
+  }
+
+  .page-head, .summary article, .panel, .record, .state {
+    padding: 18px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  .timeline::before {
+    inset-inline-start: 6px;
+  }
+
+  .record {
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .record-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .actions button {
+    flex: 1 1 100%;
+  }
+
+  .attachment-list li, .attachment-info, .attachment-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .attachment-actions app-button { width: 100%; }
+}
