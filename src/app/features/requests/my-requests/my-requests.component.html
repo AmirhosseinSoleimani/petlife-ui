@@ -1,42 +1,43 @@
-<section class="requests-page">
-  <app-page-header
-    eyebrow="Marketplace lifecycle"
-    title="requests.myRequestsTitle"
-    description="requests.myRequestsSubtitle"
-  >
-    <a routerLink="/service-requests/new">{{ 'requests.newRequest' | translate }}</a>
+<section class="requests-page customer-requests-page">
+  <app-page-header eyebrow="requests.eyebrow" title="requests.title" description="requests.subtitle">
+    <a class="header-action" routerLink="/service-requests/new">{{ 'requests.newRequest' | translate }}</a>
   </app-page-header>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'Loading requests...' | translate }}</div>
-  <div *ngIf="!isLoading && !requests.length" class="state">{{ 'No service requests yet. Start one to see the lifecycle in motion.' | translate }}</div>
+  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
+  <section *ngIf="!isLoading && !requests.length" class="request-empty">
+    <span aria-hidden="true">↗</span><h3>{{ 'requests.emptyTitle' | translate }}</h3><p>{{ 'requests.emptyDescription' | translate }}</p><a routerLink="/service-requests/new">{{ 'requests.startRequest' | translate }}</a>
+  </section>
 
-  <div class="layout" *ngIf="!isLoading && requests.length">
-    <div class="list">
-      <app-card class="request-card" [interactive]="true" *ngFor="let request of requests" (click)="selectRequest(request)">
-        <div class="request-main">
-          <app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge>
-          <h3>{{ getServiceName(request) || ('requests.unknownService' | translate) }}</h3>
-          <div class="meta-row">
-            <span><strong>{{ 'requests.petLabel' | translate }}:</strong> {{ getPetName(request) || ('requests.unknownPet' | translate) }}</span>
-            <span><strong>{{ 'requests.providerLabel' | translate }}:</strong> {{ getProviderName(request) || ('requests.unknownProvider' | translate) }}</span>
-            <span *ngIf="getRequestDate(request)"><strong>{{ 'requests.requestedDate' | translate }}:</strong> {{ getRequestDate(request) }}</span>
+  <ng-container *ngIf="!isLoading && requests.length">
+    <nav class="status-tabs" [attr.aria-label]="'requests.filterLabel' | translate">
+      <button type="button" *ngFor="let filter of statusFilters" [class.active]="statusFilter === filter.value" (click)="statusFilter = filter.value">{{ filter.label | translate }} <span>{{ getFilterCount(filter.value) }}</span></button>
+    </nav>
+
+    <div class="request-layout">
+      <div class="request-list">
+        <p *ngIf="!filteredRequests.length" class="filter-empty">{{ 'requests.noStatusResults' | translate }}</p>
+        <app-card class="lifecycle-card" *ngFor="let request of filteredRequests" [attr.data-status]="getStatus(request).toLowerCase()" (click)="selectRequest(request)">
+          <div class="status-rail" aria-hidden="true"><span [class.reached]="getStatusStep(request) >= 1"></span><span [class.reached]="getStatusStep(request) >= 2"></span><span [class.reached]="getStatusStep(request) >= 3"></span></div>
+          <div class="request-card-content">
+            <div class="request-heading"><div><p class="request-kicker">{{ 'requests.careRequest' | translate }}</p><h3>{{ getServiceName(request) || ('requests.unknownService' | translate) }}</h3></div><app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge></div>
+            <div class="request-facts">
+              <span><small>{{ 'requests.petLabel' | translate }}</small><strong>{{ getPetName(request) || ('requests.unknownPet' | translate) }}</strong></span>
+              <span><small>{{ 'requests.providerLabel' | translate }}</small><strong>{{ getProviderName(request) || ('requests.unknownProvider' | translate) }}</strong></span>
+              <span><small>{{ 'requests.requestedDate' | translate }}</small><strong>{{ getRequestDate(request) ? (getRequestDate(request) | date:'mediumDate') : ('common.notAvailable' | translate) }}</strong></span>
+            </div>
+            <p class="request-message">{{ request.requestMessage || ('requests.noMessage' | translate) }}</p>
+            <button type="button" class="details-link">{{ 'requests.viewDetails' | translate }}</button>
           </div>
-        </div>
-        <p class="message"><strong>{{ 'requests.messageLabel' | translate }}:</strong> {{ request.requestMessage || ('requests.noMessage' | translate) }}</p>
+        </app-card>
+      </div>
+
+      <app-card class="request-detail" *ngIf="selectedRequest">
+        <div class="detail-status"><p>{{ 'requests.currentStatus' | translate }}</p><app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge></div>
+        <h3>{{ getServiceName(selectedRequest) || ('requests.unknownService' | translate) }}</h3>
+        <dl><div><dt>{{ 'requests.petLabel' | translate }}</dt><dd>{{ getPetName(selectedRequest) || ('requests.unknownPet' | translate) }}</dd></div><div><dt>{{ 'requests.providerLabel' | translate }}</dt><dd>{{ getProviderName(selectedRequest) || ('requests.unknownProvider' | translate) }}</dd></div><div><dt>{{ 'requests.requestedDate' | translate }}</dt><dd>{{ getRequestDate(selectedRequest) ? (getRequestDate(selectedRequest) | date:'mediumDate') : ('common.notAvailable' | translate) }}</dd></div></dl>
+        <div class="detail-message"><span>{{ 'requests.messageLabel' | translate }}</span><p>{{ selectedRequest.requestMessage || ('requests.noMessage' | translate) }}</p></div>
       </app-card>
     </div>
-
-    <app-card class="detail" *ngIf="selectedRequest">
-      <app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge>
-      <h3>{{ getServiceName(selectedRequest) || ('requests.unknownService' | translate) }}</h3>
-      <dl>
-        <div><dt>{{ 'requests.petLabel' | translate }}</dt><dd>{{ getPetName(selectedRequest) || ('requests.unknownPet' | translate) }}</dd></div>
-        <div><dt>{{ 'requests.providerLabel' | translate }}</dt><dd>{{ getProviderName(selectedRequest) || ('requests.unknownProvider' | translate) }}</dd></div>
-        <div><dt>{{ 'requests.requestedDate' | translate }}</dt><dd>{{ getRequestDate(selectedRequest) || ('N/A' | translate) }}</dd></div>
-      </dl>
-      <p>{{ selectedRequest.requestMessage || ('requests.noMessage' | translate) }}</p>
-    </app-card>
-  </div>
+  </ng-container>
 </section>
-

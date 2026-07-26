@@ -18,6 +18,14 @@ export class MyRequestsComponent implements OnInit {
   providerNameById: Record<string, string> = {};
   isLoading = false;
   errorMessage = '';
+  statusFilter: 'all' | 'active' | 'completed' | 'rejected' = 'all';
+
+  readonly statusFilters: Array<{ value: 'all' | 'active' | 'completed' | 'rejected'; label: string }> = [
+    { value: 'all', label: 'requests.filterAll' },
+    { value: 'active', label: 'requests.filterActive' },
+    { value: 'completed', label: 'requests.filterCompleted' },
+    { value: 'rejected', label: 'requests.filterRejected' }
+  ];
 
   constructor(private readonly apiService: ApiService) {}
 
@@ -90,6 +98,38 @@ export class MyRequestsComponent implements OnInit {
     }
   }
 
+  get filteredRequests(): ServiceRequest[] {
+    if (this.statusFilter === 'all') {
+      return this.requests;
+    }
+    return this.requests.filter((request) => {
+      const status = this.getStatus(request).toLowerCase();
+      if (this.statusFilter === 'active') {
+        return status !== 'completed' && status !== 'rejected';
+      }
+      return status === this.statusFilter;
+    });
+  }
+
+  getFilterCount(filter: 'all' | 'active' | 'completed' | 'rejected'): number {
+    if (filter === 'all') {
+      return this.requests.length;
+    }
+    return this.requests.filter((request) => {
+      const status = this.getStatus(request).toLowerCase();
+      return filter === 'active' ? status !== 'completed' && status !== 'rejected' : status === filter;
+    }).length;
+  }
+
+  getStatusStep(request: ServiceRequest): number {
+    switch (this.getStatus(request).toLowerCase()) {
+      case 'accepted': return 2;
+      case 'completed': return 3;
+      case 'rejected': return 3;
+      default: return 1;
+    }
+  }
+
   loadRequests(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -101,7 +141,7 @@ export class MyRequestsComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load service requests.';
+        this.errorMessage = 'requests.loadError';
         this.isLoading = false;
       }
     });

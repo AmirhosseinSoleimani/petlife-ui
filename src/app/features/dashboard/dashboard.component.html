@@ -1,46 +1,139 @@
 <section class="dashboard">
-  <app-page-header
-    eyebrow="PetLife value center"
-    title="A vertical SaaS operating system for pet care"
-    description="One workspace connects care identity, health tracking, spend visibility, and marketplace execution."
-  >
-    <div class="hero-badge" aria-hidden="true">
-      <span class="paw-dot one"></span>
-      <span class="paw-dot two"></span>
-      <span class="paw-dot three"></span>
-      <span class="paw-pad"></span>
+  <header class="care-welcome">
+    <div class="welcome-copy">
+      <p class="eyebrow">{{ 'dashboard.careOverview' | translate }}</p>
+      <h2>
+        {{ 'dashboard.welcomeBack' | translate }}<ng-container *ngIf="displayName">, {{ displayName }}</ng-container>.
+      </h2>
+      <p>{{ 'dashboard.welcomeSummary' | translate }}</p>
     </div>
-  </app-page-header>
+    <div class="pet-stack" *ngIf="pets.length; else welcomePaw" [attr.aria-label]="'dashboard.petsUnderCare' | translate">
+      <span class="stack-avatar" *ngFor="let pet of pets | slice:0:3">
+        <img *ngIf="profileImageSource(pet) as image" [src]="image" [alt]="pet.petName" />
+        <strong *ngIf="!profileImageSource(pet)">{{ (pet.petName || 'P').charAt(0) }}</strong>
+      </span>
+    </div>
+    <ng-template #welcomePaw>
+      <span class="welcome-paw" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
+      </span>
+    </ng-template>
+  </header>
 
-  <div class="status-row">
-    <app-card class="status-card">
-      <span>{{ 'dashboard.activeWorkspace' | translate }}</span>
-      <strong>{{ (userRole || 'Customer') | translate }}</strong>
-    </app-card>
-    <app-card class="status-card warm">
-      <span>{{ 'dashboard.productStage' | translate }}</span>
-      <strong>{{ 'dashboard.pitchReady' | translate }}</strong>
-    </app-card>
+  <div class="care-metrics">
+    <a class="metric-card teal" routerLink="/pets">
+      <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg></span>
+      <strong>{{ isLoadingPets ? '…' : petsLoadFailed ? '—' : pets.length }}</strong>
+      <span>{{ 'dashboard.petsUnderCare' | translate }}</span>
+    </a>
+    <a class="metric-card amber" routerLink="/reminders">
+      <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22a2.8 2.8 0 0 0 2.6-1.8H9.4A2.8 2.8 0 0 0 12 22Zm7-5-1.8-2.1V10a5.2 5.2 0 0 0-4-5.1V3a1.2 1.2 0 0 0-2.4 0v1.9a5.2 5.2 0 0 0-4 5.1v4.9L5 17v1h14v-1Z"/></svg></span>
+      <strong>{{ isLoadingReminders ? '…' : remindersLoadFailed ? '—' : reminders.length }}</strong>
+      <span>{{ 'dashboard.upcomingReminders' | translate }}</span>
+    </a>
+    <a class="metric-card blue" [routerLink]="pets.length ? ['/pets', pets[0].id, 'health-records'] : ['/pets']">
+      <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5V3Zm3 4v2h8V7H8Zm0 5v2h5v-2H8Zm0 5h8v-2H8v2Z"/></svg></span>
+      <strong>{{ isLoadingHealth ? '…' : healthLoadFailed ? '—' : healthRecords.length }}</strong>
+      <span>{{ 'dashboard.healthRecords' | translate }}</span>
+    </a>
+    <a class="metric-card coral" routerLink="/service-requests/my">
+      <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6V3Zm8 1.8V7h2.2L14 4.8ZM8 10h8V8H8v2Zm0 4h8v-2H8v2Zm0 4h5v-2H8v2Z"/></svg></span>
+      <strong>{{ isLoadingRequests ? '…' : requestsLoadFailed ? '—' : activeRequests.length }}</strong>
+      <span>{{ 'dashboard.activeRequests' | translate }}</span>
+    </a>
+    <a class="metric-card emergency" routerLink="/emergency-vets">
+      <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.3-9A5.6 5.6 0 0 1 12 5.8 5.6 5.6 0 0 1 21.3 12C19 16.6 12 21 12 21Zm-1-12v2H9v2h2v2h2v-2h2v-2h-2V9h-2Z"/></svg></span>
+      <strong class="action-value">{{ 'dashboard.findCare' | translate }}</strong>
+      <span>{{ 'dashboard.emergencyCare' | translate }}</span>
+    </a>
   </div>
 
-  <div class="summary-grid">
-    <app-card class="summary-card" [interactive]="true" *ngFor="let card of kpiCards" [ngClass]="card.accent">
-      <span class="summary-icon"></span>
-      <div>
-        <h3>{{ card.title | translate }}</h3>
-        <strong>{{ card.value | translate }}</strong>
-        <p>{{ card.text | translate }}</p>
-      </div>
-    </app-card>
-  </div>
+  <div class="care-layout">
+    <div class="primary-column">
+      <app-card class="care-panel upcoming-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">{{ 'dashboard.todayAndNext' | translate }}</p>
+            <h3>{{ 'dashboard.upcomingCare' | translate }}</h3>
+            <p>{{ 'dashboard.upcomingCareDescription' | translate }}</p>
+          </div>
+          <a routerLink="/reminders">{{ 'dashboard.viewAll' | translate }}</a>
+        </div>
 
-  <app-card class="journey-card">
-    <div>
-      <p class="eyebrow">{{ 'dashboard.platformLoop' | translate }}</p>
-      <h3>{{ 'dashboard.platformLoopTitle' | translate }}</h3>
+        <div *ngIf="isLoadingReminders" class="compact-state">{{ 'dashboard.loadingCare' | translate }}</div>
+        <div *ngIf="!isLoadingReminders && remindersLoadFailed" class="compact-state error-state">{{ 'dashboard.dataUnavailable' | translate }}</div>
+        <div *ngIf="!isLoadingReminders && !remindersLoadFailed && !upcomingCare.length" class="compact-state">
+          <span class="empty-icon" aria-hidden="true">✓</span>
+          <div><strong>{{ 'dashboard.noUpcomingCare' | translate }}</strong><p>{{ 'dashboard.noUpcomingCareDescription' | translate }}</p></div>
+          <a routerLink="/reminders">{{ 'dashboard.addReminder' | translate }}</a>
+        </div>
+        <div class="care-list" *ngIf="!isLoadingReminders && upcomingCare.length">
+          <article *ngFor="let reminder of upcomingCare">
+            <span class="date-tile"><strong>{{ reminder.dueDate | date:'d' }}</strong><small>{{ reminder.dueDate | date:'MMM' }}</small></span>
+            <div><h4>{{ reminder.title }}</h4><p>{{ getPetName(reminder.petId) || (reminder.reminderType | translate) }}</p></div>
+            <app-badge tone="warning">{{ (reminder.status || 'Upcoming') | translate }}</app-badge>
+          </article>
+        </div>
+      </app-card>
+
+      <app-card class="care-panel pets-panel">
+        <div class="section-head">
+          <div><p class="eyebrow">{{ 'dashboard.careCircle' | translate }}</p><h3>{{ 'dashboard.yourPets' | translate }}</h3><p>{{ 'dashboard.yourPetsDescription' | translate }}</p></div>
+          <a routerLink="/pets">{{ 'dashboard.managePets' | translate }}</a>
+        </div>
+        <div *ngIf="!isLoadingPets && !petsLoadFailed && !pets.length" class="compact-state">
+          <span class="empty-icon paw-small" aria-hidden="true">+</span>
+          <div><strong>{{ 'dashboard.noPets' | translate }}</strong><p>{{ 'dashboard.noPetsDescription' | translate }}</p></div>
+          <a routerLink="/pets" [queryParams]="{ action: 'add' }">{{ 'dashboard.addFirstPet' | translate }}</a>
+        </div>
+        <div class="pet-row" *ngIf="pets.length">
+          <a *ngFor="let pet of pets | slice:0:4" [routerLink]="['/pets', pet.id, 'health-records']">
+            <span class="pet-thumb">
+              <img *ngIf="profileImageSource(pet) as image" [src]="image" [alt]="pet.petName" />
+              <strong *ngIf="!profileImageSource(pet)">{{ (pet.petName || 'P').charAt(0) }}</strong>
+            </span>
+            <span><strong>{{ pet.petName }}</strong><small>{{ (pet.species || 'Pet') | translate }}<ng-container *ngIf="pet.breed"> · {{ pet.breed }}</ng-container></small></span>
+          </a>
+        </div>
+      </app-card>
     </div>
-    <div class="journey-steps">
-      <span *ngFor="let step of workflowSteps">{{ step | translate }}</span>
-    </div>
-  </app-card>
+
+    <aside class="side-column">
+      <app-card class="care-panel quick-panel">
+        <div class="section-head"><div><p class="eyebrow">{{ 'dashboard.shortcuts' | translate }}</p><h3>{{ 'dashboard.quickActions' | translate }}</h3></div></div>
+        <nav class="quick-grid" [attr.aria-label]="'dashboard.quickActions' | translate">
+          <a routerLink="/pets" [queryParams]="{ action: 'add' }"><span aria-hidden="true">+</span>{{ 'dashboard.addPet' | translate }}</a>
+          <a routerLink="/reminders"><span aria-hidden="true">✓</span>{{ 'dashboard.addReminder' | translate }}</a>
+          <a routerLink="/services"><span aria-hidden="true">⌕</span>{{ 'dashboard.browseServices' | translate }}</a>
+          <a routerLink="/emergency-vets" class="urgent"><span aria-hidden="true">+</span>{{ 'dashboard.findEmergencyVet' | translate }}</a>
+        </nav>
+      </app-card>
+
+      <app-card class="care-panel activity-panel">
+        <div class="section-head"><div><p class="eyebrow">{{ 'dashboard.healthHistory' | translate }}</p><h3>{{ 'dashboard.recentHealth' | translate }}</h3></div></div>
+        <div *ngIf="!isLoadingHealth && !recentHealthRecords.length" class="mini-empty">{{ (healthLoadFailed ? 'dashboard.dataUnavailable' : 'dashboard.noHealthRecords') | translate }}</div>
+        <div class="activity-list" *ngIf="recentHealthRecords.length">
+          <a *ngFor="let record of recentHealthRecords" [routerLink]="['/pets', record.petId, 'health-records']">
+            <span class="activity-dot"></span>
+            <span><strong>{{ record.title || (record.recordType | translate) }}</strong><small>{{ getPetName(record.petId) }}<ng-container *ngIf="record.recordDate"> · {{ record.recordDate | date:'mediumDate' }}</ng-container></small></span>
+          </a>
+        </div>
+      </app-card>
+
+      <app-card class="care-panel requests-panel">
+        <div class="section-head">
+          <div><p class="eyebrow">{{ 'dashboard.marketplace' | translate }}</p><h3>{{ 'dashboard.serviceRequests' | translate }}</h3></div>
+          <a routerLink="/service-requests/my">{{ 'dashboard.viewAll' | translate }}</a>
+        </div>
+        <div *ngIf="!isLoadingRequests && !recentRequests.length" class="mini-empty">{{ (requestsLoadFailed ? 'dashboard.dataUnavailable' : 'dashboard.noActiveRequests') | translate }}</div>
+        <div class="request-list" *ngIf="recentRequests.length">
+          <a *ngFor="let request of recentRequests" routerLink="/service-requests/my">
+            <span><strong>{{ getRequestServiceName(request) || ('dashboard.careService' | translate) }}</strong><small>{{ getRequestPetName(request) }}</small></span>
+            <app-badge [tone]="getRequestTone(request)">{{ (request.status || 'Requested') | translate }}</app-badge>
+          </a>
+        </div>
+        <a *ngIf="!isLoadingRequests && !requestsLoadFailed && !requests.length" class="panel-cta" routerLink="/services">{{ 'dashboard.browseCare' | translate }}</a>
+      </app-card>
+    </aside>
+  </div>
 </section>

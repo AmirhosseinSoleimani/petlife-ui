@@ -1,39 +1,57 @@
-<section class="page">
-  <app-page-header
-    eyebrow="Customer Core"
-    title="Reminders"
-    description="Prioritize daily care, upcoming appointments, and completed tasks at a glance."
-  ></app-page-header>
+<section class="page reminders-page">
+  <app-page-header eyebrow="reminders.eyebrow" title="reminders.title" description="reminders.subtitle">
+    <app-button type="button" (buttonClick)="openReminderEditor()">{{ 'reminders.add' | translate }}</app-button>
+  </app-page-header>
 
-  <div class="layout">
-    <form class="panel" (ngSubmit)="createReminder()" #reminderForm="ngForm">
-      <h3>{{ 'Create reminder' | translate }}</h3>
-      <app-input name="petId" label="Pet" type="select" placeholder="Select a pet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
-      <app-input name="title" label="Title" required [(ngModel)]="form.title"></app-input>
-      <app-input name="reminderType" label="Type" type="select" placeholder="Select type" [options]="reminderTypeOptions" [(ngModel)]="form.reminderType"></app-input>
-      <app-input name="dueDate" label="Due date" required type="date" [(ngModel)]="form.dueDate"></app-input>
-      <app-input name="description" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
-      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-      <app-button type="submit" [loading]="isSaving" [disabled]="reminderForm.invalid">{{ (isSaving ? 'Creating...' : 'Create reminder') | translate }}</app-button>
-    </form>
+  <p *ngIf="errorMessage && !isReminderEditorOpen" class="error page-message">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'reminders.loading' | translate }}</div>
+  <div *ngIf="!isLoading && loadFailed" class="state error-state">{{ 'reminders.unavailable' | translate }}</div>
 
-    <div class="list">
-      <div *ngIf="isLoading" class="state">{{ 'Loading reminders...' | translate }}</div>
-      <div *ngIf="!isLoading && !reminders.length" class="state">{{ 'No upcoming reminders.' | translate }}</div>
+  <section *ngIf="!isLoading && !loadFailed && !reminders.length" class="care-empty">
+    <span class="care-empty-icon" aria-hidden="true">✓</span>
+    <h3>{{ 'reminders.emptyTitle' | translate }}</h3>
+    <p>{{ 'reminders.emptyDescription' | translate }}</p>
+    <app-button type="button" (buttonClick)="openReminderEditor()">{{ 'reminders.addFirst' | translate }}</app-button>
+  </section>
 
-      <app-card class="reminder" [interactive]="true" *ngFor="let reminder of reminders">
-        <div>
-          <h3>{{ reminder.title }}</h3>
-          <p>{{ reminder.dueDate || ('No due date' | translate) }}</p>
+  <div class="reminder-groups" *ngIf="!isLoading && !loadFailed && reminders.length">
+    <section class="reminder-group" *ngFor="let group of reminderGroups">
+      <header>
+        <span class="group-dot" [class.warning]="group.tone === 'warning'" [class.success]="group.tone === 'success'"></span>
+        <div><h3>{{ group.label | translate }}</h3><p>{{ group.items.length }} {{ 'reminders.items' | translate }}</p></div>
+      </header>
+      <p *ngIf="!group.items.length" class="group-empty">{{ group.empty | translate }}</p>
+      <app-card class="reminder-card" *ngFor="let reminder of group.items">
+        <div class="reminder-date">
+          <strong>{{ reminder.dueDate ? (reminder.dueDate | date:'d') : '—' }}</strong>
+          <small>{{ reminder.dueDate ? (reminder.dueDate | date:'MMM') : ('reminders.unscheduled' | translate) }}</small>
         </div>
-        <app-badge [tone]="getPriorityTone(reminder)">{{ getPriorityLabel(reminder) | translate }}</app-badge>
-        <p class="notes">{{ reminder.description || ('No notes.' | translate) }}</p>
-        <div class="actions">
-          <app-button type="button" (buttonClick)="markDone(reminder)">{{ 'Done' | translate }}</app-button>
-          <app-button type="button" variant="secondary" (buttonClick)="snooze(reminder)">{{ 'Snooze' | translate }}</app-button>
+        <div class="reminder-copy">
+          <div class="reminder-title"><h4>{{ reminder.title }}</h4><app-badge [tone]="getPriorityTone(reminder)">{{ getPriorityLabel(reminder) | translate }}</app-badge></div>
+          <p class="reminder-meta">{{ getPetName(reminder) || ('reminders.unknownPet' | translate) }}<span *ngIf="reminder.reminderType"> · {{ reminder.reminderType | translate }}</span></p>
+          <p class="reminder-notes">{{ reminder.description || ('reminders.noNotes' | translate) }}</p>
+          <div class="reminder-actions" *ngIf="getPriorityLabel(reminder) !== 'Done'">
+            <app-button type="button" (buttonClick)="markDone(reminder)">{{ 'reminders.markDone' | translate }}</app-button>
+            <app-button type="button" variant="secondary" (buttonClick)="snooze(reminder)">{{ 'reminders.snooze' | translate }}</app-button>
+          </div>
         </div>
       </app-card>
-    </div>
+    </section>
   </div>
+
+  <app-modal [open]="isReminderEditorOpen" title="reminders.add" description="reminders.editorDescription" [closeOnBackdrop]="false" (closed)="closeReminderEditor()">
+    <form class="reminder-editor" (ngSubmit)="createReminder()" #reminderForm="ngForm">
+      <app-input name="petId" label="reminders.petLabel" type="select" placeholder="reminders.selectPet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
+      <app-input name="title" label="reminders.titleLabel" required [(ngModel)]="form.title"></app-input>
+      <app-input name="reminderType" label="reminders.typeLabel" type="select" placeholder="reminders.selectType" [options]="reminderTypeOptions" [(ngModel)]="form.reminderType"></app-input>
+      <app-input name="dueDate" label="reminders.dueDateLabel" required type="date" [(ngModel)]="form.dueDate"></app-input>
+      <app-input class="full-field" name="description" label="reminders.notesLabel" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
+      <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
+      <footer class="drawer-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeReminderEditor()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="reminderForm.invalid">{{ (isSaving ? 'reminders.creating' : 'reminders.create') | translate }}</app-button>
+      </footer>
+    </form>
+  </app-modal>
 </section>

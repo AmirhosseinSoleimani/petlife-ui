@@ -1,39 +1,102 @@
-<section class="page">
+<section class="page pets-page">
   <app-page-header
-    eyebrow="Customer identity layer"
-    title="Pets"
-    description="Each pet becomes the customer identity layer for records, spend, reminders, and services."
-  ></app-page-header>
+    eyebrow="pets.eyebrow"
+    title="pets.title"
+    description="pets.subtitle"
+  >
+    <app-button type="button" (buttonClick)="openCreatePet()">{{ 'pets.addPet' | translate }}</app-button>
+  </app-page-header>
 
-  <div class="layout">
-    <form class="panel" (ngSubmit)="savePet()" #petForm="ngForm">
-      <h3>{{ (editingPetId ? 'Edit pet' : 'Create pet') | translate }}</h3>
+  <div class="page-feedback error" *ngIf="errorMessage && !isPetEditorOpen">{{ errorMessage | translate }}</div>
+  <div class="page-feedback success" *ngIf="successMessage">{{ successMessage | translate }}</div>
 
-      <app-input name="petName" label="Name" required [(ngModel)]="form.petName"></app-input>
-      <app-input name="species" label="Species" type="select" placeholder="Select species" [options]="petTypeOptions" required [(ngModel)]="form.species"></app-input>
-      <app-input name="breed" label="Breed" [(ngModel)]="form.breed"></app-input>
+  <div class="pets-toolbar" *ngIf="!isLoading && pets.length">
+    <div>
+      <strong>{{ pets.length }}</strong>
+      <span>{{ 'pets.profileCount' | translate }}</span>
+    </div>
+    <p>{{ 'pets.collectionHint' | translate }}</p>
+  </div>
 
-      <div class="two">
-        <app-input name="approxAge" label="Age" [(ngModel)]="form.approxAge"></app-input>
-        <app-input name="weight" label="Weight" type="number" min="0" step="0.1" [(ngModel)]="form.weight"></app-input>
+  <div *ngIf="isLoading" class="state">{{ 'pets.loading' | translate }}</div>
+
+  <section *ngIf="!isLoading && !petsLoadFailed && !pets.length" class="pets-empty">
+    <span class="empty-paw" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
+    </span>
+    <h3>{{ 'pets.emptyTitle' | translate }}</h3>
+    <p>{{ 'pets.emptyDescription' | translate }}</p>
+    <app-button type="button" (buttonClick)="openCreatePet()">{{ 'pets.addFirstPet' | translate }}</app-button>
+  </section>
+
+  <div class="pet-grid" *ngIf="!isLoading && pets.length">
+    <app-card class="pet-profile-card" [interactive]="true" *ngFor="let pet of pets">
+      <div class="pet-visual" [class.has-photo]="profileImageSource(pet)">
+        <img
+          *ngIf="profileImageSource(pet) as profileImage"
+          [src]="profileImage"
+          [alt]="pet.petName + ' - ' + ('pets.profileImage' | translate)"
+        />
+        <div class="pet-placeholder" *ngIf="!profileImageSource(pet)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
+          <strong>{{ (pet.petName || 'P').charAt(0) }}</strong>
+        </div>
+        <app-badge tone="success">{{ (pet.gender || 'pets.profile') | translate }}</app-badge>
       </div>
 
-      <app-input name="gender" label="Gender" type="select" placeholder="Select gender" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
-      <app-input name="behaviourNotes" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.behaviourNotes"></app-input>
+      <div class="pet-identity">
+        <div>
+          <h3>{{ pet.petName }}</h3>
+          <p>{{ (pet.species || 'Pet') | translate }}<span *ngIf="pet.breed"> · {{ pet.breed }}</span></p>
+        </div>
+      </div>
 
-      <section class="profile-image-section">
-        <h4>{{ 'pets.profileImage' | translate }}</h4>
-        <ng-container *ngIf="editingPet as petBeingEdited">
-          <div class="current-profile-image" *ngIf="petBeingEdited.profileImageUrl">
-            <img
-              *ngIf="profileImageSource(petBeingEdited) as profileImage"
-              class="pet-avatar pet-photo"
-              [src]="profileImage"
-              [alt]="'pets.currentProfileImage' | translate"
-            />
-            <span>{{ 'pets.currentProfileImage' | translate }}</span>
-          </div>
-        </ng-container>
+      <dl class="pet-facts">
+        <div><dt>{{ 'pets.age' | translate }}</dt><dd>{{ pet.approxAge || ('N/A' | translate) }}</dd></div>
+        <div><dt>{{ 'pets.weight' | translate }}</dt><dd>{{ pet.weight || ('N/A' | translate) }}</dd></div>
+      </dl>
+
+      <div class="notes-preview">
+        <span>{{ 'pets.notes' | translate }}</span>
+        <p>{{ pet.behaviourNotes || pet.medicalNotes || ('pets.noNotes' | translate) }}</p>
+      </div>
+
+      <div class="pet-actions">
+        <a [routerLink]="['/pets', pet.id, 'health-records']">{{ 'pets.health' | translate }}</a>
+        <a [routerLink]="['/pets', pet.id, 'expenses']">{{ 'pets.expenses' | translate }}</a>
+        <app-button type="button" variant="ghost" (buttonClick)="editPet(pet)">{{ 'pets.edit' | translate }}</app-button>
+        <app-button type="button" variant="danger" (buttonClick)="deletePet(pet)">{{ 'pets.delete' | translate }}</app-button>
+      </div>
+    </app-card>
+  </div>
+
+  <app-modal
+    [open]="isPetEditorOpen"
+    [title]="editorTitleKey"
+    [description]="editorDescriptionKey"
+    [closeOnBackdrop]="false"
+    (closed)="closePetEditor()"
+  >
+    <form class="pet-editor-form" (ngSubmit)="savePet()" #petForm="ngForm">
+      <div class="editor-fields">
+        <app-input name="petName" label="Name" required [(ngModel)]="form.petName"></app-input>
+        <app-input name="species" label="Species" type="select" placeholder="Select species" [options]="petTypeOptions" required [(ngModel)]="form.species"></app-input>
+        <app-input class="full-field" name="breed" label="Breed" [(ngModel)]="form.breed"></app-input>
+        <app-input name="approxAge" label="Age" [(ngModel)]="form.approxAge"></app-input>
+        <app-input name="weight" label="Weight" type="number" min="0" step="0.1" [(ngModel)]="form.weight"></app-input>
+        <app-input class="full-field" name="gender" label="Gender" type="select" placeholder="Select gender" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
+        <app-input class="full-field" name="behaviourNotes" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.behaviourNotes"></app-input>
+      </div>
+
+      <section class="profile-image-editor">
+        <div class="editor-section-head">
+          <div><h3>{{ 'pets.profileImage' | translate }}</h3><p>{{ 'pets.profileImageHelp' | translate }}</p></div>
+          <ng-container *ngIf="editingPet as petBeingEdited">
+            <div class="current-profile-image" *ngIf="petBeingEdited.profileImageUrl">
+              <img *ngIf="profileImageSource(petBeingEdited) as currentImage" [src]="currentImage" [alt]="'pets.currentProfileImage' | translate" />
+            </div>
+          </ng-container>
+        </div>
         <app-file-upload
           #petImageUpload
           [accept]="profileImageExtensions.join(',')"
@@ -54,53 +117,14 @@
         >{{ 'pets.removeProfileImage' | translate }}</app-button>
       </section>
 
-      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+      <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
 
-      <div class="actions">
+      <footer class="editor-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closePetEditor()">{{ 'common.cancel' | translate }}</app-button>
         <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid">
-          {{ (isSaving ? 'Saving...' : editingPetId ? 'Save changes' : 'Create pet') | translate }}
+          {{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}
         </app-button>
-        <app-button type="button" variant="secondary" *ngIf="editingPetId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
-      </div>
+      </footer>
     </form>
-
-    <div class="content">
-      <div *ngIf="isLoading" class="state">{{ 'Loading pets...' | translate }}</div>
-      <div *ngIf="!isLoading && !pets.length" class="state">{{ 'No pet profiles yet. Add one to unlock the full PetLife care loop.' | translate }}</div>
-
-      <div class="cards" *ngIf="!isLoading && pets.length">
-        <app-card class="pet-card" [interactive]="true" *ngFor="let pet of pets">
-          <div class="card-head">
-            <img
-              *ngIf="profileImageSource(pet) as profileImage"
-              class="pet-avatar pet-photo"
-              [src]="profileImage"
-              [alt]="pet.petName + ' - ' + ('pets.profileImage' | translate)"
-            />
-            <span *ngIf="!profileImageSource(pet)" class="pet-avatar">{{ (pet.petName || 'P').charAt(0) }}</span>
-            <div>
-              <h3>{{ pet.petName }}</h3>
-              <p>{{ (pet.species || 'Pet') | translate }}<span *ngIf="pet.breed"> - {{ pet.breed }}</span></p>
-            </div>
-            <app-badge tone="success">{{ (pet.gender || 'Profile') | translate }}</app-badge>
-          </div>
-
-          <dl>
-            <div><dt>{{ 'Age' | translate }}</dt><dd>{{ pet.approxAge || ('N/A' | translate) }}</dd></div>
-            <div><dt>{{ 'Weight' | translate }}</dt><dd>{{ pet.weight || ('N/A' | translate) }}</dd></div>
-          </dl>
-
-          <p class="notes">{{ pet.behaviourNotes || pet.medicalNotes || ('No notes available.' | translate) }}</p>
-
-          <div class="card-actions">
-            <a [routerLink]="['/pets', pet.id, 'health-records']">{{ 'Health' | translate }}</a>
-            <a [routerLink]="['/pets', pet.id, 'expenses']">{{ 'Expenses' | translate }}</a>
-            <app-button type="button" variant="ghost" (buttonClick)="editPet(pet)">{{ 'Edit' | translate }}</app-button>
-            <app-button type="button" variant="danger" (buttonClick)="deletePet(pet)">{{ 'Delete' | translate }}</app-button>
-          </div>
-        </app-card>
-      </div>
-    </div>
-  </div>
+  </app-modal>
 </section>

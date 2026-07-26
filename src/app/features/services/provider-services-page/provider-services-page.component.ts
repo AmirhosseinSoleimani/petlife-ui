@@ -14,6 +14,7 @@ import { Provider, ProviderService } from '../../../core/models/marketplace.mode
 export class ProviderServicesPageComponent implements OnInit {
   services: ProviderService[] = [];
   categoryFilter = '';
+  searchTerm = '';
   providerId: string | null = null;
   selectedProviderName = '';
   selectedProviderIds = new Set<string>();
@@ -43,13 +44,24 @@ export class ProviderServicesPageComponent implements OnInit {
     return this.services.filter((service) => {
       const providerMatch = !this.providerId || this.getServiceProviderIds(service).some((id) => this.selectedProviderIds.has(id));
       const categoryMatch = !this.categoryFilter || (service.category || '').toLowerCase().includes(this.categoryFilter.toLowerCase());
-      return providerMatch && categoryMatch;
+      const search = this.searchTerm.trim().toLowerCase();
+      const searchMatch = !search || [this.getServiceName(service), this.getProviderName(service), service.description || '']
+        .some((value) => value.toLowerCase().includes(search));
+      return providerMatch && categoryMatch && searchMatch;
     });
+  }
+
+  get categoryOptions(): string[] {
+    return Array.from(new Set(this.services.map((service) => service.category).filter((category): category is string => !!category))).sort();
+  }
+
+  get pageEyebrow(): string {
+    return this.providerId ? 'services.providerEyebrow' : 'services.eyebrow';
   }
 
   get pageTitle(): string {
     if (!this.providerId) {
-      return 'Service Catalog';
+      return 'services.title';
     }
 
     return this.selectedProviderName
@@ -60,7 +72,7 @@ export class ProviderServicesPageComponent implements OnInit {
   get pageDescription(): string {
     return this.providerId
       ? 'services.providerServicesSubtitle'
-      : 'The monetizable layer: customer intent, clear pricing, provider context, and request conversion.';
+      : 'services.subtitle';
   }
 
   get emptyStateKey(): string {
@@ -68,7 +80,7 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   getServiceName(service: ProviderService): string {
-    return service.name || service.serviceName || 'Provider service';
+    return service.name || service.serviceName || this.i18nService.translate('services.serviceFallback');
   }
 
   getProviderName(service: ProviderService): string {
@@ -92,7 +104,7 @@ export class ProviderServicesPageComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load provider services.';
+        this.errorMessage = 'services.loadError';
         this.isLoading = false;
       }
     });

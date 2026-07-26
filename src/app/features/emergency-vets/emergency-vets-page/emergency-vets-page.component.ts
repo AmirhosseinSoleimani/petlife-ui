@@ -32,6 +32,7 @@ export class EmergencyVetsPageComponent implements OnInit {
   twentyFourHoursOnly = false;
   isLoading = false;
   errorMessage = '';
+  isDetailOpen = false;
 
   constructor(private readonly apiService: ApiService) {}
 
@@ -65,7 +66,7 @@ export class EmergencyVetsPageComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load emergency vets.';
+        this.errorMessage = 'emergency.loadError';
         this.isLoading = false;
       }
     });
@@ -75,11 +76,17 @@ export class EmergencyVetsPageComponent implements OnInit {
     this.apiService.get<ApiResponse<EmergencyVet>>(`/emergency-vets/${vet.id}`).subscribe({
       next: (response) => {
         this.selectedVet = response.data ? this.toViewModel(response.data) : vet;
+        this.isDetailOpen = true;
       },
       error: () => {
         this.selectedVet = vet;
+        this.isDetailOpen = true;
       }
     });
+  }
+
+  closeDetails(): void {
+    this.isDetailOpen = false;
   }
 
   websiteUrl(vet: EmergencyVetView): string {
@@ -88,6 +95,10 @@ export class EmergencyVetsPageComponent implements OnInit {
     }
 
     return /^https?:\/\//i.test(vet.website) ? vet.website : `https://${vet.website}`;
+  }
+
+  emailUrl(vet: EmergencyVetView): string {
+    return vet.email ? `mailto:${vet.email}` : '';
   }
 
   private toViewModel(vet: EmergencyVet): EmergencyVetView {

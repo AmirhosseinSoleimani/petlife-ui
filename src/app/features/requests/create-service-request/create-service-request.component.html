@@ -1,32 +1,52 @@
-<section class="request-page">
-  <app-page-header
-    eyebrow="Marketplace conversion"
-    title="Request a Service"
-    description="Capture structured demand so providers can accept, reject, schedule, and complete work with clarity."
-  ></app-page-header>
+<section class="request-page guided-request-page">
+  <app-page-header eyebrow="requestForm.eyebrow" title="requestForm.title" description="requestForm.subtitle" backLink="/services" backLabel="requestForm.backToServices"></app-page-header>
 
-  <div *ngIf="isLoading" class="state">{{ 'Loading request form...' | translate }}</div>
+  <div *ngIf="isLoading" class="state">{{ 'requestForm.loading' | translate }}</div>
 
-  <form *ngIf="!isLoading" class="panel" (ngSubmit)="submitRequest()" #requestForm="ngForm">
-    <app-input name="petId" label="Pet" type="select" placeholder="Select a pet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
-    <app-input name="providerServiceId" label="Provider service" type="select" placeholder="Select a service" [placeholderValue]="null" [options]="serviceOptions" required [(ngModel)]="form.providerServiceId"></app-input>
+  <form *ngIf="!isLoading" class="guided-form" (ngSubmit)="submitRequest()" #requestForm="ngForm">
+    <div class="request-steps">
+      <section class="request-step">
+        <span class="step-number">1</span>
+        <div class="step-content">
+          <div class="step-heading"><h3>{{ 'requestForm.choosePet' | translate }}</h3><p>{{ 'requestForm.choosePetHelp' | translate }}</p></div>
+          <app-input name="petId" label="requestForm.petLabel" type="select" placeholder="requestForm.selectPet" [placeholderValue]="null" [options]="petOptions" required [(ngModel)]="form.petId"></app-input>
+          <div class="selection-confirmation" *ngIf="selectedPet"><span class="selection-avatar">{{ (selectedPet.petName || 'P').charAt(0) }}</span><div><small>{{ 'requestForm.selectedPet' | translate }}</small><strong>{{ selectedPet.petName }}</strong><p>{{ (selectedPet.species || 'requestForm.petFallback') | translate }}<span *ngIf="selectedPet.breed"> · {{ selectedPet.breed }}</span></p></div></div>
+          <a *ngIf="!pets.length" routerLink="/pets" [queryParams]="{ action: 'add' }">{{ 'requestForm.addPetFirst' | translate }}</a>
+        </div>
+      </section>
 
-    <app-input name="requestedDate" label="Requested date" required type="date" [(ngModel)]="form.requestedDate"></app-input>
+      <section class="request-step">
+        <span class="step-number">2</span>
+        <div class="step-content">
+          <div class="step-heading"><h3>{{ 'requestForm.chooseService' | translate }}</h3><p>{{ 'requestForm.chooseServiceHelp' | translate }}</p></div>
+          <app-input name="providerServiceId" label="requestForm.serviceLabel" type="select" placeholder="requestForm.selectService" [placeholderValue]="null" [options]="serviceOptions" required [(ngModel)]="form.providerServiceId"></app-input>
+          <div class="selection-confirmation service-selection" *ngIf="selectedService"><span class="selection-avatar">{{ getServiceName(selectedService).charAt(0) }}</span><div><small>{{ (selectedService.category || 'services.petCare') | translate }}</small><strong>{{ getServiceName(selectedService) }}</strong><p>{{ getProviderName(selectedService) || ('services.providerUnavailable' | translate) }}</p></div><strong class="selection-price" *ngIf="selectedService.price != null">{{ selectedService.price | currency:(selectedService.currency || 'USD') }}</strong></div>
+          <a *ngIf="!services.length" routerLink="/services">{{ 'requestForm.browseServices' | translate }}</a>
+        </div>
+      </section>
 
-    <app-input
-      name="requestMessage"
-      label="Message"
-      type="textarea"
-      [rows]="5"
-      placeholder="Share timing, care notes or special requirements."
-      [(ngModel)]="form.requestMessage"
-    ></app-input>
+      <section class="request-step">
+        <span class="step-number">3</span>
+        <div class="step-content">
+          <div class="step-heading"><h3>{{ 'requestForm.details' | translate }}</h3><p>{{ 'requestForm.detailsHelp' | translate }}</p></div>
+          <app-input name="requestedDate" label="requestForm.dateLabel" required type="date" [(ngModel)]="form.requestedDate"></app-input>
+          <app-input name="requestMessage" label="requestForm.messageLabel" type="textarea" [rows]="5" placeholder="requestForm.messagePlaceholder" [(ngModel)]="form.requestMessage"></app-input>
+        </div>
+      </section>
+    </div>
 
-    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-    <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-
-    <app-button type="submit" [loading]="isSubmitting" [disabled]="requestForm.invalid">
-      {{ (isSubmitting ? 'Submitting...' : 'Submit request') | translate }}
-    </app-button>
+    <aside class="request-review">
+      <div class="review-heading"><span class="step-number">4</span><div><h3>{{ 'requestForm.review' | translate }}</h3><p>{{ 'requestForm.reviewHelp' | translate }}</p></div></div>
+      <dl class="review-list">
+        <div><dt>{{ 'requestForm.petLabel' | translate }}</dt><dd>{{ selectedPet?.petName || ('requestForm.notSelected' | translate) }}</dd></div>
+        <div><dt>{{ 'requestForm.serviceLabel' | translate }}</dt><dd>{{ selectedService ? getServiceName(selectedService) : ('requestForm.notSelected' | translate) }}</dd></div>
+        <div><dt>{{ 'requestForm.providerLabel' | translate }}</dt><dd>{{ selectedService ? (getProviderName(selectedService) || ('services.providerUnavailable' | translate)) : ('requestForm.notSelected' | translate) }}</dd></div>
+        <div><dt>{{ 'requestForm.dateLabel' | translate }}</dt><dd>{{ form.requestedDate ? (form.requestedDate | date:'mediumDate') : ('requestForm.notSelected' | translate) }}</dd></div>
+      </dl>
+      <p *ngIf="errorMessage" class="error form-message">{{ errorMessage | translate }}</p>
+      <p *ngIf="successMessage" class="success form-message">{{ successMessage | translate }}</p>
+      <app-button type="submit" [loading]="isSubmitting" [disabled]="requestForm.invalid">{{ (isSubmitting ? 'requestForm.submitting' : 'requestForm.submit') | translate }}</app-button>
+      <small>{{ 'requestForm.submitNote' | translate }}</small>
+    </aside>
   </form>
 </section>

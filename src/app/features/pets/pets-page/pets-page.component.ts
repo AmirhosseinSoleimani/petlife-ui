@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -32,33 +33,54 @@ export class PetsPageComponent implements OnInit {
   form: PetPayload = { ...emptyPetForm };
   editingPetId: string | null = null;
   isLoading = false;
+  petsLoadFailed = false;
   isSaving = false;
   errorMessage = '';
   successMessage = '';
   removingImagePetId: string | null = null;
   selectedPetImageFileForCreate: File | null = null;
   selectedPetImageFileForEdit: File | null = null;
+  isPetEditorOpen = false;
 
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.loadPets();
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('action') === 'add') {
+        window.setTimeout(() => this.openCreatePet());
+      }
+    });
   }
 
   get editingPet(): Pet | null {
     return this.pets.find((pet) => pet.id === this.editingPetId) || null;
   }
 
+  get editorTitleKey(): string {
+    return this.editingPetId ? 'pets.editPet' : 'pets.addPet';
+  }
+
+  get editorDescriptionKey(): string {
+    return this.editingPetId ? 'pets.editPetDescription' : 'pets.addPetDescription';
+  }
+
   loadPets(): void {
     this.isLoading = true;
+    this.petsLoadFailed = false;
     this.errorMessage = '';
 
     this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
       next: (response) => {
         this.pets = response.data || [];
+        this.petsLoadFailed = false;
         this.isLoading = false;
       },
       error: () => {
+        this.petsLoadFailed = true;
         this.errorMessage = 'Unable to load pets.';
         this.isLoading = false;
       }
@@ -103,6 +125,12 @@ export class PetsPageComponent implements OnInit {
     });
   }
 
+  openCreatePet(): void {
+    this.resetForm();
+    this.errorMessage = '';
+    this.isPetEditorOpen = true;
+  }
+
   editPet(pet: Pet): void {
     this.clearImageSelection();
     this.editingPetId = pet.id;
@@ -115,6 +143,17 @@ export class PetsPageComponent implements OnInit {
       weight: pet.weight ?? null,
       behaviourNotes: pet.behaviourNotes || ''
     };
+    this.errorMessage = '';
+    this.isPetEditorOpen = true;
+  }
+
+  closePetEditor(): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.isPetEditorOpen = false;
+    this.resetForm();
   }
 
   deletePet(pet: Pet): void {
@@ -178,6 +217,7 @@ export class PetsPageComponent implements OnInit {
 
   private finishPetSave(isEditing: boolean, uploadErrorKey = ''): void {
     this.isSaving = false;
+    this.isPetEditorOpen = false;
     this.resetForm();
     this.successMessage = isEditing ? 'Pet profile updated.' : 'Pet profile created.';
     this.loadPets();

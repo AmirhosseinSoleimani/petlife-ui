@@ -2,7 +2,7 @@
   <label class="login-language">
     <span>{{ 'language.label' | translate }}</span>
     <select [ngModel]="i18nService.currentLanguage" (ngModelChange)="changeLanguage($event)">
-      <option *ngFor="let option of languageOptions" [ngValue]="option.value">{{ option.label }}</option>
+      <option *ngFor="let option of languageOptions" [ngValue]="option.code">{{ option.labelKey | translate }}</option>
     </select>
   </label>
 

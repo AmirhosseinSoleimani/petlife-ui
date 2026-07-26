@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { AppLanguage, I18nService } from '../../../core/i18n/i18n.service';
+import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
 import { LoginRequest } from '../../../core/models/auth.models';
 
 @Component({
@@ -15,11 +15,7 @@ export class LoginComponent {
     email: '',
     password: ''
   };
-  readonly languageOptions: Array<{ label: string; value: AppLanguage }> = [
-    { label: 'English', value: 'en' },
-    { label: 'فارسی', value: 'fa' },
-    { label: 'Français', value: 'fr' }
-  ];
+  readonly languageOptions = SUPPORTED_LANGUAGES;
   isSubmitting = false;
   errorMessage = '';
 

@@ -1,36 +1,34 @@
-<section class="market-page">
-  <app-page-header
-    eyebrow="Marketplace ecosystem"
-    [title]="pageTitle"
-    [description]="pageDescription"
-  ></app-page-header>
+<section class="market-page services-page">
+  <app-page-header [eyebrow]="pageEyebrow" [title]="pageTitle" [description]="pageDescription"></app-page-header>
 
-  <div class="filters">
-    <app-input label="Category" placeholder="Search category" [(ngModel)]="categoryFilter"></app-input>
-    <a routerLink="/service-requests/new">{{ 'Request service' | translate }}</a>
-  </div>
+  <section class="filter-toolbar service-filters">
+    <div class="filter-copy"><strong>{{ 'services.findService' | translate }}</strong><span>{{ filteredServices.length }} {{ 'services.results' | translate }}</span></div>
+    <div class="filter-fields">
+      <app-input label="services.searchLabel" placeholder="services.searchPlaceholder" [(ngModel)]="searchTerm"></app-input>
+      <app-input label="services.categoryLabel" type="select" placeholder="services.allCategories" [options]="categoryOptions" [(ngModel)]="categoryFilter"></app-input>
+    </div>
+  </section>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'Loading services...' | translate }}</div>
-  <div *ngIf="!isLoading && !filteredServices.length" class="state">{{ emptyStateKey | translate }}</div>
+  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'services.loading' | translate }}</div>
+  <section *ngIf="!isLoading && !filteredServices.length" class="catalog-empty">
+    <span aria-hidden="true">⌕</span><h3>{{ emptyStateKey | translate }}</h3><p>{{ (providerId ? 'services.emptyProviderDescription' : 'services.emptyDescription') | translate }}</p>
+    <a *ngIf="!providerId" routerLink="/providers">{{ 'services.browseProviders' | translate }}</a>
+  </section>
 
-  <div class="cards" *ngIf="!isLoading && filteredServices.length">
-    <app-card class="service-card" [interactive]="true" *ngFor="let service of filteredServices">
-      <div class="card-head">
-        <span class="service-icon" aria-hidden="true"></span>
-        <app-badge tone="info">{{ (service.category || 'Pet care') | translate }}</app-badge>
+  <div class="service-grid" *ngIf="!isLoading && filteredServices.length">
+    <app-card class="market-service-card" *ngFor="let service of filteredServices">
+      <div class="service-card-head">
+        <span class="service-avatar" aria-hidden="true">{{ (getServiceName(service) || 'S').charAt(0) }}</span>
+        <app-badge tone="info">{{ (service.category || 'services.petCare') | translate }}</app-badge>
       </div>
-      <h3>{{ getServiceName(service) }}</h3>
-      <p class="provider">
-        <span>{{ (('services.providerLabel' | translate) === 'services.providerLabel' ? ('Provider' | translate) : ('services.providerLabel' | translate)) }}:</span>
-        {{ getProviderName(service) || ('services.providerUnavailable' | translate) }}
-      </p>
-      <p class="description">{{ service.description || ('No description provided.' | translate) }}</p>
-      <div class="meta">
-        <span>{{ service.price || 0 | currency:(service.currency || 'USD') }}</span>
-        <span>{{ service.durationMinutes || ('N/A' | translate) }} {{ 'min' | translate }}</span>
+      <div class="service-identity"><h3>{{ getServiceName(service) }}</h3><p><span>{{ 'services.byProvider' | translate }}</span> {{ getProviderName(service) || ('services.providerUnavailable' | translate) }}</p></div>
+      <p class="service-description">{{ service.description || ('services.descriptionFallback' | translate) }}</p>
+      <div class="service-commercials">
+        <div><span>{{ 'services.price' | translate }}</span><strong *ngIf="service.price != null">{{ service.price | currency:(service.currency || 'USD') }}</strong><strong *ngIf="service.price == null">{{ 'services.priceOnRequest' | translate }}</strong></div>
+        <div><span>{{ 'services.duration' | translate }}</span><strong>{{ service.durationMinutes ? (service.durationMinutes + ' ' + ('services.minutes' | translate)) : ('services.durationFlexible' | translate) }}</strong></div>
       </div>
-      <a routerLink="/service-requests/new">{{ 'Request service' | translate }}</a>
+      <a routerLink="/service-requests/new" [queryParams]="{ serviceId: service.id }">{{ 'services.request' | translate }}</a>
     </app-card>
   </div>
 </section>

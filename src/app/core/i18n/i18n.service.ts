@@ -2,7 +2,20 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-export type AppLanguage = 'en' | 'fa' | 'fr';
+export type AppLanguage = 'en' | 'fa' | 'fr' | 'es';
+
+export interface AppLanguageOption {
+  code: AppLanguage;
+  labelKey: string;
+  direction: 'ltr' | 'rtl';
+}
+
+export const SUPPORTED_LANGUAGES: readonly AppLanguageOption[] = [
+  { code: 'en', labelKey: 'language.english', direction: 'ltr' },
+  { code: 'fa', labelKey: 'language.persian', direction: 'rtl' },
+  { code: 'fr', labelKey: 'language.french', direction: 'ltr' },
+  { code: 'es', labelKey: 'language.spanish', direction: 'ltr' }
+];
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
@@ -31,8 +44,7 @@ export class I18nService {
         this.languageSubject.next(nextLanguage);
       },
       error: () => {
-        this.translations = {};
-        this.languageSubject.next(nextLanguage);
+        this.loadEnglishFallback();
       }
     });
   }
@@ -51,11 +63,31 @@ export class I18nService {
   }
 
   private normalizeLanguage(language: string): AppLanguage {
-    return language === 'fa' || language === 'fr' ? language : 'en';
+    return SUPPORTED_LANGUAGES.some((option) => option.code === language)
+      ? language as AppLanguage
+      : 'en';
   }
 
   private applyDocumentLanguage(language: AppLanguage): void {
+    const direction = SUPPORTED_LANGUAGES.find((option) => option.code === language)?.direction || 'ltr';
     document.documentElement.lang = language;
-    document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
+    document.documentElement.dir = direction;
+  }
+
+  private loadEnglishFallback(): void {
+    const fallbackLanguage: AppLanguage = 'en';
+    localStorage.setItem(this.storageKey, fallbackLanguage);
+    this.applyDocumentLanguage(fallbackLanguage);
+
+    this.http.get<Record<string, string>>('assets/i18n/en.json').subscribe({
+      next: (translations) => {
+        this.translations = translations || {};
+        this.languageSubject.next(fallbackLanguage);
+      },
+      error: () => {
+        this.translations = {};
+        this.languageSubject.next(fallbackLanguage);
+      }
+    });
   }
 }

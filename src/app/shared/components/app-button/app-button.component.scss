@@ -1,84 +1,54 @@
-:host {
-  display: inline-flex;
-  max-width: 100%;
-}
+:host { display: inline-flex; max-width: 100%; }
 
 .app-button {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  border: 0;
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-weight: 900;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  line-height: 1.25;
   text-align: center;
   cursor: pointer;
-  transition: transform 170ms ease, box-shadow 170ms ease, filter 170ms ease, background 170ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
-.app-button span:not(.spinner) {
-  min-width: 0;
-}
-
-@media (max-width: 430px) {
-  :host {
-    flex: 1 1 100%;
-  }
-
-  .app-button {
-    min-height: 46px;
-  }
-}
-
-.app-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-.app-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-}
+.app-button span:not(.spinner) { min-width: 0; }
+.app-button:hover:not(:disabled) { transform: translateY(-1px); }
+.app-button:active:not(:disabled) { transform: translateY(0); }
+.app-button:disabled { cursor: not-allowed; opacity: .58; }
+.app-button:focus-visible { outline: 3px solid rgba(11, 128, 120, .22); outline-offset: 2px; }
 
 .primary {
   color: #fff;
   background: var(--gradient-brand);
-  box-shadow: 0 13px 28px rgba(7, 156, 145, .18);
+  box-shadow: 0 8px 18px rgba(11, 128, 120, .16);
 }
-
-.primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-glow);
-}
-
-.secondary,
-.ghost {
-  color: var(--color-navy);
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(7, 156, 145, .16);
-}
-
-.ghost {
-  background: transparent;
-}
-
-.danger {
-  color: #ffffff;
-  background: linear-gradient(135deg, #dc2626, #f97360);
-}
+.primary:hover:not(:disabled) { box-shadow: var(--shadow-glow); }
+.secondary { color: var(--color-primary-dark); background: var(--color-surface); border-color: var(--color-border-strong); }
+.secondary:hover:not(:disabled) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.ghost { color: var(--color-text); background: transparent; }
+.ghost:hover:not(:disabled) { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.danger { color: #fff; background: var(--color-danger); box-shadow: 0 8px 18px rgba(198, 76, 76, .14); }
+.danger:hover:not(:disabled) { background: #aa3f3f; }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.42);
-  border-top-color: currentColor;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
+  opacity: .75;
   animation: spin 800ms linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 430px) {
+  :host { flex: 1 1 100%; }
+  .app-button { min-height: 46px; }
 }

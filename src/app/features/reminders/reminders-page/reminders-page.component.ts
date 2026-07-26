@@ -25,6 +25,8 @@ export class RemindersPageComponent implements OnInit {
   isSaving = false;
   errorMessage = '';
   successMessage = '';
+  isReminderEditorOpen = false;
+  loadFailed = false;
 
   constructor(private readonly apiService: ApiService) {}
 
@@ -33,6 +35,17 @@ export class RemindersPageComponent implements OnInit {
       label: pet.petName,
       value: pet.id
     }));
+  }
+
+  get reminderGroups(): Array<{ label: string; empty: string; tone: 'success' | 'warning' | 'info'; items: Reminder[] }> {
+    const completed = this.reminders.filter((reminder) => this.isCompleted(reminder));
+    const dueSoon = this.reminders.filter((reminder) => !this.isCompleted(reminder) && this.isDueSoon(reminder));
+    const upcoming = this.reminders.filter((reminder) => !this.isCompleted(reminder) && !this.isDueSoon(reminder));
+    return [
+      { label: 'reminders.dueSoon', empty: 'reminders.noDueSoon', tone: 'warning', items: dueSoon },
+      { label: 'reminders.upcoming', empty: 'reminders.noUpcomingGroup', tone: 'info', items: upcoming },
+      { label: 'reminders.completed', empty: 'reminders.noCompleted', tone: 'success', items: completed }
+    ];
   }
 
   ngOnInit(): void {
@@ -46,22 +59,25 @@ export class RemindersPageComponent implements OnInit {
         this.pets = response.data || [];
       },
       error: () => {
-        this.errorMessage = 'Unable to load pets.';
+        this.errorMessage = 'reminders.loadPetsError';
       }
     });
   }
 
   loadReminders(): void {
     this.isLoading = true;
+    this.loadFailed = false;
     this.errorMessage = '';
 
     this.apiService.get<ApiResponse<Reminder[]>>('/reminders/upcoming').subscribe({
       next: (response) => {
         this.reminders = response.data || [];
+        this.loadFailed = false;
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load reminders.';
+        this.loadFailed = true;
+        this.errorMessage = 'reminders.loadError';
         this.isLoading = false;
       }
     });
@@ -73,12 +89,13 @@ export class RemindersPageComponent implements OnInit {
     this.successMessage = '';
     this.apiService.post<ApiResponse<Reminder>>('/reminders', this.form).subscribe({
       next: () => {
-        this.form = { petId: null, title: '', dueDate: '', reminderType: '', description: '' };
-        this.successMessage = 'Reminder created.';
+        this.resetForm();
+        this.isReminderEditorOpen = false;
+        this.successMessage = 'reminders.createSuccess';
         this.loadReminders();
       },
       error: () => {
-        this.errorMessage = 'Unable to create reminder.';
+        this.errorMessage = 'reminders.createError';
         this.isSaving = false;
       },
       complete: () => {
@@ -87,16 +104,34 @@ export class RemindersPageComponent implements OnInit {
     });
   }
 
+  openReminderEditor(): void {
+    this.resetForm();
+    this.errorMessage = '';
+    this.isReminderEditorOpen = true;
+  }
+
+  closeReminderEditor(): void {
+    if (this.isSaving) {
+      return;
+    }
+    this.isReminderEditorOpen = false;
+    this.resetForm();
+  }
+
+  getPetName(reminder: Reminder): string {
+    return this.pets.find((pet) => pet.id === reminder.petId)?.petName || '';
+  }
+
   markDone(reminder: Reminder): void {
     this.errorMessage = '';
     this.successMessage = '';
     this.apiService.post<ApiResponse<unknown>>(`/reminders/${reminder.id}/done`, {}).subscribe({
       next: () => {
-        this.successMessage = 'Reminder marked done.';
+        this.successMessage = 'reminders.doneSuccess';
         this.loadReminders();
       },
       error: () => {
-        this.errorMessage = 'Unable to mark reminder done.';
+        this.errorMessage = 'reminders.doneError';
       }
     });
   }
@@ -106,11 +141,11 @@ export class RemindersPageComponent implements OnInit {
     this.successMessage = '';
     this.apiService.post<ApiResponse<unknown>>(`/reminders/${reminder.id}/snooze`, { snoozeUntil: this.getTomorrowDate() }).subscribe({
       next: () => {
-        this.successMessage = 'Reminder snoozed until tomorrow.';
+        this.successMessage = 'reminders.snoozeSuccess';
         this.loadReminders();
       },
       error: () => {
-        this.errorMessage = 'Unable to snooze reminder.';
+        this.errorMessage = 'reminders.snoozeError';
       }
     });
   }
@@ -131,7 +166,9 @@ export class RemindersPageComponent implements OnInit {
     const dueDate = new Date(reminder.dueDate);
     dueDate.setHours(0, 0, 0, 0);
 
-    return dueDate <= today ? 'Due now' : 'Upcoming';
+    const dueSoon = new Date(today);
+    dueSoon.setDate(today.getDate() + 3);
+    return dueDate <= dueSoon ? 'Due soon' : 'Upcoming';
   }
 
   getPriorityTone(reminder: Reminder): 'success' | 'warning' | 'info' {
@@ -141,7 +178,29 @@ export class RemindersPageComponent implements OnInit {
       return 'success';
     }
 
-    return label === 'Due now' ? 'warning' : 'info';
+    return label === 'Due soon' ? 'warning' : 'info';
+  }
+
+  private resetForm(): void {
+    this.form = { petId: null, title: '', dueDate: '', reminderType: '', description: '' };
+  }
+
+  private isCompleted(reminder: Reminder): boolean {
+    const status = (reminder.status || '').toLowerCase();
+    return status.includes('done') || status.includes('complete');
+  }
+
+  private isDueSoon(reminder: Reminder): boolean {
+    if (!reminder.dueDate) {
+      return false;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threshold = new Date(today);
+    threshold.setDate(today.getDate() + 3);
+    const dueDate = new Date(reminder.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate <= threshold;
   }
 
   private getTomorrowDate(): string {

@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy } from '@angular/core';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { AppLanguage, I18nService } from '../../../core/i18n/i18n.service';
+import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
 import { AuthUser } from '../../../core/models/auth.models';
 
 interface NavItem {
@@ -36,11 +36,7 @@ export class AppShellComponent implements OnDestroy {
     { labelKey: 'nav.serviceAreas', path: '/provider/service-areas', icon: 'emergency', enabled: true },
     { labelKey: 'nav.incomingRequests', path: '/provider/requests', icon: 'requests', enabled: true }
   ];
-  readonly languageOptions: Array<{ label: string; value: AppLanguage }> = [
-    { label: 'English', value: 'en' },
-    { label: 'فارسی', value: 'fa' },
-    { label: 'Français', value: 'fr' }
-  ];
+  readonly languageOptions = SUPPORTED_LANGUAGES;
   readonly currentUser: AuthUser | null = this.authService.getCurrentUser();
 
   constructor(

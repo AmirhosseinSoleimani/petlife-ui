@@ -1,119 +1,90 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
 .page-head {
   position: relative;
-  overflow: hidden;
+  isolation: isolate;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  align-items: flex-start;
-  border: 1px solid rgba(234, 223, 208, 0.8);
-  border-radius: 26px;
-  padding: 30px;
-  background:
-    radial-gradient(circle at 88% 16%, rgba(255,118,92,.13), transparent 22%),
-    radial-gradient(circle at 78% 80%, rgba(79,125,243,.12), transparent 24%),
-    linear-gradient(135deg, rgba(255,255,255,.98), rgba(240,253,250,.9));
-  box-shadow: var(--shadow-premium);
-  backdrop-filter: blur(14px);
+  gap: var(--space-xl);
+  padding: clamp(22px, 3vw, 32px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(120deg, var(--color-surface) 0%, var(--color-surface-soft) 72%, var(--color-primary-soft) 100%);
+  box-shadow: var(--shadow-soft);
 }
 
-.page-head > div:first-child {
-  min-width: 0;
+.page-head::before {
+  content: "";
+  position: absolute;
+  inset-block: 22px;
+  inset-inline-start: -1px;
+  width: 4px;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  background: var(--color-accent);
 }
+:host-context([dir='rtl']) .page-head::before { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
 
 .page-head::after {
   content: "";
   position: absolute;
-  inset-inline-end: 24px;
-  top: 20px;
-  width: 86px;
-  height: 86px;
-  border: 1px solid rgba(7, 156, 145, 0.12);
-  border-radius: 28px;
+  z-index: -1;
+  inset-inline-end: clamp(20px, 5vw, 64px);
+  top: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 34%, rgba(255,255,255,.95) 0 9%, transparent 10%),
-    radial-gradient(circle at 66% 34%, rgba(255,255,255,.95) 0 9%, transparent 10%),
-    radial-gradient(circle at 50% 23%, rgba(255,255,255,.95) 0 8%, transparent 9%),
-    radial-gradient(ellipse at 50% 64%, rgba(255,255,255,.95) 0 22%, transparent 23%),
-    var(--gradient-brand);
-  opacity: 0.7;
+    radial-gradient(circle at 34% 34%, rgba(11, 128, 120, .38) 0 7%, transparent 8%),
+    radial-gradient(circle at 66% 34%, rgba(11, 128, 120, .38) 0 7%, transparent 8%),
+    radial-gradient(circle at 50% 24%, rgba(11, 128, 120, .38) 0 6%, transparent 7%),
+    radial-gradient(ellipse at 50% 64%, rgba(11, 128, 120, .38) 0 18%, transparent 19%);
+  opacity: .28;
   pointer-events: none;
 }
 
+.page-head > div:first-child { min-width: 0; }
 a {
   display: inline-flex;
   margin-bottom: 10px;
   color: var(--color-primary);
-  font-weight: 900;
+  font-size: var(--font-size-caption);
+  font-weight: 800;
 }
-
+a:hover { color: var(--color-primary-dark); }
 .eyebrow,
 h2,
-.description {
-  margin: 0;
-}
-
+.description { margin: 0; }
 .eyebrow {
   color: var(--color-primary-dark);
-  font-size: 12px;
+  font-size: var(--font-size-badge);
   font-weight: 900;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
-
 h2 {
-  margin-top: 6px;
+  margin-top: 5px;
   color: var(--color-text);
-  font-size: clamp(30px, 4vw, 44px);
-  line-height: 1.12;
+  font-size: var(--font-size-page-title);
+  line-height: 1.15;
+  letter-spacing: -.035em;
 }
-
-.description {
-  max-width: 700px;
-  margin-top: 8px;
-  color: var(--color-muted);
-  line-height: 1.55;
-}
-
+.description { max-width: 720px; margin-top: 8px; color: var(--color-muted); line-height: 1.6; }
 .actions {
   position: relative;
   z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
   justify-content: flex-end;
+  gap: 10px;
 }
 
 @media (max-width: 767px) {
-  .page-head {
-    flex-direction: column;
-    gap: 16px;
-    padding: 22px;
-    border-radius: 20px;
-  }
-
-  h2 {
-    font-size: clamp(26px, 9vw, 34px);
-  }
-
-  .description {
-    max-width: 100%;
-  }
-
-  .actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
+  .page-head { flex-direction: column; align-items: stretch; gap: 18px; border-radius: var(--radius-lg); }
+  .page-head::after { opacity: .18; }
+  .actions { width: 100%; justify-content: flex-start; }
 }
 
 @media (max-width: 430px) {
-  .page-head {
-    padding: 18px;
-  }
-
-  h2 {
-    font-size: clamp(24px, 8vw, 30px);
-  }
+  .page-head { padding: 20px 18px; }
 }

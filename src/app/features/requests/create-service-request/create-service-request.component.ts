@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -29,7 +30,8 @@ export class CreateServiceRequestComponent implements OnInit {
 
   constructor(
     private readonly apiService: ApiService,
-    private readonly i18nService: I18nService
+    private readonly i18nService: I18nService,
+    private readonly route: ActivatedRoute
   ) {}
 
   get petOptions(): AppInputOption[] {
@@ -46,12 +48,20 @@ export class CreateServiceRequestComponent implements OnInit {
     }));
   }
 
+  get selectedPet(): Pet | null {
+    return this.pets.find((pet) => pet.id === this.form.petId) || null;
+  }
+
+  get selectedService(): ProviderService | null {
+    return this.services.find((service) => service.id === this.form.providerServiceId) || null;
+  }
+
   ngOnInit(): void {
     this.loadFormData();
   }
 
   getServiceName(service: ProviderService): string {
-    return service.name || service.serviceName || 'Provider service';
+    return service.name || service.serviceName || this.i18nService.translate('services.serviceFallback');
   }
 
   getProviderName(service: ProviderService): string {
@@ -74,7 +84,7 @@ export class CreateServiceRequestComponent implements OnInit {
         this.loadServices();
       },
       error: () => {
-        this.errorMessage = 'Unable to load pets.';
+        this.errorMessage = 'requestForm.loadPetsError';
         this.isLoading = false;
       }
     });
@@ -84,11 +94,15 @@ export class CreateServiceRequestComponent implements OnInit {
     this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
       next: (response) => {
         this.services = response.data || [];
+        const requestedServiceId = this.route.snapshot.queryParamMap.get('serviceId');
+        if (requestedServiceId && this.services.some((service) => service.id === requestedServiceId)) {
+          this.form.providerServiceId = requestedServiceId;
+        }
         this.loadProviders();
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load provider services.';
+        this.errorMessage = 'requestForm.loadServicesError';
         this.isLoading = false;
       }
     });
@@ -144,12 +158,12 @@ export class CreateServiceRequestComponent implements OnInit {
 
     this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', this.form).subscribe({
       next: () => {
-        this.successMessage = 'Service request created successfully.';
+        this.successMessage = 'requestForm.success';
         this.form = { petId: null, providerServiceId: null, requestMessage: '', requestedDate: '' };
         this.isSubmitting = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to create service request.';
+        this.errorMessage = 'requestForm.submitError';
         this.isSubmitting = false;
       }
     });
