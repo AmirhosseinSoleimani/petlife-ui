@@ -60,6 +60,14 @@ export class AppShellComponent implements OnDestroy {
     return (this.currentUser?.role || '').toLowerCase().includes('provider');
   }
 
+  get hubTitleKey(): string {
+    return this.isProvider ? 'dashboard.providerHub' : 'dashboard.customerHub';
+  }
+
+  get workspaceBadgeKey(): string {
+    return this.isProvider ? 'dashboard.providerWorkspace' : 'shell.workspaceBadge';
+  }
+
   logout(): void {
     this.closeDrawer();
     this.authService.logout();

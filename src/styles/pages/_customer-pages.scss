@@ -134,26 +134,27 @@ app-my-requests {
   .status-tabs button { min-height: 40px; display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; padding: 7px 11px; border: 1px solid var(--color-border); border-radius: var(--radius-pill); color: var(--color-muted); background: var(--color-surface); font: inherit; font-size: var(--font-size-caption); font-weight: 800; cursor: pointer; }
   .status-tabs button.active { border-color: var(--color-primary); color: var(--color-primary-dark); background: var(--color-primary-soft); }
   .status-tabs span { min-width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.8); font-size: 10px; }
-  .request-layout { display: grid; grid-template-columns: minmax(0,1fr) 330px; gap: 18px; align-items: start; }
-  .request-list { display: grid; gap: 12px; }
+  .request-layout { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) 330px; gap: 18px; align-items: start; }
+  .request-list { width: 100%; min-width: 0; display: grid; gap: 12px; }
   .filter-empty { margin: 0; padding: 30px; border-radius: var(--radius-lg); color: var(--color-muted); background: var(--color-surface); text-align: center; }
-  .lifecycle-card { position: relative; min-width: 0; display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 14px; cursor: pointer; }
-  .status-rail { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 0; }
+  .lifecycle-card { position: relative; width: 100%; min-width: 0; display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 14px; align-items: stretch; cursor: pointer; }
+  .status-rail { position: relative; grid-column: 1; grid-row: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 0; }
   .status-rail::before { content: ""; position: absolute; inset-block: 34px; width: 2px; background: var(--color-border); }
   .status-rail span { position: relative; z-index: 1; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--color-border-strong); box-shadow: 0 0 0 2px var(--color-border); }
   .status-rail span.reached { background: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-soft); }
   .lifecycle-card[data-status="rejected"] .status-rail span.reached { background: var(--color-danger); }
-  .request-card-content { min-width: 0; display: grid; gap: 12px; }
+  .request-card-content { width: 100%; min-width: 0; grid-column: 2; grid-row: 1; display: grid; gap: 12px; text-align: start; }
   .request-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .request-heading > div { min-width: 0; }
+  .request-heading app-badge { flex: 0 0 auto; }
   .request-kicker { margin: 0 0 3px; color: var(--color-primary); font-size: 10px; font-weight: 900; text-transform: uppercase; }
-  .request-heading h3 { margin: 0; overflow-wrap: anywhere; }
+  .request-heading h3 { margin: 0; overflow-wrap: break-word; word-break: normal; }
   .request-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
   .request-facts span { min-width: 0; display: grid; gap: 2px; padding: 9px 10px; border-radius: var(--radius-md); background: var(--color-surface-soft); }
   .request-facts small { color: var(--color-muted); font-size: 10px; font-weight: 800; }
-  .request-facts strong { overflow-wrap: anywhere; font-size: var(--font-size-caption); }
-  .request-message { margin: 0; color: var(--color-muted); font-size: var(--font-size-caption); line-height: 1.55; overflow-wrap: anywhere; }
-  .details-link { width: fit-content; padding: 0; border: 0; color: var(--color-primary); background: transparent; font: inherit; font-size: var(--font-size-caption); font-weight: 800; cursor: pointer; }
+  .request-facts strong { min-width: 0; overflow-wrap: break-word; word-break: normal; font-size: var(--font-size-caption); }
+  .request-message { min-width: 0; margin: 0; color: var(--color-muted); font-size: var(--font-size-caption); line-height: 1.55; overflow-wrap: break-word; word-break: normal; }
+  .details-link { width: fit-content; justify-self: start; padding: 0; border: 0; color: var(--color-primary); background: transparent; font: inherit; font-size: var(--font-size-caption); font-weight: 800; text-align: start; cursor: pointer; }
   .request-detail { position: sticky; inset-block-start: 100px; display: grid; gap: 16px; }
   .detail-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .detail-status p, .request-detail h3 { margin: 0; }
@@ -162,8 +163,8 @@ app-my-requests {
   .request-detail dl div { padding: 10px 12px; border-top: 1px solid var(--color-border); }
   .request-detail dl div:first-child { border-top: 0; }
   .request-detail dt, .detail-message span { color: var(--color-muted); font-size: 10px; font-weight: 800; }
-  .request-detail dd { margin: 2px 0 0; overflow-wrap: anywhere; }
-  .detail-message p { margin: 4px 0 0; color: var(--color-muted); overflow-wrap: anywhere; }
+  .request-detail dd { margin: 2px 0 0; overflow-wrap: break-word; word-break: normal; }
+  .detail-message p { margin: 4px 0 0; color: var(--color-muted); overflow-wrap: break-word; word-break: normal; }
 }
 
 app-create-service-request {
@@ -229,6 +230,8 @@ app-create-service-request {
   app-my-requests {
     .lifecycle-card { grid-template-columns: 14px minmax(0,1fr); padding: 16px; }
     .request-heading { flex-direction: column; }
+    .request-heading app-badge { align-self: flex-start; }
+    .details-link { width: 100%; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); text-align: center; }
   }
   app-create-service-request {
     .request-step { grid-template-columns: 1fr; padding: 18px; }

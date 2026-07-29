@@ -1,4 +1,169 @@
-<section class="dashboard">
+<section class="dashboard" [class.provider-dashboard]="isProvider">
+  <ng-container *ngIf="isProvider; else customerDashboard">
+    <header class="care-welcome provider-welcome">
+      <div class="welcome-copy">
+        <p class="eyebrow">{{ 'dashboard.providerWorkspace' | translate }}</p>
+        <h2>
+          {{ 'dashboard.providerWelcomeTitle' | translate }}<ng-container *ngIf="displayName">, {{ displayName }}</ng-container>.
+        </h2>
+        <p>{{ 'dashboard.providerWelcomeSubtitle' | translate }}</p>
+        <strong *ngIf="providerBusinessName" class="provider-business-name">{{ providerBusinessName }}</strong>
+      </div>
+      <span class="provider-welcome-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11h-5v-6H9v6H4Zm7-8h2V9h3V7h-3V5h-2v2H8v2h3v3Z"/></svg>
+      </span>
+    </header>
+
+    <div class="care-metrics provider-metrics">
+      <a class="metric-card teal" routerLink="/provider/services">
+        <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v4H5V5Zm0 6h14v8H5v-8Zm3 2v4h2v-4H8Zm4 0v4h4v-4h-4Z"/></svg></span>
+        <strong>{{ isLoadingProviderServices ? '…' : providerServicesLoadFailed ? '—' : publishedServices.length }}</strong>
+        <span>{{ 'dashboard.publishedServices' | translate }}</span>
+      </a>
+      <a class="metric-card blue" routerLink="/provider/service-areas">
+        <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8.5A2.5 2.5 0 1 0 12 7a2.5 2.5 0 0 0 0 5.5Z"/></svg></span>
+        <strong>{{ isLoadingServiceAreas ? '…' : serviceAreasLoadFailed ? '—' : serviceAreas.length }}</strong>
+        <span>{{ 'dashboard.serviceAreas' | translate }}</span>
+      </a>
+      <a class="metric-card amber" routerLink="/provider/requests">
+        <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6V3Zm2 7h8M8 14h8M8 18h5"/></svg></span>
+        <strong>{{ isLoadingProviderRequests ? '…' : providerRequestsLoadFailed ? '—' : newProviderRequests.length }}</strong>
+        <span>{{ 'dashboard.newRequests' | translate }}</span>
+      </a>
+      <a class="metric-card coral" routerLink="/provider/requests">
+        <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>
+        <strong>{{ isLoadingProviderRequests ? '…' : providerRequestsLoadFailed ? '—' : acceptedProviderRequests.length }}</strong>
+        <span>{{ 'dashboard.acceptedRequests' | translate }}</span>
+      </a>
+      <a class="metric-card completed" routerLink="/provider/requests">
+        <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm-4-9 2.5 2.5L16 9"/></svg></span>
+        <strong>{{ isLoadingProviderRequests ? '…' : providerRequestsLoadFailed ? '—' : completedProviderRequests.length }}</strong>
+        <span>{{ 'dashboard.completedRequests' | translate }}</span>
+      </a>
+    </div>
+
+    <div class="provider-dashboard-layout">
+      <div class="provider-main-column">
+        <app-card class="care-panel provider-request-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">{{ 'dashboard.latestIncomingRequests' | translate }}</p>
+              <h3>{{ 'dashboard.requestQueue' | translate }}</h3>
+              <p>{{ 'dashboard.requestQueueDescription' | translate }}</p>
+            </div>
+            <a routerLink="/provider/requests">{{ 'dashboard.reviewRequests' | translate }}</a>
+          </div>
+
+          <div *ngIf="isLoadingProviderRequests" class="mini-empty">{{ 'dashboard.loadingProviderData' | translate }}</div>
+          <div *ngIf="!isLoadingProviderRequests && providerRequestsLoadFailed" class="mini-empty error-state">{{ 'dashboard.providerDataUnavailable' | translate }}</div>
+          <div *ngIf="!isLoadingProviderRequests && !providerRequestsLoadFailed && !latestProviderRequests.length" class="mini-empty">{{ 'dashboard.noProviderRequests' | translate }}</div>
+          <div class="provider-request-preview" *ngIf="latestProviderRequests.length">
+            <a *ngFor="let request of latestProviderRequests" routerLink="/provider/requests">
+              <span class="request-preview-copy">
+                <span class="request-preview-heading">
+                  <strong>{{ getProviderRequestService(request) || ('providerRequests.unknownService' | translate) }}</strong>
+                  <app-badge [tone]="getRequestTone(request)">{{ getProviderRequestStatusKey(request) | translate }}</app-badge>
+                </span>
+                <small>
+                  {{ getProviderRequestCustomer(request) || ('providerRequests.unknownCustomer' | translate) }}
+                  <ng-container *ngIf="getProviderRequestPet(request)"> · {{ getProviderRequestPet(request) }}</ng-container>
+                  <ng-container *ngIf="request.requestedDate"> · {{ request.requestedDate | date:'mediumDate' }}</ng-container>
+                </small>
+                <span class="request-preview-message">{{ request.requestMessage || ('providerRequests.noCustomerNote' | translate) }}</span>
+              </span>
+            </a>
+          </div>
+        </app-card>
+
+        <app-card class="care-panel provider-services-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">{{ 'dashboard.serviceCatalog' | translate }}</p>
+              <h3>{{ 'dashboard.servicesSnapshot' | translate }}</h3>
+              <p>{{ 'dashboard.servicesSnapshotDescription' | translate }}</p>
+            </div>
+            <a routerLink="/provider/services">{{ 'dashboard.manageServices' | translate }}</a>
+          </div>
+
+          <div *ngIf="isLoadingProviderServices" class="mini-empty">{{ 'dashboard.loadingProviderData' | translate }}</div>
+          <div *ngIf="!isLoadingProviderServices && providerServicesLoadFailed" class="mini-empty error-state">{{ 'dashboard.providerDataUnavailable' | translate }}</div>
+          <div *ngIf="!isLoadingProviderServices && !providerServicesLoadFailed && !providerServices.length" class="provider-empty-action">
+            <span>{{ 'dashboard.noProviderServices' | translate }}</span>
+            <a routerLink="/provider/services">{{ 'dashboard.addService' | translate }}</a>
+          </div>
+          <div class="provider-service-preview" *ngIf="providerServices.length">
+            <article *ngFor="let service of providerServices | slice:0:4">
+              <div>
+                <small>{{ service.category || ('providerServices.categoryFallback' | translate) }}</small>
+                <strong>{{ service.serviceName || service.name || ('providerServices.serviceFallback' | translate) }}</strong>
+              </div>
+              <span>{{ service.price != null ? (service.price | currency:(service.currency || 'AUD')) : ('providerServices.priceNotSet' | translate) }}</span>
+              <span>{{ service.durationMinutes != null ? service.durationMinutes : ('providerServices.flexible' | translate) }}<ng-container *ngIf="service.durationMinutes != null"> {{ 'providerServices.minutes' | translate }}</ng-container></span>
+            </article>
+          </div>
+        </app-card>
+      </div>
+
+      <aside class="provider-side-column">
+        <app-card class="care-panel readiness-panel">
+          <div class="readiness-heading">
+            <div>
+              <p class="eyebrow">{{ 'dashboard.profileReadiness' | translate }}</p>
+              <h3>{{ 'dashboard.businessSetup' | translate }}</h3>
+            </div>
+            <strong>{{ providerDashboardLoading ? '…' : providerReadiness + '%' }}</strong>
+          </div>
+          <div class="readiness-track" role="progressbar" [attr.aria-label]="'dashboard.profileReadiness' | translate" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="providerReadiness">
+            <span [style.width.%]="providerReadiness"></span>
+          </div>
+          <div *ngIf="providerProfileLoadFailed" class="mini-empty error-state">{{ 'dashboard.providerDataUnavailable' | translate }}</div>
+          <ul class="readiness-list">
+            <li *ngFor="let item of providerProfileChecklist" [class.complete]="item.complete">
+              <span aria-hidden="true">{{ item.complete ? '✓' : '○' }}</span>
+              {{ item.label | translate }}
+            </li>
+          </ul>
+          <a class="panel-action" routerLink="/provider/profile">
+            {{ (providerProfile ? 'dashboard.editProviderProfile' : 'dashboard.createProviderProfile') | translate }}
+          </a>
+        </app-card>
+
+        <app-card class="care-panel coverage-panel">
+          <div class="section-head">
+            <div><p class="eyebrow">{{ 'dashboard.coverage' | translate }}</p><h3>{{ 'dashboard.coverageSnapshot' | translate }}</h3></div>
+            <a routerLink="/provider/service-areas">{{ 'dashboard.manageServiceAreas' | translate }}</a>
+          </div>
+          <div *ngIf="isLoadingServiceAreas" class="mini-empty">{{ 'dashboard.loadingProviderData' | translate }}</div>
+          <div *ngIf="!isLoadingServiceAreas && serviceAreasLoadFailed" class="mini-empty error-state">{{ 'dashboard.providerDataUnavailable' | translate }}</div>
+          <div *ngIf="!isLoadingServiceAreas && !serviceAreasLoadFailed && !serviceAreas.length" class="provider-empty-action">
+            <span>{{ 'dashboard.noServiceAreas' | translate }}</span>
+            <a routerLink="/provider/service-areas">{{ 'dashboard.addServiceArea' | translate }}</a>
+          </div>
+          <div class="coverage-preview" *ngIf="serviceAreas.length">
+            <a *ngFor="let area of serviceAreas | slice:0:4" routerLink="/provider/service-areas">
+              <span aria-hidden="true">⌖</span>
+              <span>
+                <strong>{{ area.suburb || ('providerAreas.areaFallback' | translate) }}</strong>
+                <small>{{ area.state }}<ng-container *ngIf="area.postcode"> · {{ area.postcode }}</ng-container></small>
+              </span>
+            </a>
+          </div>
+        </app-card>
+
+        <app-card class="care-panel provider-quick-panel">
+          <div class="section-head"><div><p class="eyebrow">{{ 'dashboard.shortcuts' | translate }}</p><h3>{{ 'dashboard.quickActions' | translate }}</h3></div></div>
+          <nav class="provider-quick-grid" [attr.aria-label]="'dashboard.quickActions' | translate">
+            <a routerLink="/provider/profile"><span aria-hidden="true">01</span>{{ 'dashboard.editProviderProfile' | translate }}</a>
+            <a routerLink="/provider/services"><span aria-hidden="true">02</span>{{ 'dashboard.addService' | translate }}</a>
+            <a routerLink="/provider/service-areas"><span aria-hidden="true">03</span>{{ 'dashboard.addServiceArea' | translate }}</a>
+            <a routerLink="/provider/requests"><span aria-hidden="true">04</span>{{ 'dashboard.reviewRequests' | translate }}</a>
+          </nav>
+        </app-card>
+      </aside>
+    </div>
+  </ng-container>
+
+  <ng-template #customerDashboard>
   <header class="care-welcome">
     <div class="welcome-copy">
       <p class="eyebrow">{{ 'dashboard.careOverview' | translate }}</p>
@@ -136,4 +301,5 @@
       </app-card>
     </aside>
   </div>
+  </ng-template>
 </section>

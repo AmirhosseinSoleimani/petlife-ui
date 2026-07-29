@@ -20,6 +20,7 @@ const emptyAreaForm: ServiceAreaPayload = {
 export class ProviderServiceAreasComponent implements OnInit {
   areas: ServiceArea[] = [];
   form: ServiceAreaPayload = { ...emptyAreaForm };
+  isEditorOpen = false;
   isLoading = false;
   isSaving = false;
   errorMessage = '';
@@ -41,7 +42,7 @@ export class ProviderServiceAreasComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load service areas.';
+        this.errorMessage = 'providerAreas.loadError';
         this.isLoading = false;
       }
     });
@@ -54,12 +55,13 @@ export class ProviderServiceAreasComponent implements OnInit {
 
     this.apiService.post<ApiResponse<ServiceArea>>('/service-areas', this.toPayload()).subscribe({
       next: () => {
-        this.successMessage = 'Service area added.';
+        this.successMessage = 'providerAreas.addSuccess';
         this.form = { ...emptyAreaForm };
+        this.isEditorOpen = false;
         this.loadAreas();
       },
       error: () => {
-        this.errorMessage = 'Unable to add service area.';
+        this.errorMessage = 'providerAreas.addError';
       },
       complete: () => {
         this.isSaving = false;
@@ -73,13 +75,29 @@ export class ProviderServiceAreasComponent implements OnInit {
 
     this.apiService.delete<ApiResponse<unknown>>(`/service-areas/${area.id}`).subscribe({
       next: () => {
-        this.successMessage = 'Service area removed.';
+        this.successMessage = 'providerAreas.removeSuccess';
         this.loadAreas();
       },
       error: () => {
-        this.errorMessage = 'Unable to remove service area.';
+        this.errorMessage = 'providerAreas.removeError';
       }
     });
+  }
+
+  openEditor(): void {
+    this.form = { ...emptyAreaForm };
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isEditorOpen = true;
+  }
+
+  closeEditor(): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.form = { ...emptyAreaForm };
+    this.isEditorOpen = false;
   }
 
   private toPayload(): ServiceAreaPayload {

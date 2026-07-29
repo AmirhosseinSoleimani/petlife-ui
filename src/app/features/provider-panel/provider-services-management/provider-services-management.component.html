@@ -1,57 +1,127 @@
-<section class="provider-page">
+<section class="provider-workspace provider-services-page">
   <app-page-header
-    eyebrow="Provider Panel"
-    title="My Services"
-    description="Create and manage the pet-care services customers can request from your business."
-  ></app-page-header>
+    eyebrow="providerServices.eyebrow"
+    title="providerServices.title"
+    description="providerServices.subtitle"
+  >
+    <app-button type="button" (buttonClick)="openCreateService()">
+      {{ 'providerServices.add' | translate }}
+    </app-button>
+  </app-page-header>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+  <p *ngIf="errorMessage && !isEditorOpen" class="provider-notice error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="provider-notice success">{{ successMessage | translate }}</p>
 
-  <div class="layout">
-    <form class="panel" (ngSubmit)="saveService()" #serviceForm="ngForm">
-      <h3>{{ (editingId ? 'Edit service' : 'Create service') | translate }}</h3>
-      <app-input name="serviceName" label="Service name" required [(ngModel)]="form.serviceName"></app-input>
-      <app-input name="category" label="Category" type="select" placeholder="Select category" [options]="categoryOptions" [(ngModel)]="form.category"></app-input>
-      <app-input name="description" label="Description" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
-      <div class="two">
-        <app-input name="price" label="Price" type="number" min="0" step="0.01" required [(ngModel)]="form.price"></app-input>
-        <app-input name="currency" label="Currency" required [(ngModel)]="form.currency"></app-input>
+  <div class="catalog-summary">
+    <div>
+      <span>{{ 'providerServices.total' | translate }}</span>
+      <strong>{{ services.length }}</strong>
+    </div>
+    <div>
+      <span>{{ 'providerServices.active' | translate }}</span>
+      <strong>{{ activeServicesCount }}</strong>
+    </div>
+    <p>{{ 'providerServices.summaryHelp' | translate }}</p>
+  </div>
+
+  <div *ngIf="isLoading" class="provider-state">
+    <span class="provider-state-icon" aria-hidden="true">···</span>
+    <h3>{{ 'providerServices.loading' | translate }}</h3>
+  </div>
+
+  <div *ngIf="!isLoading && !services.length" class="provider-empty">
+    <div class="provider-empty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M5 7h14M7 4v6M17 4v6M5 11h14v9H5zM9 15h6"/></svg>
+    </div>
+    <h3>{{ 'providerServices.emptyTitle' | translate }}</h3>
+    <p>{{ 'providerServices.emptyDescription' | translate }}</p>
+    <app-button type="button" (buttonClick)="openCreateService()">{{ 'providerServices.addFirst' | translate }}</app-button>
+  </div>
+
+  <div *ngIf="!isLoading && services.length" class="service-catalog">
+    <app-card class="provider-service-card" *ngFor="let service of services">
+      <div class="service-card-top">
+        <div class="service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+        </div>
+        <app-badge [tone]="service.isActive === false ? 'neutral' : 'success'">
+          {{ (service.isActive === false ? 'providerServices.inactiveStatus' : 'providerServices.activeStatus') | translate }}
+        </app-badge>
       </div>
-      <app-input name="durationMinutes" label="Duration minutes" type="number" min="0" required [(ngModel)]="form.durationMinutes"></app-input>
-      <app-input name="isActive" label="Service active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
-      <div class="actions">
-        <app-button type="submit" [loading]="isSaving" [disabled]="serviceForm.invalid">
-          {{ (isSaving ? 'Saving...' : editingId ? 'Save service' : 'Create service') | translate }}
+      <div class="service-card-copy">
+        <p>{{ service.category || ('providerServices.categoryFallback' | translate) }}</p>
+        <h3>{{ getServiceName(service) || ('providerServices.serviceFallback' | translate) }}</h3>
+        <span>{{ service.description || ('providerServices.noDescription' | translate) }}</span>
+      </div>
+      <div class="service-metrics">
+        <div>
+          <span>{{ 'providerServices.price' | translate }}</span>
+          <strong>{{ service.price != null ? (service.price | currency:(service.currency || 'AUD')) : ('providerServices.priceNotSet' | translate) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'providerServices.duration' | translate }}</span>
+          <strong>{{ service.durationMinutes != null ? service.durationMinutes : ('providerServices.flexible' | translate) }}<ng-container *ngIf="service.durationMinutes != null"> {{ 'providerServices.minutes' | translate }}</ng-container></strong>
+        </div>
+      </div>
+      <div class="provider-card-actions">
+        <app-button type="button" variant="secondary" (buttonClick)="editService(service)">
+          {{ 'common.edit' | translate }}
         </app-button>
-        <app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
+        <app-button type="button" variant="ghost" (buttonClick)="deleteService(service)">
+          {{ 'common.delete' | translate }}
+        </app-button>
+      </div>
+    </app-card>
+  </div>
+
+  <app-modal
+    [open]="isEditorOpen"
+    [title]="editingId ? 'providerServices.editTitle' : 'providerServices.createTitle'"
+    description="providerServices.editorDescription"
+    (closed)="closeEditor()"
+  >
+    <form class="provider-form" (ngSubmit)="saveService()" #serviceForm="ngForm">
+      <p *ngIf="errorMessage" class="provider-notice error">{{ errorMessage | translate }}</p>
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>01</span>
+          <div>
+            <h3>{{ 'providerServices.serviceDetails' | translate }}</h3>
+            <p>{{ 'providerServices.serviceDetailsHelp' | translate }}</p>
+          </div>
+        </div>
+        <app-input name="serviceName" label="providerServices.name" required [(ngModel)]="form.serviceName"></app-input>
+        <app-input
+          name="category"
+          label="providerServices.category"
+          type="select"
+          placeholder="providerServices.selectCategory"
+          [options]="categoryOptions"
+          [(ngModel)]="form.category"
+        ></app-input>
+        <app-input name="description" label="providerServices.description" type="textarea" [rows]="4" [(ngModel)]="form.description"></app-input>
+      </div>
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>02</span>
+          <div>
+            <h3>{{ 'providerServices.pricingTitle' | translate }}</h3>
+            <p>{{ 'providerServices.pricingHelp' | translate }}</p>
+          </div>
+        </div>
+        <div class="provider-form-grid two">
+          <app-input name="price" label="providerServices.price" type="number" min="0" step="0.01" required [(ngModel)]="form.price"></app-input>
+          <app-input name="currency" label="providerServices.currency" required [(ngModel)]="form.currency"></app-input>
+        </div>
+        <app-input name="durationMinutes" label="providerServices.durationMinutes" type="number" min="0" required [(ngModel)]="form.durationMinutes"></app-input>
+        <app-input name="isActive" label="providerServices.serviceActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      </div>
+      <div class="provider-form-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="serviceForm.invalid">
+          {{ (isSaving ? 'providerServices.saving' : editingId ? 'providerServices.save' : 'providerServices.create') | translate }}
+        </app-button>
       </div>
     </form>
-
-    <div class="list">
-      <div *ngIf="isLoading" class="state">{{ 'Loading your services...' | translate }}</div>
-      <div *ngIf="!isLoading && !services.length" class="state">{{ 'No services yet. Add your first provider service.' | translate }}</div>
-
-      <app-card class="service-card" [interactive]="true" *ngFor="let service of services">
-        <div class="card-head">
-          <div>
-            <h3>{{ getServiceName(service) }}</h3>
-            <p>{{ (service.category || 'Pet care') | translate }}</p>
-          </div>
-          <app-badge [tone]="service.isActive === false ? 'neutral' : 'success'">
-            {{ (service.isActive === false ? 'Inactive' : 'Active') | translate }}
-          </app-badge>
-        </div>
-        <p>{{ service.description || ('No description provided.' | translate) }}</p>
-        <div class="meta">
-          <strong>{{ service.price || 0 | currency:(service.currency || 'AUD') }}</strong>
-          <span>{{ service.durationMinutes || ('N/A' | translate) }} {{ 'min' | translate }}</span>
-        </div>
-        <div class="actions">
-          <app-button type="button" variant="secondary" (buttonClick)="editService(service)">{{ 'Edit' | translate }}</app-button>
-          <app-button type="button" variant="danger" (buttonClick)="deleteService(service)">{{ 'Delete' | translate }}</app-button>
-        </div>
-      </app-card>
-    </div>
-  </div>
+  </app-modal>
 </section>

@@ -113,10 +113,13 @@ export interface ServiceRequest {
     id?: string;
     petName?: string;
     name?: string;
+    species?: string;
+    breed?: string;
   };
   providerServiceId?: string;
   providerService?: ProviderService;
   serviceName?: string;
+  serviceCategory?: string;
   providerServiceName?: string;
   providerBusinessName?: string;
   businessName?: string;
@@ -125,6 +128,9 @@ export interface ServiceRequest {
   customerUserId?: string;
   providerUserId?: string;
   customerName?: string;
+  customerEmail?: string;
+  petSpecies?: string;
+  petBreed?: string;
   rejectionReason?: string;
   completedDate?: string;
 }

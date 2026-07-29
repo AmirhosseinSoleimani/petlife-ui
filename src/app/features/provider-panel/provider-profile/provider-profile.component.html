@@ -1,54 +1,169 @@
-<section class="provider-page">
+<section class="provider-workspace provider-profile-page">
   <app-page-header
-    eyebrow="Provider Panel"
-    title="Provider Profile"
-    description="Keep your business profile ready for PetLife customers searching for trusted care."
-  ></app-page-header>
+    eyebrow="providerProfile.eyebrow"
+    title="providerProfile.title"
+    description="providerProfile.subtitle"
+  >
+    <app-button *ngIf="hasProfile" type="button" variant="secondary" (buttonClick)="openEditor()">
+      {{ 'providerProfile.edit' | translate }}
+    </app-button>
+  </app-page-header>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'Loading provider profile...' | translate }}</div>
+  <p *ngIf="errorMessage && !isEditorOpen" class="provider-notice error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="provider-notice success">{{ successMessage | translate }}</p>
 
-  <div class="layout" *ngIf="!isLoading">
-    <form class="panel" (ngSubmit)="saveProfile()" #profileForm="ngForm">
-      <h3>{{ (hasProfile ? 'Update business profile' : 'Create business profile') | translate }}</h3>
-      <app-input name="businessName" label="Business name" required [(ngModel)]="form.businessName"></app-input>
-      <app-input name="contactName" label="Contact name" [(ngModel)]="form.contactName"></app-input>
-      <div class="two">
-        <app-input name="phoneNumber" label="Phone" [(ngModel)]="form.phoneNumber"></app-input>
-        <app-input name="email" label="Email" type="email" [(ngModel)]="form.email"></app-input>
-      </div>
-      <app-input name="websiteUrl" label="Website" [(ngModel)]="form.websiteUrl"></app-input>
-      <app-input name="businessDescription" label="Description" type="textarea" [rows]="4" [(ngModel)]="form.businessDescription"></app-input>
-      <app-input name="addressLine1" label="Address" [(ngModel)]="form.addressLine1"></app-input>
-      <div class="three">
-        <app-input name="suburb" label="Suburb" [(ngModel)]="form.suburb"></app-input>
-        <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
-        <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
-      </div>
-      <app-input name="isActive" label="Profile active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
-      <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid">
-        {{ (isSaving ? 'Saving...' : hasProfile ? 'Save profile' : 'Create profile') | translate }}
-      </app-button>
-    </form>
-
-    <app-card class="detail" *ngIf="profile">
-      <app-badge [tone]="statusTone">{{ statusLabel | translate }}</app-badge>
-      <h3>{{ profile.businessName || ('Provider profile' | translate) }}</h3>
-      <p>{{ profile.businessDescription || profile.description || ('No business description yet.' | translate) }}</p>
-      <dl>
-        <div><dt>{{ 'Contact' | translate }}</dt><dd>{{ profile.contactName || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Phone' | translate }}</dt><dd>{{ profile.phoneNumber || profile.phone || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Email' | translate }}</dt><dd>{{ profile.email || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Website' | translate }}</dt><dd>{{ profile.websiteUrl || profile.website || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Area' | translate }}</dt><dd>{{ profile.suburb || ('N/A' | translate) }}, {{ profile.state || ('N/A' | translate) }}</dd></div>
-      </dl>
-    </app-card>
-
-    <app-card class="detail" *ngIf="!profile">
-      <app-badge tone="warning">{{ 'Profile needed' | translate }}</app-badge>
-      <h3>{{ 'Create your marketplace presence' | translate }}</h3>
-      <p>{{ 'Add business details so customers know who they are requesting care from.' | translate }}</p>
-    </app-card>
+  <div *ngIf="isLoading" class="provider-state">
+    <span class="provider-state-icon" aria-hidden="true">···</span>
+    <h3>{{ 'providerProfile.loading' | translate }}</h3>
   </div>
+
+  <ng-container *ngIf="!isLoading">
+    <div *ngIf="profile; else missingProfile" class="profile-overview">
+      <app-card class="profile-identity">
+        <div class="profile-identity-head">
+          <div class="profile-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm-7 17c.5-4 3.2-6.2 7-6.2s6.5 2.2 7 6.2"/></svg>
+          </div>
+          <div>
+            <p class="provider-kicker">{{ 'providerProfile.businessProfile' | translate }}</p>
+            <h3>{{ profile.businessName }}</h3>
+            <p>{{ profile.contactName || ('providerProfile.contactFallback' | translate) }}</p>
+          </div>
+          <app-badge [tone]="statusTone">{{ statusLabel | translate }}</app-badge>
+        </div>
+
+        <p class="profile-description">
+          {{ profile.businessDescription || profile.description || ('providerProfile.noDescription' | translate) }}
+        </p>
+
+        <div class="profile-facts">
+          <div>
+            <span>{{ 'providerProfile.location' | translate }}</span>
+            <strong>{{ locationLabel || ('providerProfile.notProvided' | translate) }}</strong>
+          </div>
+          <div>
+            <span>{{ 'providerProfile.phone' | translate }}</span>
+            <strong>{{ profile.phoneNumber || profile.phone || ('providerProfile.notProvided' | translate) }}</strong>
+          </div>
+          <div>
+            <span>{{ 'providerProfile.email' | translate }}</span>
+            <strong>{{ profile.email || ('providerProfile.notProvided' | translate) }}</strong>
+          </div>
+          <div>
+            <span>{{ 'providerProfile.availability' | translate }}</span>
+            <strong>{{ (profile.isActive === false ? 'providerProfile.unavailable' : 'providerProfile.available') | translate }}</strong>
+          </div>
+        </div>
+
+        <div class="customer-preview">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 12s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Zm8 2.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z"/></svg>
+          <div>
+            <strong>{{ 'providerProfile.customerViewTitle' | translate }}</strong>
+            <p>{{ 'providerProfile.customerViewDescription' | translate }}</p>
+          </div>
+        </div>
+      </app-card>
+
+      <app-card class="profile-completeness">
+        <div class="completeness-head">
+          <div>
+            <p class="provider-kicker">{{ 'providerProfile.readiness' | translate }}</p>
+            <h3>{{ 'providerProfile.completenessTitle' | translate }}</h3>
+          </div>
+          <strong>{{ profileCompletion }}%</strong>
+        </div>
+        <div
+          class="completion-track"
+          role="progressbar"
+          [attr.aria-label]="'providerProfile.completenessTitle' | translate"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="profileCompletion"
+        >
+          <span [style.width.%]="profileCompletion"></span>
+        </div>
+        <ul class="profile-checklist">
+          <li *ngFor="let item of profileChecklist" [class.complete]="item.complete">
+            <span aria-hidden="true">{{ item.complete ? '✓' : '○' }}</span>
+            {{ item.label | translate }}
+          </li>
+        </ul>
+        <app-button type="button" variant="secondary" (buttonClick)="openEditor()">
+          {{ 'providerProfile.improve' | translate }}
+        </app-button>
+      </app-card>
+    </div>
+
+    <ng-template #missingProfile>
+      <div class="provider-empty provider-empty-featured">
+        <div class="provider-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 20V8l7-4 7 4v12M9 20v-5h6v5M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        </div>
+        <p class="provider-kicker">{{ 'providerProfile.emptyKicker' | translate }}</p>
+        <h3>{{ 'providerProfile.emptyTitle' | translate }}</h3>
+        <p>{{ 'providerProfile.emptyDescription' | translate }}</p>
+        <app-button type="button" (buttonClick)="openEditor()">
+          {{ 'providerProfile.create' | translate }}
+        </app-button>
+      </div>
+    </ng-template>
+  </ng-container>
+
+  <app-modal
+    [open]="isEditorOpen"
+    [title]="hasProfile ? 'providerProfile.editTitle' : 'providerProfile.createTitle'"
+    description="providerProfile.editorDescription"
+    (closed)="closeEditor()"
+  >
+    <form class="provider-form" (ngSubmit)="saveProfile()" #profileForm="ngForm">
+      <p *ngIf="errorMessage" class="provider-notice error">{{ errorMessage | translate }}</p>
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>01</span>
+          <div>
+            <h3>{{ 'providerProfile.businessDetails' | translate }}</h3>
+            <p>{{ 'providerProfile.businessDetailsHelp' | translate }}</p>
+          </div>
+        </div>
+        <app-input name="businessName" label="providerProfile.businessName" required [(ngModel)]="form.businessName"></app-input>
+        <div class="provider-form-grid two">
+          <app-input name="contactName" label="providerProfile.contactName" [(ngModel)]="form.contactName"></app-input>
+          <app-input name="websiteUrl" label="providerProfile.website" [(ngModel)]="form.websiteUrl"></app-input>
+        </div>
+        <app-input name="businessDescription" label="providerProfile.description" type="textarea" [rows]="4" [(ngModel)]="form.businessDescription"></app-input>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>02</span>
+          <div>
+            <h3>{{ 'providerProfile.contactAndLocation' | translate }}</h3>
+            <p>{{ 'providerProfile.contactAndLocationHelp' | translate }}</p>
+          </div>
+        </div>
+        <div class="provider-form-grid two">
+          <app-input name="phoneNumber" label="providerProfile.phone" [(ngModel)]="form.phoneNumber"></app-input>
+          <app-input name="email" label="providerProfile.email" type="email" [(ngModel)]="form.email"></app-input>
+        </div>
+        <app-input name="addressLine1" label="providerProfile.address" [(ngModel)]="form.addressLine1"></app-input>
+        <app-input name="addressLine2" label="providerProfile.addressLine2" [(ngModel)]="form.addressLine2"></app-input>
+        <div class="provider-form-grid three">
+          <app-input name="suburb" label="providerProfile.suburb" [(ngModel)]="form.suburb"></app-input>
+          <app-input name="state" label="providerProfile.state" [(ngModel)]="form.state"></app-input>
+          <app-input name="postcode" label="providerProfile.postcode" [(ngModel)]="form.postcode"></app-input>
+        </div>
+        <app-input name="country" label="providerProfile.country" [(ngModel)]="form.country"></app-input>
+        <app-input name="isActive" label="providerProfile.profileActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      </div>
+
+      <div class="provider-form-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">
+          {{ 'common.cancel' | translate }}
+        </app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid">
+          {{ (isSaving ? 'providerProfile.saving' : hasProfile ? 'providerProfile.save' : 'providerProfile.create') | translate }}
+        </app-button>
+      </div>
+    </form>
+  </app-modal>
 </section>

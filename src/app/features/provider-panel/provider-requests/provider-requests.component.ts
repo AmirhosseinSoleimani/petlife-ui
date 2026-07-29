@@ -4,6 +4,8 @@ import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ServiceRequest } from '../../../core/models/marketplace.models';
 
+type RequestFilter = 'all' | 'requested' | 'accepted' | 'completed' | 'rejected';
+
 @Component({
   selector: 'app-provider-requests',
   templateUrl: './provider-requests.component.html',
@@ -12,6 +14,8 @@ import { ServiceRequest } from '../../../core/models/marketplace.models';
 export class ProviderRequestsComponent implements OnInit {
   requests: ServiceRequest[] = [];
   selectedRequest: ServiceRequest | null = null;
+  activeFilter: RequestFilter = 'all';
+  isRejectDialogOpen = false;
   rejectionReason = '';
   isLoading = false;
   isUpdating = false;
@@ -37,7 +41,7 @@ export class ProviderRequestsComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load incoming requests.';
+        this.errorMessage = 'providerRequests.loadError';
         this.isLoading = false;
       }
     });
@@ -45,23 +49,65 @@ export class ProviderRequestsComponent implements OnInit {
 
   selectRequest(request: ServiceRequest): void {
     this.selectedRequest = request;
-    this.rejectionReason = request.rejectionReason || '';
   }
 
   acceptRequest(request: ServiceRequest): void {
-    this.updateRequest(`/service-requests/${request.id}/accept`, {}, 'Request accepted.');
+    this.updateRequest(`/service-requests/${request.id}/accept`, {}, 'providerRequests.acceptSuccess');
   }
 
-  rejectRequest(request: ServiceRequest): void {
+  openRejectDialog(request: ServiceRequest): void {
+    this.selectedRequest = request;
+    this.rejectionReason = request.rejectionReason || '';
+    this.isRejectDialogOpen = true;
+  }
+
+  closeRejectDialog(): void {
+    if (this.isUpdating) {
+      return;
+    }
+
+    this.isRejectDialogOpen = false;
+    this.rejectionReason = '';
+  }
+
+  rejectRequest(): void {
+    if (!this.selectedRequest) {
+      return;
+    }
+
     this.updateRequest(
-      `/service-requests/${request.id}/reject`,
+      `/service-requests/${this.selectedRequest.id}/reject`,
       { rejectionReason: this.rejectionReason },
-      'Request rejected.'
+      'providerRequests.rejectSuccess',
+      true
     );
   }
 
   completeRequest(request: ServiceRequest): void {
-    this.updateRequest(`/service-requests/${request.id}/complete`, {}, 'Request completed.');
+    this.updateRequest(`/service-requests/${request.id}/complete`, {}, 'providerRequests.completeSuccess');
+  }
+
+  setFilter(filter: RequestFilter): void {
+    this.activeFilter = filter;
+    if (!this.selectedRequest || !this.filteredRequests.some((request) => request.id === this.selectedRequest?.id)) {
+      this.selectedRequest = this.filteredRequests[0] || null;
+    }
+  }
+
+  get filteredRequests(): ServiceRequest[] {
+    return this.activeFilter === 'all'
+      ? this.requests
+      : this.requests.filter((request) => this.getStatusKey(request) === this.activeFilter);
+  }
+
+  get requestCounts(): Record<RequestFilter, number> {
+    return {
+      all: this.requests.length,
+      requested: this.requests.filter((request) => this.getStatusKey(request) === 'requested').length,
+      accepted: this.requests.filter((request) => this.getStatusKey(request) === 'accepted').length,
+      completed: this.requests.filter((request) => this.getStatusKey(request) === 'completed').length,
+      rejected: this.requests.filter((request) => this.getStatusKey(request) === 'rejected').length
+    };
   }
 
   canAccept(request: ServiceRequest): boolean {
@@ -77,7 +123,10 @@ export class ProviderRequestsComponent implements OnInit {
   }
 
   getStatus(request: ServiceRequest): string {
-    return request.status || 'Requested';
+    const status = this.getStatusKey(request);
+    return ['requested', 'accepted', 'completed', 'rejected'].includes(status)
+      ? `providerRequests.status.${status}`
+      : 'providerRequests.status.unknown';
   }
 
   getStatusTone(request: ServiceRequest): 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
@@ -96,18 +145,29 @@ export class ProviderRequestsComponent implements OnInit {
   }
 
   getServiceName(request: ServiceRequest): string {
-    return request.providerService?.serviceName || request.providerService?.name || request.serviceName || 'Service request';
+    return request.serviceName || request.providerService?.serviceName || request.providerService?.name || '';
+  }
+
+  getServiceCategory(request: ServiceRequest): string {
+    return request.serviceCategory || request.providerService?.category || '';
   }
 
   getPetLabel(request: ServiceRequest): string {
-    return request.pet?.petName || request.pet?.name || request.petName || request.petId || 'Pet';
+    return request.petName || request.pet?.petName || request.pet?.name || '';
+  }
+
+  getPetDetails(request: ServiceRequest): string {
+    return [
+      request.petSpecies || request.pet?.species,
+      request.petBreed || request.pet?.breed
+    ].filter(Boolean).join(' · ');
   }
 
   getCustomerLabel(request: ServiceRequest): string {
-    return request.customerName || request.customerUserId || 'Customer';
+    return request.customerName || '';
   }
 
-  private updateRequest(endpoint: string, body: unknown, message: string): void {
+  private updateRequest(endpoint: string, body: unknown, message: string, closeRejectDialog = false): void {
     this.isUpdating = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -116,10 +176,14 @@ export class ProviderRequestsComponent implements OnInit {
       next: (response) => {
         this.selectedRequest = response.data;
         this.successMessage = message;
+        if (closeRejectDialog) {
+          this.isRejectDialogOpen = false;
+          this.rejectionReason = '';
+        }
         this.loadRequests();
       },
       error: () => {
-        this.errorMessage = 'Unable to update request.';
+        this.errorMessage = 'providerRequests.updateError';
       },
       complete: () => {
         this.isUpdating = false;
@@ -127,7 +191,7 @@ export class ProviderRequestsComponent implements OnInit {
     });
   }
 
-  private getStatusKey(request: ServiceRequest): string {
+  getStatusKey(request: ServiceRequest): string {
     return (request.status || 'requested').toLowerCase();
   }
 }

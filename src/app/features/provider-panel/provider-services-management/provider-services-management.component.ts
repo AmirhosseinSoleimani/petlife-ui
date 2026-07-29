@@ -28,6 +28,7 @@ export class ProviderServicesManagementComponent implements OnInit {
   services: ProviderService[] = [];
   form: ProviderServicePayload = { ...emptyServiceForm };
   editingId: string | null = null;
+  isEditorOpen = false;
   isLoading = false;
   isSaving = false;
   errorMessage = '';
@@ -37,6 +38,10 @@ export class ProviderServicesManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadServices();
+  }
+
+  get activeServicesCount(): number {
+    return this.services.filter((service) => service.isActive !== false).length;
   }
 
   loadServices(): void {
@@ -49,7 +54,7 @@ export class ProviderServicesManagementComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to load your services.';
+        this.errorMessage = 'providerServices.loadError';
         this.isLoading = false;
       }
     });
@@ -67,12 +72,13 @@ export class ProviderServicesManagementComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.successMessage = this.editingId ? 'Service updated.' : 'Service created.';
+        this.successMessage = this.editingId ? 'providerServices.updateSuccess' : 'providerServices.createSuccess';
+        this.isEditorOpen = false;
         this.resetForm();
         this.loadServices();
       },
       error: () => {
-        this.errorMessage = 'Unable to save service.';
+        this.errorMessage = 'providerServices.saveError';
       },
       complete: () => {
         this.isSaving = false;
@@ -91,6 +97,25 @@ export class ProviderServicesManagementComponent implements OnInit {
       durationMinutes: service.durationMinutes ?? null,
       isActive: service.isActive !== false
     };
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isEditorOpen = true;
+  }
+
+  openCreateService(): void {
+    this.resetForm();
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isEditorOpen = true;
+  }
+
+  closeEditor(): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.isEditorOpen = false;
+    this.resetForm();
   }
 
   deleteService(service: ProviderService): void {
@@ -99,11 +124,11 @@ export class ProviderServicesManagementComponent implements OnInit {
 
     this.apiService.delete<ApiResponse<unknown>>(`/provider-services/${service.id}`).subscribe({
       next: () => {
-        this.successMessage = 'Service deleted.';
+        this.successMessage = 'providerServices.deleteSuccess';
         this.loadServices();
       },
       error: () => {
-        this.errorMessage = 'Unable to delete service.';
+        this.errorMessage = 'providerServices.deleteError';
       }
     });
   }
@@ -114,7 +139,7 @@ export class ProviderServicesManagementComponent implements OnInit {
   }
 
   getServiceName(service: ProviderService): string {
-    return service.serviceName || service.name || 'Provider service';
+    return service.serviceName || service.name || '';
   }
 
   private toPayload(): ProviderServicePayload {

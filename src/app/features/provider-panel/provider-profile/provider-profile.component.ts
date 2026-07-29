@@ -28,6 +28,7 @@ const emptyProfileForm: ProviderProfilePayload = {
 export class ProviderProfileComponent implements OnInit {
   profile: Provider | null = null;
   form: ProviderProfilePayload = { ...emptyProfileForm };
+  isEditorOpen = false;
   isLoading = false;
   isSaving = false;
   errorMessage = '';
@@ -44,7 +45,13 @@ export class ProviderProfileComponent implements OnInit {
   }
 
   get statusLabel(): string {
-    return this.profile?.verificationStatus || (this.profile?.isActive === false ? 'Inactive' : 'Active');
+    if (this.profile?.isActive === false) {
+      return 'providerProfile.statusInactive';
+    }
+
+    return this.profile?.verificationStatus?.toLowerCase() === 'verified'
+      ? 'providerProfile.statusVerified'
+      : 'providerProfile.statusActive';
   }
 
   get statusTone(): 'success' | 'warning' | 'neutral' {
@@ -53,6 +60,45 @@ export class ProviderProfileComponent implements OnInit {
     }
 
     return this.profile?.verificationStatus?.toLowerCase() === 'verified' ? 'success' : 'warning';
+  }
+
+  get locationLabel(): string {
+    return [this.profile?.suburb, this.profile?.state, this.profile?.postcode].filter(Boolean).join(', ');
+  }
+
+  get completedProfileItems(): number {
+    return this.profileChecklist.filter((item) => item.complete).length;
+  }
+
+  get profileCompletion(): number {
+    return Math.round((this.completedProfileItems / this.profileChecklist.length) * 100);
+  }
+
+  get profileChecklist(): Array<{ label: string; complete: boolean }> {
+    const profile = this.profile;
+    return [
+      { label: 'providerProfile.checkBusiness', complete: !!profile?.businessName },
+      { label: 'providerProfile.checkContact', complete: !!(profile?.phoneNumber || profile?.phone || profile?.email) },
+      { label: 'providerProfile.checkDescription', complete: !!(profile?.businessDescription || profile?.description) },
+      { label: 'providerProfile.checkLocation', complete: !!(profile?.suburb && profile?.state) },
+      { label: 'providerProfile.checkWebsite', complete: !!(profile?.websiteUrl || profile?.website) }
+    ];
+  }
+
+  openEditor(): void {
+    this.form = this.profile ? this.toForm(this.profile) : { ...emptyProfileForm };
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isEditorOpen = true;
+  }
+
+  closeEditor(): void {
+    if (this.isSaving) {
+      return;
+    }
+
+    this.isEditorOpen = false;
+    this.form = this.profile ? this.toForm(this.profile) : { ...emptyProfileForm };
   }
 
   loadProfile(): void {
@@ -69,7 +115,7 @@ export class ProviderProfileComponent implements OnInit {
         this.profile = null;
         this.form = { ...emptyProfileForm };
         if (error.status !== 404) {
-          this.errorMessage = 'Unable to load provider profile.';
+          this.errorMessage = 'providerProfile.loadError';
         }
         this.isLoading = false;
       }
@@ -90,10 +136,11 @@ export class ProviderProfileComponent implements OnInit {
       next: (response) => {
         this.profile = response.data;
         this.form = this.toForm(response.data);
-        this.successMessage = isEditing ? 'Provider profile saved.' : 'Provider profile created.';
+        this.successMessage = isEditing ? 'providerProfile.updateSuccess' : 'providerProfile.createSuccess';
+        this.isEditorOpen = false;
       },
       error: () => {
-        this.errorMessage = 'Unable to save provider profile.';
+        this.errorMessage = 'providerProfile.saveError';
       },
       complete: () => {
         this.isSaving = false;

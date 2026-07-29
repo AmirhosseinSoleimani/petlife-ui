@@ -1,43 +1,112 @@
-<section class="provider-page">
+<section class="provider-workspace provider-areas-page">
   <app-page-header
-    eyebrow="Provider Panel"
-    title="Service Areas"
-    description="Tell PetLife customers where your team can provide pet-care services."
-  ></app-page-header>
+    eyebrow="providerAreas.eyebrow"
+    title="providerAreas.title"
+    description="providerAreas.subtitle"
+  >
+    <app-button type="button" (buttonClick)="openEditor()">
+      {{ 'providerAreas.add' | translate }}
+    </app-button>
+  </app-page-header>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+  <p *ngIf="errorMessage && !isEditorOpen" class="provider-notice error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="provider-notice success">{{ successMessage | translate }}</p>
 
-  <div class="layout">
-    <form class="panel" (ngSubmit)="addArea()" #areaForm="ngForm">
-      <h3>{{ 'Add service area' | translate }}</h3>
-      <app-input name="suburb" label="Suburb" required [(ngModel)]="form.suburb"></app-input>
-      <div class="two">
-        <app-input name="state" label="State" required [(ngModel)]="form.state"></app-input>
-        <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
-      </div>
-      <app-input name="radiusKm" label="Radius km" type="number" min="0" required [(ngModel)]="form.radiusKm"></app-input>
-      <app-input name="isActive" label="Area active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
-      <app-button type="submit" [loading]="isSaving" [disabled]="areaForm.invalid">
-        {{ (isSaving ? 'Adding...' : 'Add area') | translate }}
-      </app-button>
-    </form>
+  <div class="coverage-banner">
+    <div class="coverage-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8.5A2.5 2.5 0 1 0 12 7a2.5 2.5 0 0 0 0 5.5Z"/></svg>
+    </div>
+    <div>
+      <p class="provider-kicker">{{ 'providerAreas.coverageKicker' | translate }}</p>
+      <h3>{{ 'providerAreas.coverageTitle' | translate }}</h3>
+      <p>{{ 'providerAreas.coverageDescription' | translate }}</p>
+    </div>
+    <strong>{{ areas.length }}</strong>
+  </div>
 
-    <div class="list">
-      <div *ngIf="isLoading" class="state">{{ 'Loading service areas...' | translate }}</div>
-      <div *ngIf="!isLoading && !areas.length" class="state">{{ 'No service areas yet. Add the suburbs you cover.' | translate }}</div>
+  <div *ngIf="isLoading" class="provider-state">
+    <span class="provider-state-icon" aria-hidden="true">···</span>
+    <h3>{{ 'providerAreas.loading' | translate }}</h3>
+  </div>
 
-      <app-card class="area-card" [interactive]="true" *ngFor="let area of areas">
-        <div>
-          <h3>{{ area.suburb || ('Service area' | translate) }}</h3>
-          <p>{{ area.state || ('State N/A' | translate) }} {{ area.postcode || '' }}</p>
+  <div *ngIf="!isLoading && !areas.length" class="provider-empty">
+    <div class="provider-empty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8.5A2.5 2.5 0 1 0 12 7a2.5 2.5 0 0 0 0 5.5Z"/></svg>
+    </div>
+    <h3>{{ 'providerAreas.emptyTitle' | translate }}</h3>
+    <p>{{ 'providerAreas.emptyDescription' | translate }}</p>
+    <app-button type="button" (buttonClick)="openEditor()">{{ 'providerAreas.addFirst' | translate }}</app-button>
+  </div>
+
+  <div *ngIf="!isLoading && areas.length" class="coverage-grid">
+    <app-card class="coverage-card" *ngFor="let area of areas">
+      <div class="coverage-card-head">
+        <div class="area-pin" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8.5A2.5 2.5 0 1 0 12 7a2.5 2.5 0 0 0 0 5.5Z"/></svg>
         </div>
         <app-badge [tone]="area.isActive === false ? 'neutral' : 'success'">
-          {{ (area.isActive === false ? 'Inactive' : 'Active') | translate }}
+          {{ (area.isActive === false ? 'providerAreas.inactiveStatus' : 'providerAreas.activeStatus') | translate }}
         </app-badge>
-        <p class="radius">{{ area.radiusKm || 0 }} {{ 'km coverage radius' | translate }}</p>
-        <app-button type="button" variant="danger" (buttonClick)="deleteArea(area)">{{ 'Delete' | translate }}</app-button>
-      </app-card>
-    </div>
+      </div>
+      <div>
+        <p>{{ 'providerAreas.serviceArea' | translate }}</p>
+        <h3>{{ area.suburb || ('providerAreas.areaFallback' | translate) }}</h3>
+      </div>
+      <div class="area-tags">
+        <span *ngIf="area.state">{{ area.state }}</span>
+        <span *ngIf="area.postcode">{{ area.postcode }}</span>
+      </div>
+      <div class="radius-row">
+        <span>{{ 'providerAreas.radius' | translate }}</span>
+        <strong>{{ area.radiusKm || 0 }} {{ 'providerAreas.km' | translate }}</strong>
+      </div>
+      <div class="radius-visual" aria-hidden="true"><span></span></div>
+      <div class="provider-card-actions">
+        <app-button type="button" variant="ghost" (buttonClick)="deleteArea(area)">
+          {{ 'providerAreas.remove' | translate }}
+        </app-button>
+      </div>
+    </app-card>
   </div>
+
+  <app-modal
+    [open]="isEditorOpen"
+    title="providerAreas.addTitle"
+    description="providerAreas.editorDescription"
+    (closed)="closeEditor()"
+  >
+    <form class="provider-form" (ngSubmit)="addArea()" #areaForm="ngForm">
+      <p *ngIf="errorMessage" class="provider-notice error">{{ errorMessage | translate }}</p>
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>01</span>
+          <div>
+            <h3>{{ 'providerAreas.locationTitle' | translate }}</h3>
+            <p>{{ 'providerAreas.locationHelp' | translate }}</p>
+          </div>
+        </div>
+        <app-input name="suburb" label="providerAreas.suburb" required [(ngModel)]="form.suburb"></app-input>
+        <div class="provider-form-grid two">
+          <app-input name="state" label="providerAreas.state" required [(ngModel)]="form.state"></app-input>
+          <app-input name="postcode" label="providerAreas.postcode" [(ngModel)]="form.postcode"></app-input>
+        </div>
+        <app-input
+          name="radiusKm"
+          label="providerAreas.radiusKm"
+          helper="providerAreas.radiusHelp"
+          type="number"
+          min="0"
+          required
+          [(ngModel)]="form.radiusKm"
+        ></app-input>
+        <app-input name="isActive" label="providerAreas.areaActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      </div>
+      <div class="provider-form-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="areaForm.invalid">
+          {{ (isSaving ? 'providerAreas.adding' : 'providerAreas.addArea') | translate }}
+        </app-button>
+      </div>
+    </form>
+  </app-modal>
 </section>

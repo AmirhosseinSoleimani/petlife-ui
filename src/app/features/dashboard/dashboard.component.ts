@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -6,7 +7,7 @@ import { ApiService } from '../../core/api/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { HealthRecord, Pet, Reminder } from '../../core/models/customer-core.models';
-import { ServiceRequest } from '../../core/models/marketplace.models';
+import { Provider, ProviderService, ServiceArea, ServiceRequest } from '../../core/models/marketplace.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,6 +20,10 @@ export class DashboardComponent implements OnInit {
   reminders: Reminder[] = [];
   healthRecords: HealthRecord[] = [];
   requests: ServiceRequest[] = [];
+  providerProfile: Provider | null = null;
+  providerServices: ProviderService[] = [];
+  serviceAreas: ServiceArea[] = [];
+  providerRequests: ServiceRequest[] = [];
   isLoadingPets = false;
   isLoadingReminders = false;
   isLoadingHealth = false;
@@ -27,6 +32,14 @@ export class DashboardComponent implements OnInit {
   remindersLoadFailed = false;
   healthLoadFailed = false;
   requestsLoadFailed = false;
+  isLoadingProviderProfile = false;
+  isLoadingProviderServices = false;
+  isLoadingServiceAreas = false;
+  isLoadingProviderRequests = false;
+  providerProfileLoadFailed = false;
+  providerServicesLoadFailed = false;
+  serviceAreasLoadFailed = false;
+  providerRequestsLoadFailed = false;
 
   constructor(
     private readonly authService: AuthService,
@@ -34,14 +47,73 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.isProvider) {
+      this.loadProviderDashboard();
+      return;
+    }
+
     this.loadPets();
     this.loadReminders();
     this.loadRequests();
   }
 
+  get isProvider(): boolean {
+    return (this.currentUser?.role || '').toLowerCase().includes('provider');
+  }
+
   get displayName(): string {
     const name = this.currentUser?.name || '';
     return name.includes('@') ? name.split('@')[0] : name;
+  }
+
+  get providerBusinessName(): string {
+    return this.providerProfile?.businessName || '';
+  }
+
+  get publishedServices(): ProviderService[] {
+    return this.providerServices.filter((service) => service.isActive !== false);
+  }
+
+  get newProviderRequests(): ServiceRequest[] {
+    return this.providerRequests.filter((request) => this.providerRequestStatus(request) === 'requested');
+  }
+
+  get acceptedProviderRequests(): ServiceRequest[] {
+    return this.providerRequests.filter((request) => this.providerRequestStatus(request) === 'accepted');
+  }
+
+  get completedProviderRequests(): ServiceRequest[] {
+    return this.providerRequests.filter((request) => this.providerRequestStatus(request) === 'completed');
+  }
+
+  get latestProviderRequests(): ServiceRequest[] {
+    return [...this.providerRequests]
+      .sort((a, b) => this.dateValue(b.requestedDate || b.createdAt) - this.dateValue(a.requestedDate || a.createdAt))
+      .slice(0, 4);
+  }
+
+  get providerProfileChecklist(): Array<{ label: string; complete: boolean }> {
+    return [
+      { label: 'dashboard.businessProfile', complete: !!this.providerProfile?.id },
+      {
+        label: 'dashboard.contactDetails',
+        complete: !!(this.providerProfile?.email || this.providerProfile?.phoneNumber || this.providerProfile?.phone)
+      },
+      { label: 'dashboard.servicesReady', complete: this.providerServices.length > 0 },
+      { label: 'dashboard.coverageReady', complete: this.serviceAreas.length > 0 }
+    ];
+  }
+
+  get providerReadiness(): number {
+    const completed = this.providerProfileChecklist.filter((item) => item.complete).length;
+    return Math.round((completed / this.providerProfileChecklist.length) * 100);
+  }
+
+  get providerDashboardLoading(): boolean {
+    return this.isLoadingProviderProfile
+      || this.isLoadingProviderServices
+      || this.isLoadingServiceAreas
+      || this.isLoadingProviderRequests;
   }
 
   get upcomingCare(): Reminder[] {
@@ -95,8 +167,102 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  getProviderRequestService(request: ServiceRequest): string {
+    return request.serviceName
+      || request.providerService?.serviceName
+      || request.providerService?.name
+      || request.providerServiceName
+      || '';
+  }
+
+  getProviderRequestCustomer(request: ServiceRequest): string {
+    return request.customerName || '';
+  }
+
+  getProviderRequestPet(request: ServiceRequest): string {
+    return request.petName || request.pet?.petName || request.pet?.name || '';
+  }
+
+  getProviderRequestStatusKey(request: ServiceRequest): string {
+    const status = this.providerRequestStatus(request);
+    return ['requested', 'accepted', 'completed', 'rejected'].includes(status)
+      ? `providerRequests.status.${status}`
+      : 'providerRequests.status.unknown';
+  }
+
   profileImageSource(pet: Pet): string | null {
     return this.apiService.resolvePublicUrl(pet.profileImageUrl);
+  }
+
+  private loadProviderDashboard(): void {
+    this.loadProviderProfile();
+    this.loadProviderServices();
+    this.loadServiceAreas();
+    this.loadProviderRequests();
+  }
+
+  private loadProviderProfile(): void {
+    this.isLoadingProviderProfile = true;
+    this.providerProfileLoadFailed = false;
+    this.apiService.get<ApiResponse<Provider>>('/providers/me').subscribe({
+      next: (response) => {
+        this.providerProfile = response.data || null;
+        this.isLoadingProviderProfile = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.providerProfile = null;
+        this.providerProfileLoadFailed = error.status !== 404;
+        this.isLoadingProviderProfile = false;
+      }
+    });
+  }
+
+  private loadProviderServices(): void {
+    this.isLoadingProviderServices = true;
+    this.providerServicesLoadFailed = false;
+    this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services/me').subscribe({
+      next: (response) => {
+        this.providerServices = response.data || [];
+        this.isLoadingProviderServices = false;
+      },
+      error: () => {
+        this.providerServices = [];
+        this.providerServicesLoadFailed = true;
+        this.isLoadingProviderServices = false;
+      }
+    });
+  }
+
+  private loadServiceAreas(): void {
+    this.isLoadingServiceAreas = true;
+    this.serviceAreasLoadFailed = false;
+    this.apiService.get<ApiResponse<ServiceArea[]>>('/service-areas/me').subscribe({
+      next: (response) => {
+        this.serviceAreas = response.data || [];
+        this.isLoadingServiceAreas = false;
+      },
+      error: () => {
+        this.serviceAreas = [];
+        this.serviceAreasLoadFailed = true;
+        this.isLoadingServiceAreas = false;
+      }
+    });
+  }
+
+  private loadProviderRequests(): void {
+    this.isLoadingProviderRequests = true;
+    this.providerRequestsLoadFailed = false;
+    this.apiService.get<ApiResponse<ServiceRequest[]>>('/service-requests/provider').subscribe({
+      next: (response) => {
+        this.providerRequests = response.data || [];
+        this.isLoadingProviderRequests = false;
+      },
+      error: () => {
+        this.providerRequests = [];
+        this.providerRequestsLoadFailed = true;
+        this.isLoadingProviderRequests = false;
+      }
+    });
   }
 
   private loadPets(): void {
@@ -178,5 +344,9 @@ export class DashboardComponent implements OnInit {
     }
     const parsed = new Date(value).getTime();
     return Number.isNaN(parsed) ? fallback : parsed;
+  }
+
+  private providerRequestStatus(request: ServiceRequest): string {
+    return (request.status || 'Requested').toLowerCase();
   }
 }

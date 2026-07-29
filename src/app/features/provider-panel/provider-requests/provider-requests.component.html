@@ -1,67 +1,185 @@
-<section class="requests-page">
+<section class="provider-workspace provider-requests-page">
   <app-page-header
-    eyebrow="Provider business engine"
-    title="Incoming Revenue Workflow"
-    description="Demand triage for accepting work, protecting capacity, and closing completed pet-care services."
+    eyebrow="providerRequests.eyebrow"
+    title="providerRequests.title"
+    description="providerRequests.subtitle"
   ></app-page-header>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'Loading incoming requests...' | translate }}</div>
-  <div *ngIf="!isLoading && !requests.length" class="state">{{ 'No incoming requests yet. New customer demand will appear here.' | translate }}</div>
+  <p *ngIf="errorMessage && !isRejectDialogOpen" class="provider-notice error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="provider-notice success">{{ successMessage | translate }}</p>
 
-  <div class="layout" *ngIf="!isLoading && requests.length">
-    <div class="list">
-      <app-card class="request-card" [interactive]="true" *ngFor="let request of requests" (click)="selectRequest(request)">
-        <div>
-          <h3>{{ getServiceName(request) }}</h3>
-          <p>{{ getPetLabel(request) }} - {{ request.requestedDate || request.createdAt || ('Date N/A' | translate) }}</p>
-        </div>
-        <app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge>
-        <p class="message">{{ request.requestMessage || ('No message supplied.' | translate) }}</p>
-      </app-card>
+  <div class="request-toolbar" role="tablist" [attr.aria-label]="'providerRequests.filterLabel' | translate">
+    <button type="button" role="tab" [attr.aria-selected]="activeFilter === 'all'" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+      {{ 'providerRequests.all' | translate }} <span>{{ requestCounts.all }}</span>
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="activeFilter === 'requested'" [class.active]="activeFilter === 'requested'" (click)="setFilter('requested')">
+      {{ 'providerRequests.new' | translate }} <span>{{ requestCounts.requested }}</span>
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="activeFilter === 'accepted'" [class.active]="activeFilter === 'accepted'" (click)="setFilter('accepted')">
+      {{ 'providerRequests.accepted' | translate }} <span>{{ requestCounts.accepted }}</span>
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="activeFilter === 'completed'" [class.active]="activeFilter === 'completed'" (click)="setFilter('completed')">
+      {{ 'providerRequests.completed' | translate }} <span>{{ requestCounts.completed }}</span>
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="activeFilter === 'rejected'" [class.active]="activeFilter === 'rejected'" (click)="setFilter('rejected')">
+      {{ 'providerRequests.rejected' | translate }} <span>{{ requestCounts.rejected }}</span>
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="provider-state">
+    <span class="provider-state-icon" aria-hidden="true">···</span>
+    <h3>{{ 'providerRequests.loading' | translate }}</h3>
+  </div>
+
+  <div *ngIf="!isLoading && !requests.length" class="provider-empty">
+    <div class="provider-empty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM8 9h8M8 13h5M8 17h7"/></svg>
+    </div>
+    <h3>{{ 'providerRequests.emptyTitle' | translate }}</h3>
+    <p>{{ 'providerRequests.emptyDescription' | translate }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && requests.length && !filteredRequests.length" class="provider-empty compact">
+    <h3>{{ 'providerRequests.noFilterTitle' | translate }}</h3>
+    <p>{{ 'providerRequests.noFilterDescription' | translate }}</p>
+  </div>
+
+  <div class="request-workbench" *ngIf="!isLoading && filteredRequests.length">
+    <div class="request-queue">
+      <button
+        type="button"
+        class="queue-card"
+        *ngFor="let request of filteredRequests"
+        [class.selected]="selectedRequest?.id === request.id"
+        [attr.data-status]="getStatusKey(request)"
+        (click)="selectRequest(request)"
+      >
+        <span class="status-rail" aria-hidden="true"></span>
+        <span class="queue-card-main">
+          <span class="queue-card-heading">
+            <span>
+              <strong>{{ getServiceName(request) || ('providerRequests.unknownService' | translate) }}</strong>
+            </span>
+            <app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge>
+          </span>
+          <span class="queue-meta">
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm-6 16c.5-3.5 2.5-5.5 6-5.5s5.5 2 6 5.5"/></svg>
+              {{ 'providerRequests.customer' | translate }}:
+              {{ getCustomerLabel(request) || ('providerRequests.unknownCustomer' | translate) }}
+            </span>
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm-6 16c.5-3.5 2.5-5.5 6-5.5s5.5 2 6 5.5"/></svg>
+              {{ 'providerRequests.pet' | translate }}:
+              {{ getPetLabel(request) || ('providerRequests.unknownPet' | translate) }}
+            </span>
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14v13H5zM8 4v6M16 4v6M5 11h14"/></svg>
+              {{ 'providerRequests.requestedDate' | translate }}:
+              {{ request.requestedDate || request.createdAt || ('providerRequests.dateFallback' | translate) }}
+            </span>
+          </span>
+          <span class="queue-message">{{ request.requestMessage || ('providerRequests.noCustomerNote' | translate) }}</span>
+        </span>
+      </button>
     </div>
 
-    <app-card class="detail" *ngIf="selectedRequest">
-      <app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge>
-      <h3>{{ getServiceName(selectedRequest) }}</h3>
-      <dl>
-        <div><dt>{{ 'Pet' | translate }}</dt><dd>{{ getPetLabel(selectedRequest) }}</dd></div>
-        <div><dt>{{ 'Customer' | translate }}</dt><dd>{{ getCustomerLabel(selectedRequest) }}</dd></div>
-        <div><dt>{{ 'Requested' | translate }}</dt><dd>{{ selectedRequest.requestedDate || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Scheduled' | translate }}</dt><dd>{{ selectedRequest.scheduledDate || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'Completed' | translate }}</dt><dd>{{ selectedRequest.completedDate || ('N/A' | translate) }}</dd></div>
+    <app-card class="request-detail" *ngIf="selectedRequest">
+      <div class="detail-heading">
+        <div>
+          <p class="provider-kicker">{{ 'providerRequests.requestDetail' | translate }}</p>
+          <h3>{{ getServiceName(selectedRequest) || ('providerRequests.unknownService' | translate) }}</h3>
+        </div>
+        <app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge>
+      </div>
+
+      <div class="detail-people">
+        <div>
+          <span>{{ 'providerRequests.service' | translate }}</span>
+          <strong>{{ getServiceName(selectedRequest) || ('providerRequests.unknownService' | translate) }}</strong>
+          <small *ngIf="getServiceCategory(selectedRequest)">{{ getServiceCategory(selectedRequest) }}</small>
+        </div>
+        <div>
+          <span>{{ 'providerRequests.customer' | translate }}</span>
+          <strong>{{ getCustomerLabel(selectedRequest) || ('providerRequests.unknownCustomer' | translate) }}</strong>
+          <small *ngIf="selectedRequest.customerEmail">{{ selectedRequest.customerEmail }}</small>
+        </div>
+        <div>
+          <span>{{ 'providerRequests.pet' | translate }}</span>
+          <strong>{{ getPetLabel(selectedRequest) || ('providerRequests.unknownPet' | translate) }}</strong>
+          <small *ngIf="getPetDetails(selectedRequest)">{{ getPetDetails(selectedRequest) }}</small>
+        </div>
+      </div>
+
+      <dl class="request-dates">
+        <div><dt>{{ 'providerRequests.requestedDate' | translate }}</dt><dd>{{ selectedRequest.requestedDate || ('providerRequests.notScheduled' | translate) }}</dd></div>
+        <div><dt>{{ 'providerRequests.scheduledDate' | translate }}</dt><dd>{{ selectedRequest.scheduledDate || ('providerRequests.notScheduled' | translate) }}</dd></div>
+        <div *ngIf="selectedRequest.completedDate"><dt>{{ 'providerRequests.completedDate' | translate }}</dt><dd>{{ selectedRequest.completedDate }}</dd></div>
       </dl>
-      <p>{{ selectedRequest.requestMessage || ('No message supplied.' | translate) }}</p>
 
-      <app-input
-        name="rejectionReason"
-        label="Rejection reason"
-        type="textarea"
-        [rows]="3"
-        [(ngModel)]="rejectionReason"
-      ></app-input>
+      <div class="request-note">
+        <span>{{ 'providerRequests.customerNote' | translate }}</span>
+        <p>{{ selectedRequest.requestMessage || ('providerRequests.noCustomerNote' | translate) }}</p>
+      </div>
 
-      <div class="actions">
+      <div class="request-note rejection" *ngIf="selectedRequest.rejectionReason">
+        <span>{{ 'providerRequests.rejectionReason' | translate }}</span>
+        <p>{{ selectedRequest.rejectionReason }}</p>
+      </div>
+
+      <div class="provider-card-actions request-actions" *ngIf="canAccept(selectedRequest) || canComplete(selectedRequest)">
         <app-button
+          *ngIf="canAccept(selectedRequest)"
           type="button"
           [loading]="isUpdating"
-          [disabled]="!canAccept(selectedRequest)"
           (buttonClick)="acceptRequest(selectedRequest)"
-        >{{ 'Accept' | translate }}</app-button>
+        >{{ 'providerRequests.accept' | translate }}</app-button>
         <app-button
+          *ngIf="canReject(selectedRequest)"
           type="button"
           variant="danger"
-          [disabled]="isUpdating || !canReject(selectedRequest)"
-          (buttonClick)="rejectRequest(selectedRequest)"
-        >{{ 'Reject' | translate }}</app-button>
+          [disabled]="isUpdating"
+          (buttonClick)="openRejectDialog(selectedRequest)"
+        >{{ 'providerRequests.reject' | translate }}</app-button>
         <app-button
+          *ngIf="canComplete(selectedRequest)"
           type="button"
-          variant="secondary"
-          [disabled]="isUpdating || !canComplete(selectedRequest)"
+          [loading]="isUpdating"
           (buttonClick)="completeRequest(selectedRequest)"
-        >{{ 'Complete' | translate }}</app-button>
+        >{{ 'providerRequests.complete' | translate }}</app-button>
+      </div>
+      <div class="request-closed" *ngIf="!canAccept(selectedRequest) && !canComplete(selectedRequest)">
+        <span aria-hidden="true">✓</span>
+        {{ 'providerRequests.noFurtherActions' | translate }}
       </div>
     </app-card>
   </div>
+
+  <app-modal
+    [open]="isRejectDialogOpen"
+    title="providerRequests.rejectTitle"
+    description="providerRequests.rejectDescription"
+    (closed)="closeRejectDialog()"
+  >
+    <form class="provider-form reject-form" (ngSubmit)="rejectRequest()" #rejectForm="ngForm">
+      <p *ngIf="errorMessage" class="provider-notice error">{{ errorMessage | translate }}</p>
+      <div class="reject-context" *ngIf="selectedRequest">
+        <span>{{ 'providerRequests.rejecting' | translate }}</span>
+        <strong>{{ getServiceName(selectedRequest) || ('providerRequests.unknownService' | translate) }}</strong>
+        <small>{{ getCustomerLabel(selectedRequest) || ('providerRequests.unknownCustomer' | translate) }}</small>
+      </div>
+      <app-input
+        name="rejectionReason"
+        label="providerRequests.rejectionReason"
+        placeholder="providerRequests.rejectionPlaceholder"
+        type="textarea"
+        [rows]="4"
+        [(ngModel)]="rejectionReason"
+      ></app-input>
+      <div class="provider-form-actions">
+        <app-button type="button" variant="secondary" [disabled]="isUpdating" (buttonClick)="closeRejectDialog()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" variant="danger" [loading]="isUpdating">{{ 'providerRequests.confirmReject' | translate }}</app-button>
+      </div>
+    </form>
+  </app-modal>
 </section>
