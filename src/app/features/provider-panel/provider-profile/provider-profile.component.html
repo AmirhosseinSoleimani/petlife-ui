@@ -36,6 +36,30 @@
           {{ profile.businessDescription || profile.description || ('providerProfile.noDescription' | translate) }}
         </p>
 
+        <div class="profile-selection-summary">
+          <div>
+            <span>{{ 'providerProfile.providerTypes' | translate }}</span>
+            <p>
+              <app-badge tone="info" *ngFor="let providerType of profile.providerTypes">{{ providerType.name }}</app-badge>
+              <small *ngIf="!profile.providerTypes?.length">{{ 'providerProfile.notProvided' | translate }}</small>
+            </p>
+          </div>
+          <div>
+            <span>{{ 'providerProfile.supportedSpecies' | translate }}</span>
+            <p>
+              <app-badge tone="neutral" *ngFor="let species of profile.supportedSpecies">{{ species }}</app-badge>
+              <small *ngIf="!profile.supportedSpecies?.length">{{ 'providerProfile.notProvided' | translate }}</small>
+            </p>
+          </div>
+          <div>
+            <span>{{ 'providerProfile.facilities' | translate }}</span>
+            <p>
+              <app-badge tone="neutral" *ngFor="let facility of profile.facilities">{{ facility.name }}</app-badge>
+              <small *ngIf="!profile.facilities?.length">{{ 'providerProfile.notProvided' | translate }}</small>
+            </p>
+          </div>
+        </div>
+
         <div class="profile-facts">
           <div>
             <span>{{ 'providerProfile.location' | translate }}</span>
@@ -88,6 +112,9 @@
             {{ item.label | translate }}
           </li>
         </ul>
+        <p class="provider-notice" [class.success]="isSetupComplete" [class.warning]="!isSetupComplete">
+          {{ (isSetupComplete ? 'providerProfile.readyToPublish' : 'providerProfile.notReadyToPublish') | translate }}
+        </p>
         <app-button type="button" variant="secondary" (buttonClick)="openEditor()">
           {{ 'providerProfile.improve' | translate }}
         </app-button>
@@ -136,6 +163,56 @@
       <div class="form-section">
         <div class="form-section-heading">
           <span>02</span>
+          <div>
+            <h3>{{ 'providerProfile.marketplaceSetup' | translate }}</h3>
+            <p>{{ 'providerProfile.marketplaceSetupHelp' | translate }}</p>
+          </div>
+        </div>
+
+        <fieldset class="choice-fieldset">
+          <legend>{{ 'providerProfile.providerTypes' | translate }}</legend>
+          <div class="choice-grid">
+            <button
+              *ngFor="let providerType of providerTypes"
+              type="button"
+              [class.selected]="isSelected(form.providerTypeIds, providerType.id)"
+              (click)="toggleProviderType(providerType.id)"
+            >
+              <strong>{{ providerType.name }}</strong>
+              <span>{{ providerType.description }}</span>
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-fieldset">
+          <legend>{{ 'providerProfile.supportedSpecies' | translate }}</legend>
+          <div class="choice-grid compact">
+            <button
+              *ngFor="let species of speciesOptions"
+              type="button"
+              [class.selected]="isSelected(form.supportedSpecies, species)"
+              (click)="toggleSpecies(species)"
+            >{{ species }}</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-fieldset">
+          <legend>{{ 'providerProfile.facilities' | translate }}</legend>
+          <p>{{ 'providerProfile.facilitiesHelp' | translate }}</p>
+          <div class="choice-grid compact">
+            <button
+              *ngFor="let facility of facilities"
+              type="button"
+              [class.selected]="isSelected(form.facilityIds, facility.id)"
+              (click)="toggleFacility(facility.id)"
+            >{{ facility.name }}</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>03</span>
           <div>
             <h3>{{ 'providerProfile.contactAndLocation' | translate }}</h3>
             <p>{{ 'providerProfile.contactAndLocationHelp' | translate }}</p>

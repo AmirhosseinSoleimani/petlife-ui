@@ -1,12 +1,12 @@
 <section class="requests-page customer-requests-page">
   <app-page-header eyebrow="requests.eyebrow" title="requests.title" description="requests.subtitle">
-    <a class="header-action" routerLink="/service-requests/new">{{ 'requests.newRequest' | translate }}</a>
+    <a class="header-action" routerLink="/services">{{ 'requests.newRequest' | translate }}</a>
   </app-page-header>
 
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
   <section *ngIf="!isLoading && !requests.length" class="request-empty">
-    <span aria-hidden="true">↗</span><h3>{{ 'requests.emptyTitle' | translate }}</h3><p>{{ 'requests.emptyDescription' | translate }}</p><a routerLink="/service-requests/new">{{ 'requests.startRequest' | translate }}</a>
+    <span aria-hidden="true">↗</span><h3>{{ 'requests.emptyTitle' | translate }}</h3><p>{{ 'requests.emptyDescription' | translate }}</p><a routerLink="/services">{{ 'requests.startRequest' | translate }}</a>
   </section>
 
   <ng-container *ngIf="!isLoading && requests.length">

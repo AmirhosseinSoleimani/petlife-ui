@@ -1,34 +1,134 @@
 <section class="market-page services-page">
-  <app-page-header [eyebrow]="pageEyebrow" [title]="pageTitle" [description]="pageDescription"></app-page-header>
+  <app-page-header
+    eyebrow="services.eyebrow"
+    [title]="pageTitle"
+    [description]="pageDescription"
+  ></app-page-header>
 
-  <section class="filter-toolbar service-filters">
-    <div class="filter-copy"><strong>{{ 'services.findService' | translate }}</strong><span>{{ filteredServices.length }} {{ 'services.results' | translate }}</span></div>
-    <div class="filter-fields">
-      <app-input label="services.searchLabel" placeholder="services.searchPlaceholder" [(ngModel)]="searchTerm"></app-input>
-      <app-input label="services.categoryLabel" type="select" placeholder="services.allCategories" [options]="categoryOptions" [(ngModel)]="categoryFilter"></app-input>
+  <ol class="discovery-progress" [attr.aria-label]="'services.discoveryProgress' | translate">
+    <li [class.active]="!selectedPetId" [class.complete]="!!selectedPetId">
+      <span>1</span>{{ 'services.stepPet' | translate }}
+    </li>
+    <li [class.active]="!!selectedPetId && !selectedCategoryId" [class.complete]="!!selectedCategoryId">
+      <span>2</span>{{ 'services.stepCategory' | translate }}
+    </li>
+    <li [class.active]="!!selectedCategoryId">
+      <span>3</span>{{ 'services.stepProviderService' | translate }}
+    </li>
+  </ol>
+
+  <section class="discovery-step pet-step">
+    <div>
+      <p class="step-kicker">{{ 'services.stepOne' | translate }}</p>
+      <h2>{{ 'services.selectPetTitle' | translate }}</h2>
+      <p>{{ 'services.selectPetHelp' | translate }}</p>
     </div>
+    <app-input
+      name="selectedPetId"
+      label="services.petLabel"
+      type="select"
+      placeholder="services.selectPet"
+      [placeholderValue]="null"
+      [options]="petOptions"
+      [ngModel]="selectedPetId"
+      (ngModelChange)="selectPet($event)"
+    ></app-input>
+    <a *ngIf="!isLoadingPets && !pets.length" routerLink="/pets" [queryParams]="{ action: 'add' }">
+      {{ 'services.addPetFirst' | translate }}
+    </a>
   </section>
 
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'services.loading' | translate }}</div>
-  <section *ngIf="!isLoading && !filteredServices.length" class="catalog-empty">
-    <span aria-hidden="true">⌕</span><h3>{{ emptyStateKey | translate }}</h3><p>{{ (providerId ? 'services.emptyProviderDescription' : 'services.emptyDescription') | translate }}</p>
-    <a *ngIf="!providerId" routerLink="/providers">{{ 'services.browseProviders' | translate }}</a>
+
+  <section *ngIf="selectedPetId" class="discovery-step">
+    <div>
+      <p class="step-kicker">{{ 'services.stepTwo' | translate }}</p>
+      <h2>{{ 'services.selectCategoryTitle' | translate }}</h2>
+      <p>{{ 'services.selectCategoryHelp' | translate }} <strong>{{ selectedPet?.petName }}</strong>.</p>
+    </div>
+
+    <div *ngIf="isLoadingCategories" class="state">{{ 'services.loadingCategories' | translate }}</div>
+    <div *ngIf="!isLoadingCategories && categories.length" class="category-grid">
+      <button
+        type="button"
+        *ngFor="let category of categories"
+        [class.selected]="selectedCategoryId === category.id"
+        (click)="selectCategory(category.id)"
+      >
+        <span aria-hidden="true">{{ category.name.charAt(0) }}</span>
+        <strong>{{ category.name }}</strong>
+        <small>{{ category.description }}</small>
+      </button>
+    </div>
+    <div *ngIf="!isLoadingCategories && !categories.length" class="catalog-empty">
+      <h3>{{ 'services.noCategoriesTitle' | translate }}</h3>
+      <p>{{ 'services.noCategoriesDescription' | translate }}</p>
+    </div>
   </section>
 
-  <div class="service-grid" *ngIf="!isLoading && filteredServices.length">
-    <app-card class="market-service-card" *ngFor="let service of filteredServices">
-      <div class="service-card-head">
-        <span class="service-avatar" aria-hidden="true">{{ (getServiceName(service) || 'S').charAt(0) }}</span>
-        <app-badge tone="info">{{ (service.category || 'services.petCare') | translate }}</app-badge>
-      </div>
-      <div class="service-identity"><h3>{{ getServiceName(service) }}</h3><p><span>{{ 'services.byProvider' | translate }}</span> {{ getProviderName(service) || ('services.providerUnavailable' | translate) }}</p></div>
-      <p class="service-description">{{ service.description || ('services.descriptionFallback' | translate) }}</p>
-      <div class="service-commercials">
-        <div><span>{{ 'services.price' | translate }}</span><strong *ngIf="service.price != null">{{ service.price | currency:(service.currency || 'USD') }}</strong><strong *ngIf="service.price == null">{{ 'services.priceOnRequest' | translate }}</strong></div>
-        <div><span>{{ 'services.duration' | translate }}</span><strong>{{ service.durationMinutes ? (service.durationMinutes + ' ' + ('services.minutes' | translate)) : ('services.durationFlexible' | translate) }}</strong></div>
-      </div>
-      <a routerLink="/service-requests/new" [queryParams]="{ serviceId: service.id }">{{ 'services.request' | translate }}</a>
-    </app-card>
-  </div>
+  <section *ngIf="selectedCategoryId" class="discovery-step results-step">
+    <div>
+      <p class="step-kicker">{{ 'services.stepThree' | translate }}</p>
+      <h2>{{ 'services.compatibleServicesTitle' | translate }}</h2>
+      <p>{{ 'services.compatibleServicesHelp' | translate }}</p>
+    </div>
+
+    <div *ngIf="isLoadingServices" class="state">{{ 'services.loading' | translate }}</div>
+    <section *ngIf="!isLoadingServices && !visibleServices.length" class="catalog-empty">
+      <h3>{{ (providerId ? 'services.emptyProviderServices' : 'services.noCompatibleServices') | translate }}</h3>
+      <p>{{ 'services.noCompatibleServicesHelp' | translate }}</p>
+    </section>
+
+    <div class="service-grid" *ngIf="!isLoadingServices && visibleServices.length">
+      <app-card class="market-service-card" *ngFor="let service of visibleServices">
+        <div class="service-card-head">
+          <span class="service-avatar" aria-hidden="true">{{ getServiceName(service).charAt(0) }}</span>
+          <app-badge tone="info">{{ service.serviceCategoryName || service.category }}</app-badge>
+        </div>
+        <div class="service-identity">
+          <h3>{{ getServiceName(service) }}</h3>
+          <p><span>{{ 'services.byProvider' | translate }}</span> {{ getProviderName(service) }}</p>
+        </div>
+        <p class="service-description">{{ service.description || ('services.descriptionFallback' | translate) }}</p>
+
+        <dl class="service-decision-data">
+          <div>
+            <dt>{{ 'services.providerType' | translate }}</dt>
+            <dd>{{ service.providerTypes?.join(', ') || ('common.notAvailable' | translate) }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'services.location' | translate }}</dt>
+            <dd>{{ getProviderLocation(service) || ('common.notAvailable' | translate) }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'services.deliveryMode' | translate }}</dt>
+            <dd>{{ getDeliveryModeKey(service.deliveryMode) | translate }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'services.eligibleSpecies' | translate }}</dt>
+            <dd>{{ service.applicableSpecies?.join(', ') || ('common.notAvailable' | translate) }}</dd>
+          </div>
+        </dl>
+
+        <div class="facility-row" *ngIf="service.facilities?.length">
+          <span *ngFor="let facility of service.facilities">{{ facility }}</span>
+        </div>
+
+        <div class="service-commercials">
+          <div>
+            <span>{{ 'services.price' | translate }}</span>
+            <strong>{{ service.price | currency:(service.currency || 'AUD') }}</strong>
+          </div>
+          <div>
+            <span>{{ 'services.duration' | translate }}</span>
+            <strong>{{ service.durationMinutes }} {{ 'services.minutes' | translate }}</strong>
+          </div>
+        </div>
+        <a
+          [routerLink]="['/service-requests/new', service.id]"
+          [queryParams]="{ petId: selectedPetId }"
+        >{{ 'services.request' | translate }}</a>
+      </app-card>
+    </div>
+  </section>
 </section>

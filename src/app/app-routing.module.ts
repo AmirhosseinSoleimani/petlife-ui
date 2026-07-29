@@ -82,8 +82,13 @@ const routes: Routes = [
         component: ProviderServicesPageComponent
       },
       {
-        path: 'service-requests/new',
+        path: 'service-requests/new/:serviceId',
         component: CreateServiceRequestComponent
+      },
+      {
+        path: 'service-requests/new',
+        pathMatch: 'full',
+        redirectTo: 'services'
       },
       {
         path: 'service-requests/my',

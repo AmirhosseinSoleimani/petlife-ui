@@ -3,7 +3,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Provider, ProviderProfilePayload } from '../../../core/models/marketplace.models';
+import {
+  Provider,
+  ProviderFacility,
+  ProviderProfilePayload,
+  ProviderType
+} from '../../../core/models/marketplace.models';
 
 const emptyProfileForm: ProviderProfilePayload = {
   businessName: '',
@@ -17,7 +22,10 @@ const emptyProfileForm: ProviderProfilePayload = {
   state: '',
   postcode: '',
   country: 'Australia',
-  isActive: true
+  isActive: true,
+  providerTypeIds: [],
+  facilityIds: [],
+  supportedSpecies: []
 };
 
 @Component({
@@ -27,6 +35,9 @@ const emptyProfileForm: ProviderProfilePayload = {
 })
 export class ProviderProfileComponent implements OnInit {
   profile: Provider | null = null;
+  providerTypes: ProviderType[] = [];
+  facilities: ProviderFacility[] = [];
+  speciesOptions: string[] = [];
   form: ProviderProfilePayload = { ...emptyProfileForm };
   isEditorOpen = false;
   isLoading = false;
@@ -37,6 +48,7 @@ export class ProviderProfileComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
+    this.loadReferenceData();
     this.loadProfile();
   }
 
@@ -80,9 +92,42 @@ export class ProviderProfileComponent implements OnInit {
       { label: 'providerProfile.checkBusiness', complete: !!profile?.businessName },
       { label: 'providerProfile.checkContact', complete: !!(profile?.phoneNumber || profile?.phone || profile?.email) },
       { label: 'providerProfile.checkDescription', complete: !!(profile?.businessDescription || profile?.description) },
-      { label: 'providerProfile.checkLocation', complete: !!(profile?.suburb && profile?.state) },
-      { label: 'providerProfile.checkWebsite', complete: !!(profile?.websiteUrl || profile?.website) }
+      { label: 'providerProfile.checkTypes', complete: !!profile?.providerTypes?.length },
+      { label: 'providerProfile.checkSpecies', complete: !!profile?.supportedSpecies?.length },
+      { label: 'providerProfile.checkLocation', complete: !!(profile?.addressLine1 && profile?.suburb && profile?.state && profile?.postcode) }
     ];
+  }
+
+  get isSetupComplete(): boolean {
+    return this.profile?.isSetupComplete === true;
+  }
+
+  loadReferenceData(): void {
+    this.apiService.get<ApiResponse<ProviderType[]>>('/provider-types').subscribe({
+      next: (response) => this.providerTypes = response.data || []
+    });
+    this.apiService.get<ApiResponse<ProviderFacility[]>>('/provider-facilities').subscribe({
+      next: (response) => this.facilities = response.data || []
+    });
+    this.apiService.get<ApiResponse<string[]>>('/pet-species').subscribe({
+      next: (response) => this.speciesOptions = response.data || []
+    });
+  }
+
+  toggleProviderType(id: string): void {
+    this.form.providerTypeIds = this.toggleValue(this.form.providerTypeIds, id);
+  }
+
+  toggleFacility(id: string): void {
+    this.form.facilityIds = this.toggleValue(this.form.facilityIds, id);
+  }
+
+  toggleSpecies(species: string): void {
+    this.form.supportedSpecies = this.toggleValue(this.form.supportedSpecies, species);
+  }
+
+  isSelected(values: string[], value: string): boolean {
+    return values.includes(value);
   }
 
   openEditor(): void {
@@ -162,7 +207,16 @@ export class ProviderProfileComponent implements OnInit {
       state: profile.state || '',
       postcode: profile.postcode || '',
       country: profile.country || 'Australia',
-      isActive: profile.isActive !== false
+      isActive: profile.isActive !== false,
+      providerTypeIds: (profile.providerTypes || []).map((item) => item.id),
+      facilityIds: (profile.facilities || []).map((item) => item.id),
+      supportedSpecies: [...(profile.supportedSpecies || [])]
     };
+  }
+
+  private toggleValue(values: string[], value: string): string[] {
+    return values.includes(value)
+      ? values.filter((item) => item !== value)
+      : [...values, value];
   }
 }

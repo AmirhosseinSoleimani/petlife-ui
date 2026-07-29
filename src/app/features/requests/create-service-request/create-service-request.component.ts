@@ -1,11 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
-import { Provider, ProviderService, ServiceRequest, ServiceRequestPayload } from '../../../core/models/marketplace.models';
+import {
+  DeliveryMode,
+  ProviderService,
+  ServiceRequest,
+  ServiceRequestPayload
+} from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 
 @Component({
@@ -15,36 +21,43 @@ import { AppInputOption } from '../../../shared/components/app-input/app-input.c
 })
 export class CreateServiceRequestComponent implements OnInit {
   pets: Pet[] = [];
-  services: ProviderService[] = [];
-  providerNameById: Record<string, string> = {};
+  selectedService: ProviderService | null = null;
   form: ServiceRequestPayload = {
     petId: null,
     providerServiceId: null,
     requestMessage: '',
-    requestedDate: ''
+    requestedDate: '',
+    serviceAddressLine1: '',
+    serviceSuburb: '',
+    serviceState: '',
+    servicePostcode: ''
   };
   isLoading = false;
   isSubmitting = false;
   errorMessage = '';
-  successMessage = '';
 
   constructor(
     private readonly apiService: ApiService,
     private readonly i18nService: I18nService,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly router: Router
   ) {}
+
+  ngOnInit(): void {
+    const serviceId = this.route.snapshot.paramMap.get('serviceId');
+    if (!serviceId) {
+      this.router.navigate(['/services']);
+      return;
+    }
+
+    this.form.providerServiceId = serviceId;
+    this.loadContext(serviceId);
+  }
 
   get petOptions(): AppInputOption[] {
     return this.pets.map((pet) => ({
-      label: pet.petName,
+      label: `${pet.petName}${pet.species ? ` — ${pet.species}` : ''}`,
       value: pet.id
-    }));
-  }
-
-  get serviceOptions(): AppInputOption[] {
-    return this.services.map((service) => ({
-      label: `${this.getServiceName(service)} - ${this.getProviderName(service) || this.i18nService.translate('services.providerUnavailable')}`,
-      value: service.id
     }));
   }
 
@@ -52,118 +65,100 @@ export class CreateServiceRequestComponent implements OnInit {
     return this.pets.find((pet) => pet.id === this.form.petId) || null;
   }
 
-  get selectedService(): ProviderService | null {
-    return this.services.find((service) => service.id === this.form.providerServiceId) || null;
+  get needsCustomerLocation(): boolean {
+    return this.selectedService?.deliveryMode === 'AtCustomerLocation'
+      || this.selectedService?.deliveryMode === 'Hybrid';
   }
 
-  ngOnInit(): void {
-    this.loadFormData();
+  get isSelectedPetCompatible(): boolean {
+    if (!this.selectedPet || !this.selectedService) {
+      return true;
+    }
+
+    return (this.selectedService.applicableSpecies || []).some(
+      (species) => species.toLowerCase() === (this.selectedPet?.species || '').toLowerCase());
   }
 
-  getServiceName(service: ProviderService): string {
-    return service.name || service.serviceName || this.i18nService.translate('services.serviceFallback');
+  get providerLocation(): string {
+    if (!this.selectedService) {
+      return '';
+    }
+
+    return [
+      this.selectedService.providerAddressLine1,
+      this.selectedService.providerSuburb,
+      this.selectedService.providerState,
+      this.selectedService.providerPostcode
+    ].filter(Boolean).join(', ');
   }
 
-  getProviderName(service: ProviderService): string {
-    return service.providerBusinessName
-      || service.businessName
-      || service.providerName
-      || service.provider?.businessName
-      || service.provider?.name
-      || this.lookupProviderName(service)
+  getServiceName(): string {
+    return this.selectedService?.serviceName
+      || this.selectedService?.name
+      || this.i18nService.translate('services.serviceFallback');
+  }
+
+  getProviderName(): string {
+    return this.selectedService?.providerBusinessName
+      || this.selectedService?.businessName
+      || this.selectedService?.providerName
       || '';
   }
 
-  loadFormData(): void {
+  getDeliveryModeKey(deliveryMode: DeliveryMode | undefined): string {
+    switch (deliveryMode) {
+      case 'AtCustomerLocation': return 'deliveryMode.atCustomer';
+      case 'Online': return 'deliveryMode.online';
+      case 'Hybrid': return 'deliveryMode.hybrid';
+      default: return 'deliveryMode.atProvider';
+    }
+  }
+
+  loadContext(serviceId: string): void {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
-      next: (response) => {
-        this.pets = response.data || [];
-        this.loadServices();
-      },
-      error: () => {
-        this.errorMessage = 'requestForm.loadPetsError';
-        this.isLoading = false;
-      }
-    });
-  }
-
-  loadServices(): void {
-    this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
-      next: (response) => {
-        this.services = response.data || [];
-        const requestedServiceId = this.route.snapshot.queryParamMap.get('serviceId');
-        if (requestedServiceId && this.services.some((service) => service.id === requestedServiceId)) {
-          this.form.providerServiceId = requestedServiceId;
+    forkJoin({
+      pets: this.apiService.get<ApiResponse<Pet[]>>('/pets'),
+      service: this.apiService.get<ApiResponse<ProviderService>>(`/provider-services/${serviceId}`)
+    }).subscribe({
+      next: ({ pets, service }) => {
+        this.pets = pets.data || [];
+        this.selectedService = service.data || null;
+        const requestedPetId = this.route.snapshot.queryParamMap.get('petId');
+        if (requestedPetId && this.pets.some((pet) => pet.id === requestedPetId)) {
+          this.form.petId = requestedPetId;
         }
-        this.loadProviders();
         this.isLoading = false;
       },
       error: () => {
-        this.errorMessage = 'requestForm.loadServicesError';
+        this.errorMessage = 'requestForm.contextError';
         this.isLoading = false;
       }
     });
-  }
-
-  private loadProviders(): void {
-    this.apiService.get<ApiResponse<Provider[]>>('/providers').subscribe({
-      next: (response) => {
-        this.providerNameById = (response.data || []).reduce<Record<string, string>>((map, provider) => {
-          const providerName = provider.businessName || provider.name || '';
-          const providerIds = this.getProviderIds(provider);
-
-          if (providerName) {
-            providerIds.forEach((id) => map[id] = providerName);
-          }
-
-          return map;
-        }, {});
-      }
-    });
-  }
-
-  private lookupProviderName(service: ProviderService): string {
-    const matchedId = this.getServiceProviderIds(service).find((id) => this.providerNameById[id]);
-    return matchedId ? this.providerNameById[matchedId] : '';
-  }
-
-  private getServiceProviderIds(service: ProviderService): string[] {
-    return [
-      service.providerId,
-      service.providerProfileId,
-      service.providerUserId,
-      service.provider?.id,
-      service.provider?.providerId,
-      service.provider?.providerProfileId,
-      service.provider?.userId
-    ].filter((id): id is string => !!id);
-  }
-
-  private getProviderIds(provider: Provider): string[] {
-    return [
-      provider.id,
-      provider.providerId,
-      provider.providerProfileId,
-      provider.userId
-    ].filter((id): id is string => !!id);
   }
 
   submitRequest(): void {
+    if (!this.isSelectedPetCompatible) {
+      this.errorMessage = 'requestForm.incompatiblePet';
+      return;
+    }
+
     this.isSubmitting = true;
     this.errorMessage = '';
-    this.successMessage = '';
 
-    this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', this.form).subscribe({
-      next: () => {
-        this.successMessage = 'requestForm.success';
-        this.form = { petId: null, providerServiceId: null, requestMessage: '', requestedDate: '' };
-        this.isSubmitting = false;
-      },
+    const payload: ServiceRequestPayload = {
+      ...this.form,
+      serviceAddressLine1: this.needsCustomerLocation ? this.form.serviceAddressLine1 : undefined,
+      serviceSuburb: this.needsCustomerLocation ? this.form.serviceSuburb : undefined,
+      serviceState: this.needsCustomerLocation ? this.form.serviceState : undefined,
+      servicePostcode: this.needsCustomerLocation ? this.form.servicePostcode : undefined
+    };
+
+    this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({
+      next: () => this.router.navigate(['/service-requests/my']),
       error: () => {
-        this.errorMessage = 'requestForm.submitError';
+        this.errorMessage = 'requestForm.compatibilityError';
         this.isSubmitting = false;
       }
     });

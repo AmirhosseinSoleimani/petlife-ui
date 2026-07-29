@@ -138,7 +138,17 @@ export interface EmergencyVet {
   notes?: string;
 }
 
-export const PET_TYPE_OPTIONS = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Reptile', 'Fish', 'Other'];
+export const PET_TYPE_OPTIONS = [
+  'Dog',
+  'Cat',
+  'Bird',
+  'Rabbit',
+  'Reptile',
+  'Fish',
+  'Small Mammal',
+  'Exotic Pet',
+  'Other'
+];
 export const PET_GENDER_OPTIONS = ['Male', 'Female', 'Unknown'];
 export const HEALTH_RECORD_TYPE_OPTIONS = ['Vaccination', 'Medication', 'Checkup', 'Surgery', 'Allergy', 'Other'];
 export const EXPENSE_CATEGORY_OPTIONS = ['Food', 'Vet', 'Medication', 'Grooming', 'Training', 'Boarding', 'Other'];

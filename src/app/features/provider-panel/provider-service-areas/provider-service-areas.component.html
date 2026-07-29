@@ -24,6 +24,17 @@
     <strong>{{ areas.length }}</strong>
   </div>
 
+  <div class="delivery-area-rules">
+    <div>
+      <strong>{{ 'providerAreas.customerLocationTitle' | translate }}</strong>
+      <p>{{ 'providerAreas.customerLocationDescription' | translate }}</p>
+    </div>
+    <div>
+      <strong>{{ 'providerAreas.providerLocationTitle' | translate }}</strong>
+      <p>{{ 'providerAreas.providerLocationDescription' | translate }}</p>
+    </div>
+  </div>
+
   <div *ngIf="isLoading" class="provider-state">
     <span class="provider-state-icon" aria-hidden="true">···</span>
     <h3>{{ 'providerAreas.loading' | translate }}</h3>

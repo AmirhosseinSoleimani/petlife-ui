@@ -1,1 +1,26 @@
 :host { display: block; }
+
+.delivery-area-rules {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1rem 0 1.5rem;
+
+  div {
+    background: #f7faf9;
+    border: 1px solid #dce8e4;
+    border-radius: .9rem;
+    padding: 1rem;
+  }
+
+  p {
+    color: #667085;
+    margin: .35rem 0 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .delivery-area-rules {
+    grid-template-columns: 1fr;
+  }
+}

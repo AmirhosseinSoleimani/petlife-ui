@@ -11,6 +11,10 @@
 
   <p *ngIf="errorMessage && !isEditorOpen" class="provider-notice error">{{ errorMessage | translate }}</p>
   <p *ngIf="successMessage" class="provider-notice success">{{ successMessage | translate }}</p>
+  <p class="provider-notice" [class.success]="isProfileReady" [class.warning]="!isProfileReady">
+    {{ (isProfileReady ? 'providerServices.setupReady' : 'providerServices.setupRequired') | translate }}
+    <a *ngIf="!isProfileReady" routerLink="/provider/profile">{{ 'providerServices.completeProfile' | translate }}</a>
+  </p>
 
   <div class="catalog-summary">
     <div>
@@ -49,9 +53,15 @@
         </app-badge>
       </div>
       <div class="service-card-copy">
-        <p>{{ service.category || ('providerServices.categoryFallback' | translate) }}</p>
+        <p>{{ service.serviceCategoryName || service.category || ('providerServices.categoryFallback' | translate) }}</p>
         <h3>{{ getServiceName(service) || ('providerServices.serviceFallback' | translate) }}</h3>
         <span>{{ service.description || ('providerServices.noDescription' | translate) }}</span>
+        <div class="service-context">
+          <app-badge tone="info">{{ getDeliveryModeKey(service.deliveryMode) | translate }}</app-badge>
+          <span *ngIf="service.applicableSpecies?.length">
+            {{ 'providerServices.eligibleFor' | translate }}: {{ service.applicableSpecies?.join(', ') }}
+          </span>
+        </div>
       </div>
       <div class="service-metrics">
         <div>
@@ -90,15 +100,22 @@
             <p>{{ 'providerServices.serviceDetailsHelp' | translate }}</p>
           </div>
         </div>
-        <app-input name="serviceName" label="providerServices.name" required [(ngModel)]="form.serviceName"></app-input>
         <app-input
-          name="category"
-          label="providerServices.category"
+          name="serviceDefinitionId"
+          label="providerServices.definition"
           type="select"
-          placeholder="providerServices.selectCategory"
-          [options]="categoryOptions"
-          [(ngModel)]="form.category"
+          placeholder="providerServices.selectDefinition"
+          [placeholderValue]="null"
+          [options]="definitionOptions"
+          required
+          [(ngModel)]="form.serviceDefinitionId"
         ></app-input>
+        <div *ngIf="selectedDefinition" class="definition-summary">
+          <strong>{{ selectedDefinition.name }}</strong>
+          <span>{{ selectedDefinition.categoryName }}</span>
+          <p>{{ 'providerServices.eligibleFor' | translate }}: {{ selectedDefinition.applicableSpecies.join(', ') }}</p>
+        </div>
+        <app-input name="serviceName" label="providerServices.customName" helper="providerServices.customNameHelp" [(ngModel)]="form.serviceName"></app-input>
         <app-input name="description" label="providerServices.description" type="textarea" [rows]="4" [(ngModel)]="form.description"></app-input>
       </div>
       <div class="form-section">
@@ -114,7 +131,18 @@
           <app-input name="currency" label="providerServices.currency" required [(ngModel)]="form.currency"></app-input>
         </div>
         <app-input name="durationMinutes" label="providerServices.durationMinutes" type="number" min="0" required [(ngModel)]="form.durationMinutes"></app-input>
+        <app-input
+          name="deliveryMode"
+          label="providerServices.deliveryMode"
+          type="select"
+          [options]="deliveryModeOptions"
+          required
+          [(ngModel)]="form.deliveryMode"
+        ></app-input>
         <app-input name="isActive" label="providerServices.serviceActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+        <p *ngIf="form.isActive && !isProfileReady" class="provider-notice warning">
+          {{ 'providerServices.cannotPublish' | translate }}
+        </p>
       </div>
       <div class="provider-form-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button>

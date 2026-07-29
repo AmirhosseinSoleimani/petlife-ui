@@ -4,7 +4,14 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Provider, ProviderService } from '../../../core/models/marketplace.models';
+import { Pet } from '../../../core/models/customer-core.models';
+import {
+  DeliveryMode,
+  Provider,
+  ProviderService,
+  ServiceCategory
+} from '../../../core/models/marketplace.models';
+import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 
 @Component({
   selector: 'app-provider-services-page',
@@ -12,14 +19,17 @@ import { Provider, ProviderService } from '../../../core/models/marketplace.mode
   styleUrls: ['./provider-services-page.component.scss']
 })
 export class ProviderServicesPageComponent implements OnInit {
+  pets: Pet[] = [];
+  categories: ServiceCategory[] = [];
   services: ProviderService[] = [];
-  categoryFilter = '';
-  searchTerm = '';
+  selectedPetId: string | null = null;
+  selectedCategoryId: string | null = null;
   providerId: string | null = null;
   selectedProviderName = '';
   selectedProviderIds = new Set<string>();
-  providerNameById: Record<string, string> = {};
-  isLoading = false;
+  isLoadingPets = false;
+  isLoadingCategories = false;
+  isLoadingServices = false;
   errorMessage = '';
 
   constructor(
@@ -29,34 +39,34 @@ export class ProviderServicesPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const providerId = this.route.snapshot.paramMap.get('providerId');
-    this.providerId = providerId || null;
-    this.selectedProviderIds = new Set(providerId ? [providerId] : []);
+    this.providerId = this.route.snapshot.paramMap.get('providerId');
+    this.selectedProviderIds = new Set(this.providerId ? [this.providerId] : []);
 
     if (this.providerId) {
       this.loadSelectedProvider(this.providerId);
     }
 
-    this.loadServices();
+    this.loadPets();
   }
 
-  get filteredServices(): ProviderService[] {
-    return this.services.filter((service) => {
-      const providerMatch = !this.providerId || this.getServiceProviderIds(service).some((id) => this.selectedProviderIds.has(id));
-      const categoryMatch = !this.categoryFilter || (service.category || '').toLowerCase().includes(this.categoryFilter.toLowerCase());
-      const search = this.searchTerm.trim().toLowerCase();
-      const searchMatch = !search || [this.getServiceName(service), this.getProviderName(service), service.description || '']
-        .some((value) => value.toLowerCase().includes(search));
-      return providerMatch && categoryMatch && searchMatch;
-    });
+  get petOptions(): AppInputOption[] {
+    return this.pets.map((pet) => ({
+      label: `${pet.petName}${pet.species ? ` — ${pet.species}` : ''}`,
+      value: pet.id
+    }));
   }
 
-  get categoryOptions(): string[] {
-    return Array.from(new Set(this.services.map((service) => service.category).filter((category): category is string => !!category))).sort();
+  get selectedPet(): Pet | null {
+    return this.pets.find((pet) => pet.id === this.selectedPetId) || null;
   }
 
-  get pageEyebrow(): string {
-    return this.providerId ? 'services.providerEyebrow' : 'services.eyebrow';
+  get visibleServices(): ProviderService[] {
+    if (!this.providerId) {
+      return this.services;
+    }
+
+    return this.services.filter((service) =>
+      this.getServiceProviderIds(service).some((id) => this.selectedProviderIds.has(id)));
   }
 
   get pageTitle(): string {
@@ -70,17 +80,72 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   get pageDescription(): string {
-    return this.providerId
-      ? 'services.providerServicesSubtitle'
-      : 'services.subtitle';
+    return this.providerId ? 'services.providerServicesSubtitle' : 'services.subtitle';
   }
 
-  get emptyStateKey(): string {
-    return this.providerId ? 'services.emptyProviderServices' : 'services.emptyCatalog';
+  loadPets(): void {
+    this.isLoadingPets = true;
+    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
+      next: (response) => {
+        this.pets = response.data || [];
+        this.isLoadingPets = false;
+      },
+      error: () => {
+        this.errorMessage = 'services.loadPetsError';
+        this.isLoadingPets = false;
+      }
+    });
+  }
+
+  selectPet(petId: string | null): void {
+    this.selectedPetId = petId;
+    this.selectedCategoryId = null;
+    this.categories = [];
+    this.services = [];
+    this.errorMessage = '';
+
+    if (!petId) {
+      return;
+    }
+
+    this.isLoadingCategories = true;
+    this.apiService.get<ApiResponse<ServiceCategory[]>>(`/service-categories?petId=${petId}`).subscribe({
+      next: (response) => {
+        this.categories = response.data || [];
+        this.isLoadingCategories = false;
+      },
+      error: () => {
+        this.errorMessage = 'services.loadCategoriesError';
+        this.isLoadingCategories = false;
+      }
+    });
+  }
+
+  selectCategory(categoryId: string): void {
+    if (!this.selectedPetId) {
+      return;
+    }
+
+    this.selectedCategoryId = categoryId;
+    this.services = [];
+    this.errorMessage = '';
+    this.isLoadingServices = true;
+    this.apiService.get<ApiResponse<ProviderService[]>>(
+      `/provider-services?petId=${this.selectedPetId}&categoryId=${categoryId}`
+    ).subscribe({
+      next: (response) => {
+        this.services = response.data || [];
+        this.isLoadingServices = false;
+      },
+      error: () => {
+        this.errorMessage = 'services.loadError';
+        this.isLoadingServices = false;
+      }
+    });
   }
 
   getServiceName(service: ProviderService): string {
-    return service.name || service.serviceName || this.i18nService.translate('services.serviceFallback');
+    return service.serviceName || service.name || this.i18nService.translate('services.serviceFallback');
   }
 
   getProviderName(service: ProviderService): string {
@@ -89,66 +154,39 @@ export class ProviderServicesPageComponent implements OnInit {
       || service.providerName
       || service.provider?.businessName
       || service.provider?.name
-      || this.lookupProviderName(service)
       || '';
   }
 
-  loadServices(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
-      next: (response) => {
-        this.services = response.data || [];
-        this.loadProviders();
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'services.loadError';
-        this.isLoading = false;
-      }
-    });
+  getProviderLocation(service: ProviderService): string {
+    return [
+      service.providerAddressLine1,
+      service.providerSuburb,
+      service.providerState,
+      service.providerPostcode
+    ].filter(Boolean).join(', ');
   }
 
-  private loadProviders(): void {
-    this.apiService.get<ApiResponse<Provider[]>>('/providers').subscribe({
-      next: (response) => {
-        this.providerNameById = (response.data || []).reduce<Record<string, string>>((map, provider) => {
-          const providerName = provider.businessName || provider.name || '';
-          const providerIds = this.getProviderIds(provider);
-
-          if (providerName) {
-            providerIds.forEach((id) => map[id] = providerName);
-          }
-
-          if (this.providerId && providerIds.includes(this.providerId)) {
-            this.applySelectedProvider(provider);
-          }
-
-          return map;
-        }, {});
-      }
-    });
+  getDeliveryModeKey(deliveryMode: DeliveryMode | undefined): string {
+    switch (deliveryMode) {
+      case 'AtCustomerLocation': return 'deliveryMode.atCustomer';
+      case 'Online': return 'deliveryMode.online';
+      case 'Hybrid': return 'deliveryMode.hybrid';
+      default: return 'deliveryMode.atProvider';
+    }
   }
 
   private loadSelectedProvider(providerId: string): void {
     this.apiService.get<ApiResponse<Provider>>(`/providers/${providerId}`).subscribe({
       next: (response) => {
-        if (response.data) {
-          this.applySelectedProvider(response.data);
+        const provider = response.data;
+        if (!provider) {
+          return;
         }
+
+        this.selectedProviderName = provider.businessName || provider.name || '';
+        this.getProviderIds(provider).forEach((id) => this.selectedProviderIds.add(id));
       }
     });
-  }
-
-  private applySelectedProvider(provider: Provider): void {
-    this.selectedProviderName = provider.businessName || provider.name || this.selectedProviderName;
-    this.getProviderIds(provider).forEach((id) => this.selectedProviderIds.add(id));
-  }
-
-  private lookupProviderName(service: ProviderService): string {
-    const matchedId = this.getServiceProviderIds(service).find((id) => this.providerNameById[id]);
-    return matchedId ? this.providerNameById[matchedId] : '';
   }
 
   private getServiceProviderIds(service: ProviderService): string[] {

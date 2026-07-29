@@ -3,19 +3,24 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
-  PROVIDER_SERVICE_CATEGORY_OPTIONS,
+  DeliveryMode,
+  Provider,
   ProviderService,
-  ProviderServicePayload
+  ProviderServicePayload,
+  ServiceDefinition
 } from '../../../core/models/marketplace.models';
+import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 
 const emptyServiceForm: ProviderServicePayload = {
+  serviceDefinitionId: null,
   serviceName: '',
   category: '',
   description: '',
   price: null,
   currency: 'AUD',
   durationMinutes: null,
-  isActive: true
+  deliveryMode: 'AtProviderLocation',
+  isActive: false
 };
 
 @Component({
@@ -24,8 +29,15 @@ const emptyServiceForm: ProviderServicePayload = {
   styleUrls: ['./provider-services-management.component.scss']
 })
 export class ProviderServicesManagementComponent implements OnInit {
-  readonly categoryOptions = PROVIDER_SERVICE_CATEGORY_OPTIONS;
+  readonly deliveryModeOptions: AppInputOption[] = [
+    { label: 'deliveryMode.atProvider', value: 'AtProviderLocation' },
+    { label: 'deliveryMode.atCustomer', value: 'AtCustomerLocation' },
+    { label: 'deliveryMode.online', value: 'Online' },
+    { label: 'deliveryMode.hybrid', value: 'Hybrid' }
+  ];
   services: ProviderService[] = [];
+  serviceDefinitions: ServiceDefinition[] = [];
+  profile: Provider | null = null;
   form: ProviderServicePayload = { ...emptyServiceForm };
   editingId: string | null = null;
   isEditorOpen = false;
@@ -37,7 +49,23 @@ export class ProviderServicesManagementComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
+    this.loadSetupData();
     this.loadServices();
+  }
+
+  get definitionOptions(): AppInputOption[] {
+    return this.serviceDefinitions.map((definition) => ({
+      label: `${definition.name} — ${definition.categoryName}`,
+      value: definition.id
+    }));
+  }
+
+  get selectedDefinition(): ServiceDefinition | null {
+    return this.serviceDefinitions.find((item) => item.id === this.form.serviceDefinitionId) || null;
+  }
+
+  get isProfileReady(): boolean {
+    return this.profile?.isSetupComplete === true;
   }
 
   get activeServicesCount(): number {
@@ -57,6 +85,16 @@ export class ProviderServicesManagementComponent implements OnInit {
         this.errorMessage = 'providerServices.loadError';
         this.isLoading = false;
       }
+    });
+  }
+
+  loadSetupData(): void {
+    this.apiService.get<ApiResponse<ServiceDefinition[]>>('/service-definitions').subscribe({
+      next: (response) => this.serviceDefinitions = response.data || [],
+      error: () => this.errorMessage = 'providerServices.loadDefinitionsError'
+    });
+    this.apiService.get<ApiResponse<Provider>>('/providers/me').subscribe({
+      next: (response) => this.profile = response.data || null
     });
   }
 
@@ -89,12 +127,14 @@ export class ProviderServicesManagementComponent implements OnInit {
   editService(service: ProviderService): void {
     this.editingId = service.id;
     this.form = {
+      serviceDefinitionId: service.serviceDefinitionId || null,
       serviceName: service.serviceName || service.name || '',
-      category: service.category || '',
+      category: service.serviceCategoryName || service.category || '',
       description: service.description || '',
       price: service.price ?? null,
       currency: service.currency || 'AUD',
       durationMinutes: service.durationMinutes ?? null,
+      deliveryMode: service.deliveryMode || 'AtProviderLocation',
       isActive: service.isActive !== false
     };
     this.errorMessage = '';
@@ -142,9 +182,19 @@ export class ProviderServicesManagementComponent implements OnInit {
     return service.serviceName || service.name || '';
   }
 
+  getDeliveryModeKey(deliveryMode: DeliveryMode | undefined): string {
+    switch (deliveryMode) {
+      case 'AtCustomerLocation': return 'deliveryMode.atCustomer';
+      case 'Online': return 'deliveryMode.online';
+      case 'Hybrid': return 'deliveryMode.hybrid';
+      default: return 'deliveryMode.atProvider';
+    }
+  }
+
   private toPayload(): ProviderServicePayload {
     return {
       ...this.form,
+      category: this.selectedDefinition?.categoryName || '',
       price: this.form.price === null ? 0 : Number(this.form.price),
       durationMinutes: this.form.durationMinutes === null ? 0 : Number(this.form.durationMinutes),
       isActive: !!this.form.isActive

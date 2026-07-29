@@ -24,6 +24,12 @@ export interface Provider {
   isActive?: boolean;
   isAvailable?: boolean;
   description?: string;
+  providerTypes?: ProviderType[];
+  facilities?: ProviderFacility[];
+  supportedSpecies?: string[];
+  location?: ProviderLocation;
+  isSetupComplete?: boolean;
+  missingSetupItems?: string[];
 }
 
 export interface ProviderProfilePayload {
@@ -41,6 +47,52 @@ export interface ProviderProfilePayload {
   postcode?: string;
   country?: string;
   isActive?: boolean;
+  providerTypeIds: string[];
+  facilityIds: string[];
+  supportedSpecies: string[];
+}
+
+export interface ProviderType {
+  id: string;
+  name: string;
+  key?: string;
+  description?: string;
+}
+
+export interface ProviderFacility {
+  id: string;
+  name: string;
+  key?: string;
+  category?: string;
+  description?: string;
+  isVerified?: boolean;
+}
+
+export interface ProviderLocation {
+  addressLine1?: string;
+  addressLine2?: string;
+  suburb?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+}
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  key?: string;
+  description?: string;
+  iconKey?: string;
+}
+
+export interface ServiceDefinition {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  key?: string;
+  description?: string;
+  applicableSpecies: string[];
 }
 
 export interface ProviderService {
@@ -60,17 +112,33 @@ export interface ProviderService {
   durationMinutes?: number;
   description?: string;
   isActive?: boolean;
+  serviceDefinitionId?: string;
+  serviceCategoryId?: string;
+  serviceCategoryName?: string;
+  deliveryMode?: DeliveryMode;
+  applicableSpecies?: string[];
+  providerTypes?: string[];
+  facilities?: string[];
+  providerSupportedSpecies?: string[];
+  providerAddressLine1?: string;
+  providerSuburb?: string;
+  providerState?: string;
+  providerPostcode?: string;
 }
 
 export interface ProviderServicePayload {
+  serviceDefinitionId: string | null;
   serviceName?: string;
   category?: string;
   description?: string;
   price: number | null;
   currency?: string;
   durationMinutes: number | null;
+  deliveryMode: DeliveryMode;
   isActive: boolean;
 }
+
+export type DeliveryMode = 'AtProviderLocation' | 'AtCustomerLocation' | 'Online' | 'Hybrid';
 
 export interface ServiceArea {
   id: string;
@@ -96,6 +164,10 @@ export interface ServiceRequestPayload {
   providerServiceId: string | null;
   requestMessage?: string;
   requestedDate: string;
+  serviceAddressLine1?: string;
+  serviceSuburb?: string;
+  serviceState?: string;
+  servicePostcode?: string;
 }
 
 export interface ServiceRequest {
@@ -133,10 +205,13 @@ export interface ServiceRequest {
   petBreed?: string;
   rejectionReason?: string;
   completedDate?: string;
+  deliveryMode?: DeliveryMode;
+  serviceAddressLine1?: string;
+  serviceSuburb?: string;
+  serviceState?: string;
+  servicePostcode?: string;
 }
 
 export interface RejectServiceRequestPayload {
   rejectionReason?: string;
 }
-
-export const PROVIDER_SERVICE_CATEGORY_OPTIONS = ['Grooming', 'Walking', 'Boarding', 'Training', 'Veterinary', 'Pet Sitting', 'Other'];

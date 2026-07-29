@@ -1,1 +1,35 @@
 :host { display: block; }
+
+.provider-notice a {
+  color: inherit;
+  font-weight: 700;
+  margin-inline-start: .4rem;
+}
+
+.service-context {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-top: .85rem;
+
+  span {
+    color: #667085;
+    font-size: .85rem;
+  }
+}
+
+.definition-summary {
+  background: #f5faf8;
+  border: 1px solid #d8e8e2;
+  border-radius: .75rem;
+  display: grid;
+  gap: .25rem;
+  padding: .85rem;
+
+  span,
+  p {
+    color: #667085;
+    margin: 0;
+  }
+}

@@ -18,7 +18,10 @@
       </div>
       <div class="provider-identity"><h3>{{ getProviderName(provider) || ('providers.providerFallback' | translate) }}</h3><p>{{ provider.suburb || ('providers.areaUnavailable' | translate) }}<span *ngIf="provider.state">, {{ provider.state }}</span></p></div>
       <p class="provider-description">{{ provider.description || provider.businessDescription || ('providers.descriptionFallback' | translate) }}</p>
-      <div class="category-row" *ngIf="getProviderCategories(provider).length"><app-badge tone="neutral" *ngFor="let category of getProviderCategories(provider)">{{ category | translate }}</app-badge></div>
+      <div class="category-row">
+        <app-badge tone="info" *ngFor="let providerType of provider.providerTypes">{{ providerType.name }}</app-badge>
+        <app-badge tone="neutral" *ngFor="let category of getProviderCategories(provider)">{{ category }}</app-badge>
+      </div>
       <div class="provider-summary">
         <span><strong>{{ getProviderServices(provider).length }}</strong>{{ 'providers.servicesCount' | translate }}</span>
         <span><strong>{{ provider.phone || '—' }}</strong>{{ 'providers.contact' | translate }}</span>
@@ -35,6 +38,12 @@
       <div class="detail-identity"><span class="provider-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11h-5v-6H9v6H4Zm7-8h2V9h3V7h-3V5h-2v2H8v2h3v3Z"/></svg></span><div><h3>{{ getProviderName(selectedProvider) || ('providers.providerFallback' | translate) }}</h3><p>{{ selectedProvider.suburb }}<span *ngIf="selectedProvider.state">, {{ selectedProvider.state }}</span></p></div></div>
       <div class="provider-badges"><app-badge tone="info" *ngIf="isVerified(selectedProvider)">{{ 'providers.verified' | translate }}</app-badge><app-badge [tone]="isAvailable(selectedProvider) ? 'success' : 'neutral'">{{ (isAvailable(selectedProvider) ? 'providers.available' : 'providers.inactive') | translate }}</app-badge></div>
       <p class="provider-detail-copy">{{ selectedProvider.description || selectedProvider.businessDescription || ('providers.descriptionFallback' | translate) }}</p>
+      <div class="category-row" *ngIf="selectedProvider.providerTypes?.length">
+        <app-badge tone="info" *ngFor="let providerType of selectedProvider.providerTypes">{{ providerType.name }}</app-badge>
+      </div>
+      <div class="category-row" *ngIf="selectedProvider.facilities?.length">
+        <app-badge tone="neutral" *ngFor="let facility of selectedProvider.facilities">{{ facility.name }}</app-badge>
+      </div>
       <dl class="detail-list"><div><dt>{{ 'providers.area' | translate }}</dt><dd>{{ selectedProvider.suburb || ('common.notAvailable' | translate) }}, {{ selectedProvider.state || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.phone' | translate }}</dt><dd>{{ selectedProvider.phone || selectedProvider.phoneNumber || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.email' | translate }}</dt><dd>{{ selectedProvider.email || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.website' | translate }}</dt><dd>{{ selectedProvider.website || selectedProvider.websiteUrl || ('common.notAvailable' | translate) }}</dd></div></dl>
       <a class="primary-detail-action" [routerLink]="['/providers', getProviderRouteId(selectedProvider), 'services']">{{ 'providers.viewServices' | translate }}</a>
     </section>
