@@ -25,7 +25,7 @@
 
 .provider-workspace app-page-header .page-head {
   background:
-    radial-gradient(circle at 88% 20%, rgba(11, 128, 120, .13), transparent 24%),
+    radial-gradient(circle at 88% 20%, var(--accent-subtle), transparent 24%),
     linear-gradient(118deg, #fff 0%, #fbfaf7 70%, #eaf5f2 100%);
 }
 
@@ -57,7 +57,7 @@
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(circle at 50% 0%, rgba(11, 128, 120, .08), transparent 38%),
+    radial-gradient(circle at 50% 0%, var(--accent-subtle), transparent 38%),
     rgba(255, 255, 255, .88);
   color: var(--color-muted);
   text-align: center;
@@ -86,7 +86,7 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border: 1px solid rgba(11, 128, 120, .14);
+  border: 1px solid var(--accent-subtle);
   color: var(--color-primary);
   background: var(--color-primary-soft);
 }
@@ -122,7 +122,7 @@
 .profile-identity {
   min-height: 100%;
   background:
-    radial-gradient(circle at 100% 0%, rgba(11, 128, 120, .09), transparent 32%),
+    radial-gradient(circle at 100% 0%, var(--accent-subtle), transparent 32%),
     var(--color-surface);
 }
 
@@ -237,7 +237,7 @@
   height: 8px;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: #e6eae6;
+  background: var(--app-border);
 }
 
 .completion-track span,
@@ -245,7 +245,7 @@
   height: 100%;
   display: block;
   border-radius: inherit;
-  background: var(--gradient-brand);
+  background: var(--button-primary-bg);
 }
 
 .profile-checklist {
@@ -485,7 +485,7 @@
   gap: 16px;
   align-items: center;
   padding: 20px 22px;
-  border: 1px solid rgba(11, 128, 120, .18);
+  border: 1px solid var(--accent-subtle);
   border-radius: var(--radius-xl);
   background: linear-gradient(120deg, var(--color-primary-soft), rgba(255, 255, 255, .94));
 }
@@ -520,7 +520,7 @@
 .coverage-card {
   position: relative;
   background:
-    radial-gradient(circle at 100% 0%, rgba(11, 128, 120, .08), transparent 35%),
+    radial-gradient(circle at 100% 0%, var(--accent-subtle), transparent 35%),
     var(--color-surface) !important;
 }
 
@@ -583,9 +583,9 @@
 }
 
 .request-toolbar button.active {
-  color: #fff;
-  background: var(--color-nav);
-  box-shadow: 0 7px 16px rgba(23, 55, 61, .16);
+  color: var(--button-primary-text);
+  background: var(--button-primary-bg);
+  box-shadow: var(--shadow-glow);
 }
 
 .request-toolbar button span {
@@ -627,13 +627,13 @@
 
 .queue-card:hover,
 .queue-card.selected {
-  border-color: rgba(11, 128, 120, .42);
+  border-color: var(--accent);
   box-shadow: var(--shadow-medium);
   transform: translateY(-1px);
 }
 
 .queue-card.selected {
-  background: linear-gradient(110deg, var(--color-surface), rgba(229, 244, 241, .45));
+  background: linear-gradient(110deg, var(--app-surface), var(--accent-subtle));
 }
 
 .provider-requests-page .status-rail {
@@ -716,7 +716,7 @@
   display: grid !important;
   gap: 18px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(11, 128, 120, .08), transparent 30%),
+    radial-gradient(circle at 100% 0%, var(--accent-subtle), transparent 30%),
     var(--color-surface) !important;
 }
 
@@ -862,7 +862,7 @@ app-provider-profile {
     display: grid;
     gap: 10px;
     padding: 13px;
-    border: 1px solid #c6e8dc;
+    border: 1px solid var(--accent);
     border-radius: var(--radius-lg);
     background: var(--color-primary-soft);
   }
@@ -882,8 +882,8 @@ app-provider-profile {
     justify-content: center;
     padding-inline: 6px;
     border-radius: var(--radius-pill);
-    color: #fff;
-    background: var(--color-primary);
+    color: var(--accent-contrast);
+    background: var(--accent);
     font-size: 11px;
     font-weight: 800;
   }
@@ -901,10 +901,10 @@ app-provider-profile {
     align-items: center;
     gap: 5px;
     padding: 5px 9px;
-    border: 1px solid #b6dcce;
+    border: 1px solid var(--accent);
     border-radius: var(--radius-pill);
-    color: var(--color-primary-dark);
-    background: #fff;
+    color: var(--accent-strong);
+    background: var(--app-surface);
     cursor: pointer;
     font: inherit;
     font-size: 12px;
@@ -933,7 +933,7 @@ app-provider-profile {
   }
 
   .selected-facility-list button:focus-visible {
-    outline: 3px solid rgba(22, 134, 107, .18);
+    outline: 3px solid var(--accent-ring);
     outline-offset: 2px;
   }
 

@@ -4,6 +4,7 @@ import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
 import { Provider, ProviderService, ServiceRequest } from '../../../core/models/marketplace.models';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 @Component({
   selector: 'app-my-requests',
@@ -27,10 +28,19 @@ export class MyRequestsComponent implements OnInit {
     { value: 'rejected', label: 'requests.filterRejected' }
   ];
 
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly preferencesService: UserPreferencesService
+  ) {}
 
   ngOnInit(): void {
-    this.loadRequests();
+    this.preferencesService.load().subscribe((preferences) => {
+      const filter = (preferences.customerDefaultRequestFilter || 'All').toLowerCase();
+      if (['all', 'active', 'completed', 'rejected'].includes(filter)) {
+        this.statusFilter = filter as typeof this.statusFilter;
+      }
+      this.loadRequests();
+    });
   }
 
   getPetName(request: ServiceRequest): string {

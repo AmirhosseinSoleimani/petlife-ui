@@ -35,10 +35,10 @@
   height: 72px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 34%, rgba(11, 128, 120, .38) 0 7%, transparent 8%),
-    radial-gradient(circle at 66% 34%, rgba(11, 128, 120, .38) 0 7%, transparent 8%),
-    radial-gradient(circle at 50% 24%, rgba(11, 128, 120, .38) 0 6%, transparent 7%),
-    radial-gradient(ellipse at 50% 64%, rgba(11, 128, 120, .38) 0 18%, transparent 19%);
+    radial-gradient(circle at 34% 34%, var(--accent) 0 7%, transparent 8%),
+    radial-gradient(circle at 66% 34%, var(--accent) 0 7%, transparent 8%),
+    radial-gradient(circle at 50% 24%, var(--accent) 0 6%, transparent 7%),
+    radial-gradient(ellipse at 50% 64%, var(--accent) 0 18%, transparent 19%);
   opacity: .28;
   pointer-events: none;
 }

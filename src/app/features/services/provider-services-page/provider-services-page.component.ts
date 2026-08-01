@@ -12,6 +12,7 @@ import {
   ServiceCategory
 } from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 @Component({
   selector: 'app-provider-services-page',
@@ -35,7 +36,8 @@ export class ProviderServicesPageComponent implements OnInit {
   constructor(
     private readonly apiService: ApiService,
     private readonly route: ActivatedRoute,
-    private readonly i18nService: I18nService
+    private readonly i18nService: I18nService,
+    private readonly preferencesService: UserPreferencesService
   ) {}
 
   ngOnInit(): void {
@@ -46,7 +48,7 @@ export class ProviderServicesPageComponent implements OnInit {
       this.loadSelectedProvider(this.providerId);
     }
 
-    this.loadPets();
+    this.preferencesService.load().subscribe(() => this.loadPets());
   }
 
   get petOptions(): AppInputOption[] {
@@ -89,6 +91,10 @@ export class ProviderServicesPageComponent implements OnInit {
       next: (response) => {
         this.pets = response.data || [];
         this.isLoadingPets = false;
+        const defaultPetId = this.preferencesService.current.defaultPetId;
+        if (!this.selectedPetId && defaultPetId && this.pets.some((pet) => pet.id === defaultPetId)) {
+          this.selectPet(defaultPetId);
+        }
       },
       error: () => {
         this.errorMessage = 'services.loadPetsError';

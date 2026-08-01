@@ -17,7 +17,7 @@
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }
-.file-upload:focus-within { box-shadow: 0 0 0 3px rgba(11, 128, 120, .12); }
+.file-upload:focus-within { box-shadow: 0 0 0 3px var(--accent-ring); }
 
 .file-picker {
   position: relative;
@@ -32,7 +32,7 @@
   border-radius: var(--radius-md);
   color: #fff;
   background: var(--color-primary);
-  box-shadow: 0 8px 18px rgba(11, 128, 120, .14);
+  box-shadow: var(--shadow-glow);
   font-size: var(--font-size-caption);
   font-weight: 800;
   cursor: pointer;

@@ -1,20 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 import { ApiService } from '../../core/api/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { HealthRecord, Pet, Reminder } from '../../core/models/customer-core.models';
 import { Provider, ProviderService, ServiceArea, ServiceRequest } from '../../core/models/marketplace.models';
+import {
+  CUSTOMER_QUICK_ACTIONS,
+  PROVIDER_QUICK_ACTIONS,
+  QuickActionDefinition
+} from '../../core/preferences/user-preferences.models';
+import { UserPreferencesService } from '../../core/preferences/user-preferences.service';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   readonly currentUser = this.authService.getCurrentUser();
   pets: Pet[] = [];
   reminders: Reminder[] = [];
@@ -40,13 +47,23 @@ export class DashboardComponent implements OnInit {
   providerServicesLoadFailed = false;
   serviceAreasLoadFailed = false;
   providerRequestsLoadFailed = false;
+  visibleQuickActions: QuickActionDefinition[] = [];
+  private preferencesSubscription?: Subscription;
 
   constructor(
     private readonly authService: AuthService,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly preferencesService: UserPreferencesService
   ) {}
 
   ngOnInit(): void {
+    this.preferencesSubscription = this.preferencesService.preferences$.subscribe((preferences) => {
+      const definitions = this.isProvider ? PROVIDER_QUICK_ACTIONS : CUSTOMER_QUICK_ACTIONS;
+      const selected = new Set(preferences.quickActions);
+      this.visibleQuickActions = definitions.filter((action) => selected.has(action.key));
+    });
+    this.preferencesService.load().subscribe();
+
     if (this.isProvider) {
       this.loadProviderDashboard();
       return;
@@ -55,6 +72,10 @@ export class DashboardComponent implements OnInit {
     this.loadPets();
     this.loadReminders();
     this.loadRequests();
+  }
+
+  ngOnDestroy(): void {
+    this.preferencesSubscription?.unsubscribe();
   }
 
   get isProvider(): boolean {

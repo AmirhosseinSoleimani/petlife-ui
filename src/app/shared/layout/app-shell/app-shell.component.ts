@@ -1,8 +1,9 @@
-import { Component, HostListener, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
 import { AuthUser } from '../../../core/models/auth.models';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 interface NavItem {
   labelKey: string;
@@ -16,8 +17,9 @@ interface NavItem {
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.scss']
 })
-export class AppShellComponent implements OnDestroy {
+export class AppShellComponent implements OnInit, OnDestroy {
   isDrawerOpen = false;
+  isPreferencesOpen = false;
 
   private readonly customerNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
@@ -41,8 +43,13 @@ export class AppShellComponent implements OnDestroy {
 
   constructor(
     private readonly authService: AuthService,
-    readonly i18nService: I18nService
+    readonly i18nService: I18nService,
+    private readonly preferencesService: UserPreferencesService
   ) {}
+
+  ngOnInit(): void {
+    this.preferencesService.load(true).subscribe();
+  }
 
   get displayName(): string {
     return this.currentUser?.name || 'PetLife User';
@@ -70,6 +77,7 @@ export class AppShellComponent implements OnDestroy {
 
   logout(): void {
     this.closeDrawer();
+    this.preferencesService.resetSession();
     this.authService.logout();
   }
 

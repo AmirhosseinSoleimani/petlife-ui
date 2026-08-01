@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ServiceRequest } from '../../../core/models/marketplace.models';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 type RequestFilter = 'all' | 'requested' | 'accepted' | 'completed' | 'rejected';
 
@@ -22,10 +23,20 @@ export class ProviderRequestsComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly preferencesService: UserPreferencesService
+  ) {}
 
   ngOnInit(): void {
-    this.loadRequests();
+    this.preferencesService.load().subscribe((preferences) => {
+      const savedFilter = (preferences.providerDefaultRequestFilter || 'All').toLowerCase();
+      const filter = savedFilter === 'new' ? 'requested' : savedFilter;
+      if (['all', 'requested', 'accepted', 'completed', 'rejected'].includes(filter)) {
+        this.activeFilter = filter as RequestFilter;
+      }
+      this.loadRequests();
+    });
   }
 
   loadRequests(): void {
@@ -35,9 +46,10 @@ export class ProviderRequestsComponent implements OnInit {
     this.apiService.get<ApiResponse<ServiceRequest[]>>('/service-requests/provider').subscribe({
       next: (response) => {
         this.requests = response.data || [];
+        const visibleRequests = this.filteredRequests;
         this.selectedRequest = this.selectedRequest
-          ? this.requests.find((request) => request.id === this.selectedRequest?.id) || null
-          : this.requests[0] || null;
+          ? visibleRequests.find((request) => request.id === this.selectedRequest?.id) || visibleRequests[0] || null
+          : visibleRequests[0] || null;
         this.isLoading = false;
       },
       error: () => {

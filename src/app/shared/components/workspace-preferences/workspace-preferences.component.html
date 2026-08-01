@@ -1,0 +1,80 @@
+<app-modal
+  [open]="open"
+  title="preferences.title"
+  description="preferences.description"
+  (closed)="close()"
+>
+  <form class="preferences-form" (ngSubmit)="save()">
+    <section class="preference-section">
+      <div class="preference-heading"><h3>{{ 'preferences.appearance' | translate }}</h3><p>{{ 'preferences.appearanceHelp' | translate }}</p></div>
+      <fieldset>
+        <legend>{{ 'preferences.theme' | translate }}</legend>
+        <div class="choice-grid">
+          <button *ngFor="let theme of themes" type="button" class="choice-card" [class.selected]="themeMode === theme" [attr.aria-pressed]="themeMode === theme" (click)="selectTheme(theme)">
+            <span class="choice-icon" aria-hidden="true">{{ theme === 'Light' ? '☀' : '●' }}</span>
+            <strong>{{ ('preferences.theme.' + theme.toLowerCase()) | translate }}</strong>
+            <span *ngIf="themeMode === theme" class="selected-mark" aria-hidden="true">✓</span>
+          </button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>{{ 'preferences.accentColor' | translate }}</legend>
+        <p class="field-help">{{ 'preferences.accentColorHelp' | translate }}</p>
+        <div class="accent-grid">
+          <button *ngFor="let accent of accentColors" type="button" class="choice-card accent-choice" [class.selected]="accentColor === accent" [attr.aria-pressed]="accentColor === accent" (click)="selectAccent(accent)">
+            <span class="accent-swatch" [ngClass]="accent.toLowerCase()" aria-hidden="true"></span>
+            <strong>{{ ('preferences.accent.' + accent.toLowerCase()) | translate }}</strong>
+            <span *ngIf="accentColor === accent" class="selected-mark" aria-hidden="true">✓</span>
+          </button>
+        </div>
+        <div class="accent-preview" aria-hidden="true">
+          <span class="preview-sidebar"></span>
+          <span class="preview-button"></span>
+          <span class="preview-chip"></span>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="preference-section">
+      <div class="preference-heading"><h3>{{ 'preferences.defaults' | translate }}</h3><p>{{ 'preferences.defaultsHelp' | translate }}</p></div>
+      <label *ngIf="!isProvider" class="preference-field">
+        <span>{{ 'preferences.defaultPet' | translate }}</span>
+        <select [(ngModel)]="defaultPetId" name="defaultPetId">
+          <option [ngValue]="null">{{ 'preferences.noDefaultPet' | translate }}</option>
+          <option *ngFor="let pet of pets" [ngValue]="pet.id">{{ pet.petName }}</option>
+        </select>
+      </label>
+      <label *ngIf="!isProvider" class="preference-field">
+        <span>{{ 'preferences.customerRequestFilter' | translate }}</span>
+        <select [(ngModel)]="customerFilter" name="customerFilter">
+          <option *ngFor="let filter of customerFilters" [ngValue]="filter">{{ ('preferences.filter.' + filter.toLowerCase()) | translate }}</option>
+        </select>
+      </label>
+      <label *ngIf="isProvider" class="preference-field">
+        <span>{{ 'preferences.providerRequestFilter' | translate }}</span>
+        <select [(ngModel)]="providerFilter" name="providerFilter">
+          <option *ngFor="let filter of providerFilters" [ngValue]="filter">{{ ('preferences.filter.' + filter.toLowerCase()) | translate }}</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="preference-section">
+      <div class="preference-heading"><h3>{{ 'preferences.quickActions' | translate }}</h3><p>{{ 'preferences.quickActionsHelp' | translate }}</p></div>
+      <div class="quick-action-options">
+        <label *ngFor="let action of quickActions" [class.selected]="selectedQuickActions.includes(action.key)">
+          <input type="checkbox" [checked]="selectedQuickActions.includes(action.key)" (change)="toggleQuickAction(action.key, $any($event.target).checked)" />
+          <span class="quick-marker" aria-hidden="true">{{ action.marker }}</span>
+          <span>{{ action.labelKey | translate }}</span>
+          <span *ngIf="selectedQuickActions.includes(action.key)" class="selected-mark" aria-hidden="true">✓</span>
+        </label>
+      </div>
+    </section>
+
+    <p *ngIf="errorMessage" class="form-message error-message" role="alert">{{ errorMessage | translate }}</p>
+    <p *ngIf="successMessage" class="form-message success-message" role="status">{{ successMessage | translate }}</p>
+    <div class="preference-actions">
+      <app-button type="button" variant="ghost" (buttonClick)="resetDefaults()">{{ 'preferences.reset' | translate }}</app-button>
+      <app-button type="submit" [loading]="isSaving">{{ 'preferences.save' | translate }}</app-button>
+    </div>
+  </form>
+</app-modal>

@@ -36,8 +36,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: 0;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(11, 128, 120, .14);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 input:disabled,
 select:disabled,

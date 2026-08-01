@@ -78,6 +78,15 @@
             <option *ngFor="let option of languageOptions" [ngValue]="option.code">{{ option.labelKey | translate }}</option>
           </select>
         </label>
+        <button
+          type="button"
+          class="preferences-trigger"
+          [attr.aria-label]="'preferences.open' | translate"
+          [attr.title]="'preferences.open' | translate"
+          (click)="isPreferencesOpen = true"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.5-2.4 1a8.6 8.6 0 0 0-1.7-1L15 3.5h-4L10.7 6A8.6 8.6 0 0 0 9 7L6.6 6l-2 3.5 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.5L9 17a8.6 8.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a8.6 8.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+        </button>
         <div class="user-card">
           <span class="avatar">{{ displayName.charAt(0) }}</span>
           <div class="user-card-copy">
@@ -97,3 +106,5 @@
     </main>
   </div>
 </div>
+
+<app-workspace-preferences [open]="isPreferencesOpen" (closed)="isPreferencesOpen = false"></app-workspace-preferences>

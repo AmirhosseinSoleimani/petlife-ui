@@ -30,6 +30,7 @@ import { AppModalComponent } from './shared/components/app-modal/app-modal.compo
 import { AppFileUploadComponent } from './shared/components/app-file-upload/app-file-upload.component';
 import { AppPageHeaderComponent } from './shared/components/app-page-header/app-page-header.component';
 import { AppShellComponent } from './shared/layout/app-shell/app-shell.component';
+import { WorkspacePreferencesComponent } from './shared/components/workspace-preferences/workspace-preferences.component';
 
 @NgModule({
   declarations: [
@@ -57,6 +58,7 @@ import { AppShellComponent } from './shared/layout/app-shell/app-shell.component
     AppFileUploadComponent,
     AppBadgeComponent,
     AppPageHeaderComponent,
+    WorkspacePreferencesComponent,
     TranslatePipe
   ],
   imports: [

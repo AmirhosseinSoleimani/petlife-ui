@@ -153,10 +153,7 @@
         <app-card class="care-panel provider-quick-panel">
           <div class="section-head"><div><p class="eyebrow">{{ 'dashboard.shortcuts' | translate }}</p><h3>{{ 'dashboard.quickActions' | translate }}</h3></div></div>
           <nav class="provider-quick-grid" [attr.aria-label]="'dashboard.quickActions' | translate">
-            <a routerLink="/provider/profile"><span aria-hidden="true">01</span>{{ 'dashboard.editProviderProfile' | translate }}</a>
-            <a routerLink="/provider/services"><span aria-hidden="true">02</span>{{ 'dashboard.addService' | translate }}</a>
-            <a routerLink="/provider/service-areas"><span aria-hidden="true">03</span>{{ 'dashboard.addServiceArea' | translate }}</a>
-            <a routerLink="/provider/requests"><span aria-hidden="true">04</span>{{ 'dashboard.reviewRequests' | translate }}</a>
+            <a *ngFor="let action of visibleQuickActions" [routerLink]="action.path" [queryParams]="action.queryParams"><span aria-hidden="true">{{ action.marker }}</span>{{ action.labelKey | translate }}</a>
           </nav>
         </app-card>
       </aside>
@@ -267,10 +264,7 @@
       <app-card class="care-panel quick-panel">
         <div class="section-head"><div><p class="eyebrow">{{ 'dashboard.shortcuts' | translate }}</p><h3>{{ 'dashboard.quickActions' | translate }}</h3></div></div>
         <nav class="quick-grid" [attr.aria-label]="'dashboard.quickActions' | translate">
-          <a routerLink="/pets" [queryParams]="{ action: 'add' }"><span aria-hidden="true">+</span>{{ 'dashboard.addPet' | translate }}</a>
-          <a routerLink="/reminders"><span aria-hidden="true">✓</span>{{ 'dashboard.addReminder' | translate }}</a>
-          <a routerLink="/services"><span aria-hidden="true">⌕</span>{{ 'dashboard.browseServices' | translate }}</a>
-          <a routerLink="/emergency-vets" class="urgent"><span aria-hidden="true">+</span>{{ 'dashboard.findEmergencyVet' | translate }}</a>
+          <a *ngFor="let action of visibleQuickActions" [routerLink]="action.path" [queryParams]="action.queryParams" [class.urgent]="action.urgent"><span aria-hidden="true">{{ action.marker }}</span>{{ action.labelKey | translate }}</a>
         </nav>
       </app-card>
 

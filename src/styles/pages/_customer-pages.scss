@@ -109,7 +109,7 @@ app-provider-services-page {
   .results-step { align-content: start; }
   .market-service-card { min-width: 0; display: flex; flex-direction: column; gap: 13px; }
   .service-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .service-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-md); color: var(--color-info); background: var(--color-info-soft); font-size: 18px; font-weight: 900; }
+  .service-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-md); color: var(--accent-strong); background: var(--accent-soft); font-size: 18px; font-weight: 900; }
   .service-avatar svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
   .service-identity h3 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
   .service-identity p, .service-description { margin: 4px 0 0; color: var(--color-muted); font-size: var(--font-size-caption); line-height: 1.55; overflow-wrap: anywhere; }
@@ -145,6 +145,7 @@ app-my-requests {
   .request-list { width: 100%; min-width: 0; display: grid; gap: 12px; }
   .filter-empty { margin: 0; padding: 30px; border-radius: var(--radius-lg); color: var(--color-muted); background: var(--color-surface); text-align: center; }
   .lifecycle-card { position: relative; width: 100%; min-width: 0; display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 14px; align-items: stretch; cursor: pointer; }
+  .lifecycle-card.selected { border-color: var(--accent); background: linear-gradient(110deg, var(--app-surface), var(--accent-subtle)); box-shadow: var(--shadow-medium); }
   .status-rail { position: relative; grid-column: 1; grid-row: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 0; }
   .status-rail::before { content: ""; position: absolute; inset-block: 34px; width: 2px; background: var(--color-border); }
   .status-rail span { position: relative; z-index: 1; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--color-border-strong); box-shadow: 0 0 0 2px var(--color-border); }
@@ -185,7 +186,7 @@ app-create-service-request {
   .step-heading h3 { font-size: 1.05rem; }
   .step-heading p { margin-top: 3px; color: var(--color-muted); font-size: var(--font-size-caption); }
   .step-content > a { width: fit-content; color: var(--color-primary); font-size: var(--font-size-caption); font-weight: 800; }
-  .selection-confirmation { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 12px; border: 1px solid rgba(11,128,120,.18); border-radius: var(--radius-md); background: var(--color-primary-soft); }
+  .selection-confirmation { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 12px; border: 1px solid var(--accent); border-radius: var(--radius-md); background: var(--accent-soft); }
   .selection-avatar { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: var(--radius-md); color: var(--color-primary-dark); background: #fff; font-weight: 900; }
   .selection-confirmation > div { min-width: 0; flex: 1; }
   .selection-confirmation small, .selection-confirmation strong, .selection-confirmation p { display: block; overflow-wrap: anywhere; }

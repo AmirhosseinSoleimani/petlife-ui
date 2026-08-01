@@ -17,7 +17,7 @@
     <div class="request-layout">
       <div class="request-list">
         <p *ngIf="!filteredRequests.length" class="filter-empty">{{ 'requests.noStatusResults' | translate }}</p>
-        <app-card class="lifecycle-card" *ngFor="let request of filteredRequests" [attr.data-status]="getStatus(request).toLowerCase()" (click)="selectRequest(request)">
+        <app-card class="lifecycle-card" *ngFor="let request of filteredRequests" [class.selected]="selectedRequest?.id === request.id" [attr.data-status]="getStatus(request).toLowerCase()" (click)="selectRequest(request)">
           <div class="status-rail" aria-hidden="true"><span [class.reached]="getStatusStep(request) >= 1"></span><span [class.reached]="getStatusStep(request) >= 2"></span><span [class.reached]="getStatusStep(request) >= 3"></span></div>
           <div class="request-card-content">
             <div class="request-heading"><div><p class="request-kicker">{{ 'requests.careRequest' | translate }}</p><h3>{{ getServiceName(request) || ('requests.unknownService' | translate) }}</h3></div><app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge></div>

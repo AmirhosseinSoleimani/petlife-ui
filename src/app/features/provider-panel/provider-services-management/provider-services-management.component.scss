@@ -14,14 +14,14 @@
   margin-top: .85rem;
 
   span {
-    color: #667085;
+    color: var(--app-muted);
     font-size: .85rem;
   }
 }
 
 .definition-summary {
-  background: linear-gradient(145deg, #f5faf8, #fbfdfc);
-  border: 1px solid #cfe5dc;
+  background: linear-gradient(145deg, var(--app-surface-soft), var(--app-surface));
+  border: 1px solid var(--app-border);
   border-radius: .9rem;
   display: grid;
   gap: .8rem;
@@ -36,8 +36,8 @@
   }
 
   dl > div {
-    background: rgba(255, 255, 255, .8);
-    border: 1px solid #e0ece7;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
     border-radius: .7rem;
     min-width: 0;
     padding: .65rem;
@@ -48,7 +48,7 @@
   }
 
   dt {
-    color: #667085;
+    color: var(--app-muted);
     font-size: .72rem;
     font-weight: 750;
   }
@@ -72,7 +72,7 @@
   }
 
   small {
-    color: #667085;
+    color: var(--app-muted);
     font-size: .72rem;
     font-weight: 750;
   }
@@ -84,9 +84,9 @@
 
 .definition-summary-icon {
   align-items: center;
-  background: #e4f5ee;
+  background: var(--accent-soft);
   border-radius: .65rem;
-  color: #16866b;
+  color: var(--accent-strong);
   display: inline-flex;
   flex: 0 0 auto;
   height: 2.35rem;

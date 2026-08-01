@@ -8,7 +8,7 @@
 }
 
 .step-kicker {
-  color: #16866b;
+  color: var(--accent-strong);
   font-size: .78rem;
   font-weight: 700;
   letter-spacing: .08em;
@@ -23,9 +23,9 @@
 
   > span {
     align-items: center;
-    background: #16866b;
+    background: var(--button-primary-bg);
     border-radius: .8rem;
-    color: #fff;
+    color: var(--button-primary-text);
     display: inline-flex;
     font-size: 1.35rem;
     height: 3rem;

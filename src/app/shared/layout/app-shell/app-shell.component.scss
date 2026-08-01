@@ -10,10 +10,8 @@
   height: 100vh;
   padding: 20px 16px;
   overflow-y: auto;
-  color: #e5f0ee;
-  background:
-    radial-gradient(circle at 12% 100%, rgba(11, 128, 120, .2), transparent 34%),
-    var(--color-nav);
+  color: var(--sidebar-text);
+  background: linear-gradient(165deg, var(--sidebar-bg-soft), var(--sidebar-bg) 72%);
   border-inline-end: 1px solid rgba(255, 255, 255, .08);
 }
 
@@ -36,7 +34,7 @@
   letter-spacing: -.02em;
 }
 
-.brand-panel small { color: #a9c3c0; }
+.brand-panel small { color: var(--sidebar-muted); }
 
 .brand-mark {
   position: relative;
@@ -75,19 +73,19 @@
   padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  color: #bdd0ce;
+  color: var(--sidebar-muted);
   font-weight: 700;
 }
 
-.nav a:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.nav a:hover { background: var(--sidebar-icon-bg); color: var(--sidebar-text); }
 .nav a:focus-visible { outline-color: rgba(255, 255, 255, .35); }
 .nav a.active {
   border-color: rgba(255, 255, 255, .12);
-  background: rgba(255, 255, 255, .11);
-  color: #fff;
-  box-shadow: inset 3px 0 0 var(--color-accent);
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-text);
+  box-shadow: inset 3px 0 0 var(--sidebar-active-border);
 }
-:host-context([dir='rtl']) .nav a.active { box-shadow: inset -3px 0 0 var(--color-accent); }
+:host-context([dir='rtl']) .nav a.active { box-shadow: inset -3px 0 0 var(--sidebar-active-border); }
 .nav a.disabled { opacity: .55; }
 
 .nav-icon {
@@ -96,10 +94,10 @@
   display: inline-grid;
   place-items: center;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, .07);
+  background: var(--sidebar-icon-bg);
 }
 
-.active .nav-icon { color: #fff; background: rgba(11, 128, 120, .55); }
+.active .nav-icon { color: var(--accent-contrast); background: var(--sidebar-icon-active-bg); }
 .nav-icon svg { width: 17px; height: 17px; fill: currentColor; }
 
 .workspace {
@@ -111,15 +109,12 @@
 
 .topbar {
   width: 100%;
-  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
   padding: 14px 32px;
-  background: rgba(255, 255, 255, .92);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 4px 16px rgba(25, 52, 58, .04);
   backdrop-filter: blur(14px);
 }
 

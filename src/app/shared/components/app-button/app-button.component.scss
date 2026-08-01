@@ -21,14 +21,14 @@
 .app-button:hover:not(:disabled) { transform: translateY(-1px); }
 .app-button:active:not(:disabled) { transform: translateY(0); }
 .app-button:disabled { cursor: not-allowed; opacity: .58; }
-.app-button:focus-visible { outline: 3px solid rgba(11, 128, 120, .22); outline-offset: 2px; }
+.app-button:focus-visible { outline: 3px solid var(--accent-ring); outline-offset: 2px; }
 
 .primary {
-  color: #fff;
-  background: var(--gradient-brand);
-  box-shadow: 0 8px 18px rgba(11, 128, 120, .16);
+  color: var(--button-primary-text);
+  background: var(--button-primary-bg);
+  box-shadow: var(--shadow-glow);
 }
-.primary:hover:not(:disabled) { box-shadow: var(--shadow-glow); }
+.primary:hover:not(:disabled) { background: var(--button-primary-hover); box-shadow: var(--shadow-glow); }
 .secondary { color: var(--color-primary-dark); background: var(--color-surface); border-color: var(--color-border-strong); }
 .secondary:hover:not(:disabled) { border-color: var(--color-primary); background: var(--color-primary-soft); }
 .ghost { color: var(--color-text); background: transparent; }
