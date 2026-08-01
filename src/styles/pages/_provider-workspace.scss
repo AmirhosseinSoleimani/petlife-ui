@@ -847,6 +847,171 @@
   color: var(--color-muted);
 }
 
+app-provider-profile {
+  .facility-fieldset {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .facility-fieldset > p {
+    margin-block: -4px 0;
+  }
+
+  .selected-facilities {
+    display: grid;
+    gap: 10px;
+    padding: 13px;
+    border: 1px solid #c6e8dc;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-soft);
+  }
+
+  .selected-facilities-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .selected-facilities-heading span {
+    min-width: 23px;
+    min-height: 23px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 6px;
+    border-radius: var(--radius-pill);
+    color: #fff;
+    background: var(--color-primary);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .selected-facility-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .selected-facility-list button {
+    max-width: 100%;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border: 1px solid #b6dcce;
+    border-radius: var(--radius-pill);
+    color: var(--color-primary-dark);
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  .selected-facility-list button span:first-of-type {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .selected-facility-list button span:last-child {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .selected-facility-list button svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .selected-facility-list button:focus-visible {
+    outline: 3px solid rgba(22, 134, 107, .18);
+    outline-offset: 2px;
+  }
+
+  .facility-groups {
+    display: grid;
+    gap: 10px;
+  }
+
+  .facility-group {
+    overflow: clip;
+    border: 1px solid #d8e2de;
+    border-radius: var(--radius-lg);
+  }
+
+  .facility-group summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 13px;
+    background: var(--color-surface-soft);
+    cursor: pointer;
+    font-weight: 750;
+    list-style: none;
+  }
+
+  .facility-group summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .facility-group summary::after {
+    width: 7px;
+    height: 7px;
+    margin-inline-start: auto;
+    border-block-end: 2px solid var(--color-muted);
+    border-inline-end: 2px solid var(--color-muted);
+    content: '';
+    transform: rotate(45deg);
+    transition: transform 160ms ease;
+  }
+
+  .facility-group summary small {
+    min-width: 22px;
+    min-height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 5px;
+    border-radius: var(--radius-pill);
+    color: #53615c;
+    background: #e9efec;
+    font-size: 11px;
+  }
+
+  .facility-group[open] summary {
+    border-block-end: 1px solid #d8e2de;
+  }
+
+  .facility-group[open] summary::after {
+    transform: rotate(225deg);
+  }
+
+  .facility-choice-grid {
+    padding: 11px;
+  }
+
+  .facility-no-results {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed #c8d4cf;
+    border-radius: var(--radius-lg);
+    color: var(--color-muted);
+    background: var(--color-surface-soft);
+    text-align: center;
+  }
+}
+
 @media (max-width: 1100px) {
   .profile-overview,
   .request-workbench {
@@ -976,5 +1141,18 @@
   .provider-form-actions app-button,
   .provider-card-actions app-button {
     flex: 1 1 100%;
+  }
+
+  app-provider-profile .selected-facility-list {
+    display: grid;
+  }
+
+  app-provider-profile .selected-facility-list button {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  app-provider-profile .selected-facility-list button span:last-child {
+    margin-inline-start: auto;
   }
 }

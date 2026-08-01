@@ -10,6 +10,12 @@ import {
   ProviderType
 } from '../../../core/models/marketplace.models';
 
+interface FacilityGroup {
+  key: string;
+  labelKey: string;
+  facilities: ProviderFacility[];
+}
+
 const emptyProfileForm: ProviderProfilePayload = {
   businessName: '',
   contactName: '',
@@ -34,11 +40,40 @@ const emptyProfileForm: ProviderProfilePayload = {
   styleUrls: ['./provider-profile.component.scss']
 })
 export class ProviderProfileComponent implements OnInit {
+  private readonly facilityGroupDefinitions = [
+    {
+      key: 'medical',
+      labelKey: 'providerProfile.facilityGroupMedical',
+      terms: ['medical', 'veterinary', 'veterinarian', 'vet', 'clinic', 'hospital', 'surgery', 'diagnostic', 'pharmacy', 'vaccin']
+    },
+    {
+      key: 'grooming',
+      labelKey: 'providerProfile.facilityGroupGrooming',
+      terms: ['groom', 'bath', 'nail', 'coat', 'salon', 'wash']
+    },
+    {
+      key: 'boarding',
+      labelKey: 'providerProfile.facilityGroupBoarding',
+      terms: ['boarding', 'daycare', 'day care', 'kennel', 'accommodation', 'overnight', 'play area', 'cat area', 'dog area']
+    },
+    {
+      key: 'transport',
+      labelKey: 'providerProfile.facilityGroupTransport',
+      terms: ['transport', 'travel', 'mobile', 'pickup', 'pick up', 'shuttle', 'ambulance', 'vehicle']
+    },
+    {
+      key: 'specialist',
+      labelKey: 'providerProfile.facilityGroupSpecialist',
+      terms: ['specialist', 'specialty', 'rehab', 'physio', 'behavio', 'training', 'dental', 'emergency', 'exotic', 'therapy']
+    }
+  ];
+
   profile: Provider | null = null;
   providerTypes: ProviderType[] = [];
   facilities: ProviderFacility[] = [];
   speciesOptions: string[] = [];
   form: ProviderProfilePayload = { ...emptyProfileForm };
+  facilitySearch = '';
   isEditorOpen = false;
   isLoading = false;
   isSaving = false;
@@ -102,6 +137,38 @@ export class ProviderProfileComponent implements OnInit {
     return this.profile?.isSetupComplete === true;
   }
 
+  get selectedFacilities(): ProviderFacility[] {
+    const availableFacilities = new Map(
+      [...this.facilities, ...(this.profile?.facilities || [])].map((facility) => [facility.id, facility])
+    );
+
+    return this.form.facilityIds
+      .map((id) => availableFacilities.get(id))
+      .filter((facility): facility is ProviderFacility => !!facility);
+  }
+
+  get facilityGroups(): FacilityGroup[] {
+    const query = this.normalizeSearchValue(this.facilitySearch);
+
+    return this.facilityGroupDefinitions
+      .map((group) => ({
+        key: group.key,
+        labelKey: group.labelKey,
+        facilities: this.facilities.filter((facility) => {
+          const matchesGroup = this.getFacilityGroupKey(facility) === group.key;
+          const matchesSearch = !query || this.normalizeSearchValue([
+            facility.name,
+            facility.description,
+            facility.category,
+            facility.key
+          ].filter(Boolean).join(' ')).includes(query);
+
+          return matchesGroup && matchesSearch;
+        })
+      }))
+      .filter((group) => group.facilities.length > 0);
+  }
+
   loadReferenceData(): void {
     this.apiService.get<ApiResponse<ProviderType[]>>('/provider-types').subscribe({
       next: (response) => this.providerTypes = response.data || []
@@ -132,6 +199,7 @@ export class ProviderProfileComponent implements OnInit {
 
   openEditor(): void {
     this.form = this.profile ? this.toForm(this.profile) : { ...emptyProfileForm };
+    this.facilitySearch = '';
     this.errorMessage = '';
     this.successMessage = '';
     this.isEditorOpen = true;
@@ -144,6 +212,7 @@ export class ProviderProfileComponent implements OnInit {
 
     this.isEditorOpen = false;
     this.form = this.profile ? this.toForm(this.profile) : { ...emptyProfileForm };
+    this.facilitySearch = '';
   }
 
   loadProfile(): void {
@@ -218,5 +287,25 @@ export class ProviderProfileComponent implements OnInit {
     return values.includes(value)
       ? values.filter((item) => item !== value)
       : [...values, value];
+  }
+
+  private getFacilityGroupKey(facility: ProviderFacility): string {
+    const source = this.normalizeSearchValue([
+      facility.category,
+      facility.key,
+      facility.name
+    ].filter(Boolean).join(' '));
+
+    return this.facilityGroupDefinitions.find((group) =>
+      group.terms.some((term) => source.includes(term))
+    )?.key || 'specialist';
+  }
+
+  private normalizeSearchValue(value: string): string {
+    return value
+      .toLocaleLowerCase()
+      .replace(/[_/-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 }

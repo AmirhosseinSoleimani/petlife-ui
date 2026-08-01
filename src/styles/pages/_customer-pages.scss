@@ -105,23 +105,30 @@ app-providers-page {
 app-provider-services-page {
   .services-page { display: grid; gap: 18px; }
   .service-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-  .market-service-card { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .service-grid.short-list { grid-template-columns: repeat(2,minmax(0,24rem)); justify-content: start; }
+  .results-step { align-content: start; }
+  .market-service-card { min-width: 0; display: flex; flex-direction: column; gap: 13px; }
   .service-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .service-avatar { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-md); color: var(--color-info); background: var(--color-info-soft); font-size: 18px; font-weight: 900; }
+  .service-avatar svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
   .service-identity h3 { margin: 0; font-size: 1.15rem; overflow-wrap: anywhere; }
   .service-identity p, .service-description { margin: 4px 0 0; color: var(--color-muted); font-size: var(--font-size-caption); line-height: 1.55; overflow-wrap: anywhere; }
   .service-identity p span { color: var(--color-text); font-weight: 800; }
-  .service-description { min-height: 60px; }
+  .service-description { min-height: 0; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .service-commercials { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .service-commercials > div { min-width: 0; display: grid; gap: 3px; padding: 11px; border-radius: var(--radius-md); background: var(--color-surface-soft); }
   .service-commercials span { color: var(--color-muted); font-size: 11px; font-weight: 800; }
   .service-commercials strong { overflow-wrap: anywhere; }
   .market-service-card > a, .catalog-empty > a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; margin-top: auto; padding: 9px 14px; border-radius: var(--radius-md); color: #fff; background: var(--gradient-brand); font-weight: 800; text-align: center; }
+  .service-request-cta { justify-content: space-between !important; gap: 7px; }
+  .service-request-cta svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .catalog-empty, .request-empty { min-height: 300px; display: grid; align-content: center; justify-items: center; gap: 9px; padding: 32px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-xl); background: linear-gradient(135deg,#fff,var(--color-info-soft)); text-align: center; }
   .catalog-empty > span, .request-empty > span { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 50%; color: var(--color-info); background: #fff; box-shadow: var(--shadow-soft); font-size: 30px; }
   .catalog-empty h3, .catalog-empty p { margin: 0; }
   .catalog-empty p { color: var(--color-muted); }
 }
+
+[dir='rtl'] app-provider-services-page .service-request-cta svg { transform: rotate(180deg); }
 
 app-my-requests {
   .customer-requests-page { display: grid; gap: 18px; }
@@ -207,9 +214,10 @@ app-create-service-request {
   .filter-fields app-input { flex: 1 1 0; min-width: 0; }
   app-reminders-page .reminder-groups, app-emergency-vets-page .clinic-grid, app-my-requests .request-layout, app-create-service-request .guided-form { grid-template-columns: 1fr; }
   app-my-requests .request-detail, app-create-service-request .request-review { position: static; }
+  app-provider-services-page .service-grid.short-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 700px) {
-  app-providers-page .provider-grid, app-provider-services-page .service-grid { grid-template-columns: 1fr; }
+  app-providers-page .provider-grid, app-provider-services-page .service-grid, app-provider-services-page .service-grid.short-list { grid-template-columns: 1fr; }
   app-my-requests .request-facts { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {

@@ -110,10 +110,30 @@
           required
           [(ngModel)]="form.serviceDefinitionId"
         ></app-input>
-        <div *ngIf="selectedDefinition" class="definition-summary">
-          <strong>{{ selectedDefinition.name }}</strong>
-          <span>{{ selectedDefinition.categoryName }}</span>
-          <p>{{ 'providerServices.eligibleFor' | translate }}: {{ selectedDefinition.applicableSpecies.join(', ') }}</p>
+        <div *ngIf="selectedDefinition" class="definition-summary" aria-live="polite">
+          <div class="definition-summary-heading">
+            <span class="definition-summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>
+            </span>
+            <div>
+              <small>{{ 'providerServices.selectedDefinition' | translate }}</small>
+              <strong>{{ selectedDefinition.name }}</strong>
+            </div>
+          </div>
+          <dl>
+            <div>
+              <dt>{{ 'providerServices.definitionCategory' | translate }}</dt>
+              <dd>{{ selectedDefinition.categoryName }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'providerServices.eligibleFor' | translate }}</dt>
+              <dd>{{ selectedDefinition.applicableSpecies?.join(', ') || ('common.notAvailable' | translate) }}</dd>
+            </div>
+            <div class="definition-description">
+              <dt>{{ 'providerServices.defaultDescription' | translate }}</dt>
+              <dd>{{ selectedDefinition.description || ('providerServices.noDefaultDescription' | translate) }}</dd>
+            </div>
+          </dl>
         </div>
         <app-input name="serviceName" label="providerServices.customName" helper="providerServices.customNameHelp" [(ngModel)]="form.serviceName"></app-input>
         <app-input name="description" label="providerServices.description" type="textarea" [rows]="4" [(ngModel)]="form.description"></app-input>

@@ -175,6 +175,19 @@ export class ProviderServicesPageComponent implements OnInit {
     }
   }
 
+  getCategoryIconPath(category: ServiceCategory): string {
+    return this.resolveCategoryIconPath([category.iconKey, category.key, category.name].filter(Boolean).join(' '));
+  }
+
+  getServiceIconPath(service: ProviderService): string {
+    return this.resolveCategoryIconPath([
+      service.serviceCategoryName,
+      service.category,
+      service.serviceName,
+      service.name
+    ].filter(Boolean).join(' '));
+  }
+
   private loadSelectedProvider(providerId: string): void {
     this.apiService.get<ApiResponse<Provider>>(`/providers/${providerId}`).subscribe({
       next: (response) => {
@@ -208,5 +221,35 @@ export class ProviderServicesPageComponent implements OnInit {
       provider.providerProfileId,
       provider.userId
     ].filter((id): id is string => !!id);
+  }
+
+  private resolveCategoryIconPath(value: string): string {
+    const normalizedValue = value.toLocaleLowerCase().replace(/[_/-]+/g, ' ');
+
+    if (/(veterinary|medical|vet|clinic|health)/.test(normalizedValue)) {
+      return 'M12 3v18M3 12h18';
+    }
+
+    if (/(groom|bath|coat|nail)/.test(normalizedValue)) {
+      return 'M6 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM8 8l8 8M16 8 8 16';
+    }
+
+    if (/(board|daycare|day care|kennel|stay|sitting)/.test(normalizedValue)) {
+      return 'M4 20V9l8-5 8 5v11M8 20v-6h8v6';
+    }
+
+    if (/(transport|travel|pickup|mobile|vehicle)/.test(normalizedValue)) {
+      return 'M5 17h14l-1.5-7h-11L5 17Zm2.5 0v2M16.5 17v2M8 13h8';
+    }
+
+    if (/(walk|exercise|fitness)/.test(normalizedValue)) {
+      return 'M8 8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm8 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM9.5 8l2.5 3 3-1 2 3M12 11l-2 4-3 2';
+    }
+
+    if (/(train|behavio|specialist|therapy|rehab)/.test(normalizedValue)) {
+      return 'm12 3 2.2 4.5 5 .7-3.6 3.5.9 5-5-2.4L7 19l.9-5-3.6-3.5 5-.7L12 3Z';
+    }
+
+    return 'M8.3 10.2a2 2 0 1 0-3.8-1.2 2 2 0 0 0 3.8 1.2Zm11.2-1.2a2 2 0 1 0-3.8 1.2A2 2 0 0 0 19.5 9ZM12 8.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Zm0 2.3c-3.5 0-6 2.6-6 5.2 0 2 1.6 3.3 3.5 2.5.9-.4 1.6-.6 2.5-.6s1.6.2 2.5.6c1.9.8 3.5-.5 3.5-2.5 0-2.6-2.5-5.2-6-5.2Z';
   }
 }

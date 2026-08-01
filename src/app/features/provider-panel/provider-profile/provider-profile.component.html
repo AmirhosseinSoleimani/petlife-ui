@@ -176,10 +176,15 @@
               *ngFor="let providerType of providerTypes"
               type="button"
               [class.selected]="isSelected(form.providerTypeIds, providerType.id)"
+              [attr.aria-pressed]="isSelected(form.providerTypeIds, providerType.id)"
               (click)="toggleProviderType(providerType.id)"
             >
+              <span *ngIf="isSelected(form.providerTypeIds, providerType.id)" class="choice-selected">
+                <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 10 3 3 7-7"/></svg>
+                {{ 'common.selected' | translate }}
+              </span>
               <strong>{{ providerType.name }}</strong>
-              <span>{{ providerType.description }}</span>
+              <span class="choice-description">{{ providerType.description }}</span>
             </button>
           </div>
         </fieldset>
@@ -191,22 +196,77 @@
               *ngFor="let species of speciesOptions"
               type="button"
               [class.selected]="isSelected(form.supportedSpecies, species)"
+              [attr.aria-pressed]="isSelected(form.supportedSpecies, species)"
               (click)="toggleSpecies(species)"
-            >{{ species }}</button>
+            >
+              <span class="compact-choice-label">{{ species }}</span>
+              <svg *ngIf="isSelected(form.supportedSpecies, species)" class="compact-choice-check" aria-hidden="true" viewBox="0 0 20 20">
+                <path d="m5 10 3 3 7-7"/>
+              </svg>
+            </button>
           </div>
         </fieldset>
 
-        <fieldset class="choice-fieldset">
+        <fieldset class="choice-fieldset facility-fieldset">
           <legend>{{ 'providerProfile.facilities' | translate }}</legend>
           <p>{{ 'providerProfile.facilitiesHelp' | translate }}</p>
-          <div class="choice-grid compact">
-            <button
-              *ngFor="let facility of facilities"
-              type="button"
-              [class.selected]="isSelected(form.facilityIds, facility.id)"
-              (click)="toggleFacility(facility.id)"
-            >{{ facility.name }}</button>
+
+          <div *ngIf="selectedFacilities.length" class="selected-facilities" aria-live="polite">
+            <div class="selected-facilities-heading">
+              <strong>{{ 'providerProfile.selectedFacilities' | translate }}</strong>
+              <span>{{ selectedFacilities.length }}</span>
+            </div>
+            <div class="selected-facility-list">
+              <button
+                *ngFor="let facility of selectedFacilities"
+                type="button"
+                [attr.aria-label]="('providerProfile.removeFacility' | translate) + ' ' + facility.name"
+                (click)="toggleFacility(facility.id)"
+              >
+                <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 10 3 3 7-7"/></svg>
+                <span>{{ facility.name }}</span>
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
           </div>
+
+          <app-input
+            name="facilitySearch"
+            label="providerProfile.searchFacilities"
+            placeholder="providerProfile.searchFacilitiesPlaceholder"
+            [(ngModel)]="facilitySearch"
+          ></app-input>
+
+          <div *ngIf="facilityGroups.length; else noFacilityMatches" class="facility-groups">
+            <details
+              *ngFor="let group of facilityGroups"
+              class="facility-group"
+              [open]="!!facilitySearch.trim()"
+            >
+              <summary>
+                <span>{{ group.labelKey | translate }}</span>
+                <small>{{ group.facilities.length }}</small>
+              </summary>
+              <div class="choice-grid compact facility-choice-grid">
+                <button
+                  *ngFor="let facility of group.facilities"
+                  type="button"
+                  [class.selected]="isSelected(form.facilityIds, facility.id)"
+                  [attr.aria-pressed]="isSelected(form.facilityIds, facility.id)"
+                  (click)="toggleFacility(facility.id)"
+                >
+                  <span class="compact-choice-label">{{ facility.name }}</span>
+                  <svg *ngIf="isSelected(form.facilityIds, facility.id)" class="compact-choice-check" aria-hidden="true" viewBox="0 0 20 20">
+                    <path d="m5 10 3 3 7-7"/>
+                  </svg>
+                </button>
+              </div>
+            </details>
+          </div>
+
+          <ng-template #noFacilityMatches>
+            <p class="facility-no-results">{{ 'providerProfile.noFacilityMatches' | translate }}</p>
+          </ng-template>
         </fieldset>
       </div>
 

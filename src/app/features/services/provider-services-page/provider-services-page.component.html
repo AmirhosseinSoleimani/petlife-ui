@@ -53,9 +53,16 @@
         type="button"
         *ngFor="let category of categories"
         [class.selected]="selectedCategoryId === category.id"
+        [attr.aria-pressed]="selectedCategoryId === category.id"
         (click)="selectCategory(category.id)"
       >
-        <span aria-hidden="true">{{ category.name.charAt(0) }}</span>
+        <span class="category-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path [attr.d]="getCategoryIconPath(category)"/></svg>
+        </span>
+        <span *ngIf="selectedCategoryId === category.id" class="category-selected">
+          <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 10 3 3 7-7"/></svg>
+          {{ 'common.selected' | translate }}
+        </span>
         <strong>{{ category.name }}</strong>
         <small>{{ category.description }}</small>
       </button>
@@ -79,10 +86,16 @@
       <p>{{ 'services.noCompatibleServicesHelp' | translate }}</p>
     </section>
 
-    <div class="service-grid" *ngIf="!isLoadingServices && visibleServices.length">
+    <div
+      class="service-grid"
+      [class.short-list]="visibleServices.length < 3"
+      *ngIf="!isLoadingServices && visibleServices.length"
+    >
       <app-card class="market-service-card" *ngFor="let service of visibleServices">
         <div class="service-card-head">
-          <span class="service-avatar" aria-hidden="true">{{ getServiceName(service).charAt(0) }}</span>
+          <span class="service-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path [attr.d]="getServiceIconPath(service)"/></svg>
+          </span>
           <app-badge tone="info">{{ service.serviceCategoryName || service.category }}</app-badge>
         </div>
         <div class="service-identity">
@@ -125,9 +138,13 @@
           </div>
         </div>
         <a
+          class="service-request-cta"
           [routerLink]="['/service-requests/new', service.id]"
           [queryParams]="{ petId: selectedPetId }"
-        >{{ 'services.request' | translate }}</a>
+        >
+          <span>{{ 'services.request' | translate }}</span>
+          <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h12m-4-4 4 4-4 4"/></svg>
+        </a>
       </app-card>
     </div>
   </section>
