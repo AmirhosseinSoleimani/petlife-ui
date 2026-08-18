@@ -1,0 +1,57 @@
+<section class="ai-page page">
+  <app-page-header eyebrow="ai.eyebrow" title="ai.title" description="ai.subtitle"></app-page-header>
+
+  <div class="ai-layout">
+    <section class="chat-panel" [attr.aria-label]="'ai.title' | translate">
+      <div class="empty-state" *ngIf="!messages.length">
+        <span class="ai-mark" aria-hidden="true">&#10022;</span>
+        <h2>{{ 'ai.askTitle' | translate }}</h2>
+        <p>{{ 'ai.emptyState' | translate }}</p>
+
+        <div class="examples">
+          <strong>{{ 'ai.examplePrompts' | translate }}</strong>
+          <button
+            type="button"
+            *ngFor="let example of examplePrompts"
+            (click)="useExample(example)"
+          >
+            {{ example | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="message-list" *ngIf="messages.length" aria-live="polite">
+        <article *ngFor="let item of messages" class="message" [class.user-message]="item.role === 'user'">
+          <span>{{ (item.role === 'user' ? 'ai.you' : 'ai.assistant') | translate }}</span>
+          <p>{{ item.content }}</p>
+        </article>
+        <article class="message thinking" *ngIf="isLoading">
+          <span>{{ 'ai.assistant' | translate }}</span>
+          <p>{{ 'ai.thinking' | translate }}</p>
+        </article>
+      </div>
+
+      <p *ngIf="errorKey" class="ai-error" role="alert">{{ errorKey | translate }}</p>
+
+      <form class="composer" (ngSubmit)="send()">
+        <label for="ai-question">{{ 'ai.typeQuestion' | translate }}</label>
+        <div class="composer-row">
+          <textarea
+            id="ai-question"
+            name="aiQuestion"
+            rows="2"
+            maxlength="2000"
+            [(ngModel)]="message"
+            [placeholder]="'ai.placeholder' | translate"
+            [disabled]="isLoading"
+            (keydown)="handleKeydown($event)"
+          ></textarea>
+          <button type="submit" [disabled]="isLoading || !message.trim()">
+            {{ (isLoading ? 'ai.thinking' : 'ai.send') | translate }}
+          </button>
+        </div>
+        <small>{{ 'ai.safetyNote' | translate }}</small>
+      </form>
+    </section>
+  </div>
+</section>

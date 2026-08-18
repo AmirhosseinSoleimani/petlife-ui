@@ -5,6 +5,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { AiAssistantComponent } from './features/ai/ai-assistant/ai-assistant.component';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { TranslatePipe } from './core/i18n/translate.pipe';
 import { LoginComponent } from './features/auth/login/login.component';
@@ -35,6 +36,7 @@ import { WorkspacePreferencesComponent } from './shared/components/workspace-pre
 @NgModule({
   declarations: [
     AppComponent,
+    AiAssistantComponent,
     AppShellComponent,
     LoginComponent,
     DashboardComponent,

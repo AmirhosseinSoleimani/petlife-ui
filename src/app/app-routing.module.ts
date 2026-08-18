@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AuthGuard } from './core/guards/auth.guard';
+import { AiAssistantComponent } from './features/ai/ai-assistant/ai-assistant.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
@@ -29,6 +30,10 @@ const routes: Routes = [
     component: AppShellComponent,
     canActivateChild: [AuthGuard],
     children: [
+      {
+        path: 'ai',
+        component: AiAssistantComponent
+      },
       {
         path: 'dashboard',
         component: DashboardComponent

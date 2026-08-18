@@ -28,7 +28,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { labelKey: 'nav.providers', path: '/providers', icon: 'providers', enabled: true },
     { labelKey: 'nav.services', path: '/services', icon: 'services', enabled: true },
     { labelKey: 'nav.myRequests', path: '/service-requests/my', icon: 'requests', enabled: true },
-    { labelKey: 'nav.emergencyVets', path: '/emergency-vets', icon: 'emergency', enabled: true }
+    { labelKey: 'nav.emergencyVets', path: '/emergency-vets', icon: 'emergency', enabled: true },
+    { labelKey: 'nav.aiAssistant', path: '/ai', icon: 'ai', enabled: true }
   ];
 
   private readonly providerNavItems: NavItem[] = [
@@ -36,7 +37,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { labelKey: 'nav.providerProfile', path: '/provider/profile', icon: 'providers', enabled: true },
     { labelKey: 'nav.providerServices', path: '/provider/services', icon: 'services', enabled: true },
     { labelKey: 'nav.serviceAreas', path: '/provider/service-areas', icon: 'emergency', enabled: true },
-    { labelKey: 'nav.incomingRequests', path: '/provider/requests', icon: 'requests', enabled: true }
+    { labelKey: 'nav.incomingRequests', path: '/provider/requests', icon: 'requests', enabled: true },
+    { labelKey: 'nav.aiAssistant', path: '/ai', icon: 'ai', enabled: true }
   ];
   readonly languageOptions = SUPPORTED_LANGUAGES;
   readonly currentUser: AuthUser | null = this.authService.getCurrentUser();

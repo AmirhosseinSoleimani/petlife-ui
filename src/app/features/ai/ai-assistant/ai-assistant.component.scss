@@ -1,0 +1,228 @@
+.ai-page {
+  display: grid;
+  gap: 24px;
+}
+
+.ai-layout {
+  display: grid;
+  place-items: start center;
+}
+
+.chat-panel {
+  width: min(860px, 100%);
+  min-height: 580px;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-medium);
+}
+
+.empty-state {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 36px;
+  text-align: center;
+}
+
+.empty-state h2,
+.empty-state p {
+  margin: 0;
+}
+
+.empty-state p {
+  max-width: 580px;
+  color: var(--color-muted);
+}
+
+.ai-mark {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--gradient-brand);
+  color: white;
+  font-size: 28px;
+  box-shadow: var(--shadow-glow);
+}
+
+.examples {
+  width: min(640px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+  text-align: start;
+}
+
+.examples strong {
+  grid-column: 1 / -1;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.examples button {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.examples button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.message-list {
+  max-height: 560px;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 24px;
+}
+
+.message {
+  max-width: min(680px, 88%);
+  justify-self: start;
+}
+
+.message span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.message p {
+  margin: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  background: var(--color-surface-soft);
+  white-space: pre-wrap;
+}
+
+.user-message {
+  justify-self: end;
+}
+
+.user-message span {
+  text-align: end;
+}
+
+.user-message p {
+  border-color: transparent;
+  border-radius: var(--radius-lg) 4px var(--radius-lg) var(--radius-lg);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.thinking p {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.ai-error {
+  margin: 0 20px 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(198, 76, 76, .18);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.composer {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+.composer > label {
+  font-weight: 750;
+}
+
+.composer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 62px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+}
+
+.composer button {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--gradient-brand);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.composer small {
+  color: var(--color-muted);
+}
+
+html[dir='rtl'] .message p {
+  border-radius: var(--radius-lg) 4px var(--radius-lg) var(--radius-lg);
+}
+
+html[dir='rtl'] .user-message p {
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+}
+
+@media (max-width: 640px) {
+  .chat-panel {
+    min-height: calc(100dvh - 230px);
+    border-radius: var(--radius-lg);
+  }
+
+  .empty-state,
+  .message-list {
+    padding: 18px;
+  }
+
+  .examples {
+    grid-template-columns: 1fr;
+  }
+
+  .composer {
+    padding: 14px;
+  }
+
+  .composer-row {
+    grid-template-columns: 1fr;
+  }
+
+  .composer button {
+    width: 100%;
+  }
+
+  .message {
+    max-width: 94%;
+  }
+}
