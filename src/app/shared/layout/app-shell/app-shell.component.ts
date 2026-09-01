@@ -23,6 +23,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   private readonly customerNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
+    { labelKey: 'nav.profile', path: '/profile', icon: 'profile', enabled: true },
     { labelKey: 'nav.pets', path: '/pets', icon: 'pets', enabled: true },
     { labelKey: 'nav.reminders', path: '/reminders', icon: 'reminders', enabled: true },
     { labelKey: 'nav.providers', path: '/providers', icon: 'providers', enabled: true },

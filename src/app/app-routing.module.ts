@@ -5,6 +5,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { AiAssistantComponent } from './features/ai/ai-assistant/ai-assistant.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { CustomerProfileComponent } from './features/customer-profile/customer-profile/customer-profile.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
 import { PetExpensesComponent } from './features/pets/pet-expenses/pet-expenses.component';
 import { PetHealthRecordsComponent } from './features/pets/pet-health-records/pet-health-records.component';
@@ -37,6 +38,10 @@ const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponent
+      },
+      {
+        path: 'profile',
+        component: CustomerProfileComponent
       },
       {
         path: 'pets',
