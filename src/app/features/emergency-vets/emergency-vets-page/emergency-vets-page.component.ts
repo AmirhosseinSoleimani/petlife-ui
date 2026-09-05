@@ -10,12 +10,21 @@ interface EmergencyVetView {
   address: string;
   suburb: string;
   state: string;
+  postcode: string;
   phone: string;
   email: string;
   website: string;
   isAfterHours: boolean;
   is24Hours: boolean;
   description: string;
+  supportedSpecies: string[];
+  isVerified: boolean;
+  lastVerifiedAt: string | null;
+  distanceKm: number | null;
+  mapsUrl: string;
+  googleMapsUrl: string;
+  appleMapsUrl: string;
+  openingHoursNotes: string;
 }
 
 @Component({
@@ -27,9 +36,17 @@ export class EmergencyVetsPageComponent implements OnInit {
   vets: EmergencyVetView[] = [];
   selectedVet: EmergencyVetView | null = null;
   suburbFilter = '';
+  cityFilter = '';
   stateFilter = '';
+  postcodeFilter = '';
+  speciesFilter = '';
   afterHoursOnly = false;
   twentyFourHoursOnly = false;
+  openNowOnly = false;
+  latitude: number | null = null;
+  longitude: number | null = null;
+  radiusKm: number | null = 25;
+  isLocating = false;
   isLoading = false;
   errorMessage = '';
   isDetailOpen = false;
@@ -41,25 +58,28 @@ export class EmergencyVetsPageComponent implements OnInit {
   }
 
   get filteredVets(): EmergencyVetView[] {
-    const suburbFilter = this.suburbFilter.trim().toLowerCase();
-    const stateFilter = this.stateFilter.trim().toLowerCase();
-
-    return this.vets.filter((vet) => {
-      const suburbMatch = !suburbFilter ||
-        vet.suburb.toLowerCase().includes(suburbFilter) ||
-        vet.address.toLowerCase().includes(suburbFilter);
-      const stateMatch = !stateFilter || vet.state.toLowerCase().includes(stateFilter);
-      const afterHoursMatch = !this.afterHoursOnly || vet.isAfterHours;
-      const twentyFourHoursMatch = !this.twentyFourHoursOnly || vet.is24Hours;
-      return suburbMatch && stateMatch && afterHoursMatch && twentyFourHoursMatch;
-    });
+    return this.vets;
   }
 
   loadVets(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    const params = new URLSearchParams();
+    if (this.suburbFilter.trim()) params.set('suburb', this.suburbFilter.trim());
+    if (this.cityFilter.trim()) params.set('city', this.cityFilter.trim());
+    if (this.stateFilter.trim()) params.set('state', this.stateFilter.trim());
+    if (this.postcodeFilter.trim()) params.set('postcode', this.postcodeFilter.trim());
+    if (this.speciesFilter.trim()) params.set('species', this.speciesFilter.trim());
+    if (this.afterHoursOnly) params.set('offersAfterHours', 'true');
+    if (this.twentyFourHoursOnly) params.set('offers24HourService', 'true');
+    if (this.openNowOnly) params.set('isOpenNow', 'true');
+    if (this.latitude !== null && this.longitude !== null) {
+      params.set('latitude', String(this.latitude));
+      params.set('longitude', String(this.longitude));
+      if (this.radiusKm !== null) params.set('radiusKm', String(this.radiusKm));
+    }
 
-    this.apiService.get<ApiResponse<EmergencyVet[]>>('/emergency-vets').subscribe({
+    this.apiService.get<ApiResponse<EmergencyVet[]>>(`/emergency-vets?${params.toString()}`).subscribe({
       next: (response) => {
         this.vets = (response.data || []).map((vet) => this.toViewModel(vet));
         this.selectedVet = null;
@@ -70,6 +90,28 @@ export class EmergencyVetsPageComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  useMyLocation(): void {
+    if (!navigator.geolocation) {
+      this.errorMessage = 'Location is not available in this browser.';
+      return;
+    }
+
+    this.isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
+        this.isLocating = false;
+        this.loadVets();
+      },
+      () => {
+        this.errorMessage = 'Unable to read your current location.';
+        this.isLocating = false;
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
   }
 
   selectVet(vet: EmergencyVetView): void {
@@ -90,10 +132,7 @@ export class EmergencyVetsPageComponent implements OnInit {
   }
 
   websiteUrl(vet: EmergencyVetView): string {
-    if (!vet.website) {
-      return '';
-    }
-
+    if (!vet.website) return '';
     return /^https?:\/\//i.test(vet.website) ? vet.website : `https://${vet.website}`;
   }
 
@@ -105,15 +144,24 @@ export class EmergencyVetsPageComponent implements OnInit {
     return {
       id: vet.id,
       clinicName: vet.clinicName || vet.vetClinicName || vet.businessName || vet.name || '',
-      address: vet.address || '',
+      address: [vet.addressLine1 || vet.address, vet.addressLine2, vet.suburb, vet.state, vet.postcode].filter(Boolean).join(', '),
       suburb: vet.suburb || '',
       state: vet.state || '',
+      postcode: vet.postcode || '',
       phone: vet.phone || vet.phoneNumber || '',
       email: vet.email || '',
-      website: vet.website || '',
-      isAfterHours: !!(vet.isAfterHours || vet.afterHours),
-      is24Hours: !!(vet.is24Hours || vet.is24h || vet.open24Hours),
-      description: vet.description || vet.notes || vet.instructions || ''
+      website: vet.website || vet.websiteUrl || '',
+      isAfterHours: !!(vet.offersAfterHours || vet.isAfterHours || vet.afterHours),
+      is24Hours: !!(vet.offers24HourService || vet.is24Hours || vet.is24h || vet.open24Hours),
+      description: vet.emergencyInstructions || vet.description || vet.notes || vet.instructions || '',
+      supportedSpecies: vet.supportedSpecies || [],
+      isVerified: vet.isVerified !== false,
+      lastVerifiedAt: vet.lastVerifiedAt || null,
+      distanceKm: vet.distanceKm ?? null,
+      mapsUrl: vet.mapsUrl || '',
+      googleMapsUrl: vet.googleMapsUrl || vet.mapsUrl || '',
+      appleMapsUrl: vet.appleMapsUrl || '',
+      openingHoursNotes: vet.openingHoursNotes || ''
     };
   }
 }

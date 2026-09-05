@@ -1,0 +1,15 @@
+<main class="public-share">
+  <section class="share-shell">
+    <header><strong>PetLife Australia</strong><span>{{ 'sharing.readOnlyShare' | translate }}</span></header>
+    <div class="state" *ngIf="isLoading">{{ 'sharing.loadingSharedData' | translate }}</div>
+    <div class="state error" *ngIf="unavailable">{{ 'sharing.unavailable' | translate }}</div>
+    <ng-container *ngIf="data">
+      <app-card class="notice"><strong>{{ 'sharing.privacyTitle' | translate }}</strong><p>{{ 'sharing.publicPrivacyCopy' | translate }}</p><small>{{ 'sharing.expiresAt' | translate }}: {{ data.expiresAt | date:'medium' }}</small></app-card>
+      <app-card *ngIf="data.petProfile" class="section"><h1>{{ data.petProfile.petName }}</h1><p>{{ data.petProfile.species }} · {{ data.petProfile.breed || '—' }}</p><dl><ng-container *ngIf="data.petProfile.gender"><dt>{{ 'pets.gender' | translate }}</dt><dd>{{ data.petProfile.gender }}</dd></ng-container><ng-container *ngIf="data.petProfile.handlingNotes"><dt>{{ 'healthTimeline.handling' | translate }}</dt><dd>{{ data.petProfile.handlingNotes }}</dd></ng-container><ng-container *ngIf="data.petProfile.specialNeeds"><dt>{{ 'healthTimeline.specialNeeds' | translate }}</dt><dd>{{ data.petProfile.specialNeeds }}</dd></ng-container></dl></app-card>
+      <app-card *ngIf="data.vitalSummary" class="section"><h2>{{ 'healthTimeline.vitalSummary' | translate }}</h2><p><strong>{{ 'healthTimeline.allergies' | translate }}:</strong> {{ data.vitalSummary.allergyNotes || '—' }}</p><p><strong>{{ 'healthTimeline.conditions' | translate }}:</strong> {{ data.vitalSummary.medicalNotes || '—' }}</p><p><strong>{{ 'healthTimeline.specialNeeds' | translate }}:</strong> {{ data.vitalSummary.specialNeeds || '—' }}</p></app-card>
+      <app-card *ngIf="data.measurements" class="section"><h2>{{ 'healthTimeline.latestMeasurements' | translate }}</h2><div *ngFor="let item of data.measurements" class="row"><span>{{ item.type }}</span><strong>{{ item.value }} {{ item.unit }}</strong><small>{{ item.recordedOn | date }}</small></div></app-card>
+      <app-card *ngIf="data.medications" class="section"><h2>{{ 'healthTimeline.recentMedications' | translate }}</h2><div *ngFor="let item of data.medications" class="row"><span>{{ item.name }}</span><strong>{{ item.dose || '—' }}</strong><small>{{ item.recordedOn | date }}</small></div></app-card>
+      <app-card *ngIf="data.healthTimeline" class="section"><h2>{{ 'healthTimeline.title' | translate }}</h2><div *ngFor="let item of data.healthTimeline" class="timeline-row"><small>{{ item.date | date }}</small><strong>{{ item.title }}</strong><span>{{ item.description }}</span></div></app-card>
+    </ng-container>
+  </section>
+</main>

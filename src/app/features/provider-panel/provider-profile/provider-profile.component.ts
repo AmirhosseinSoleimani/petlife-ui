@@ -1,13 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
+  GeographyArea,
   Provider,
+  ProviderExpertise,
   ProviderFacility,
+  ProviderMedia,
   ProviderProfilePayload,
-  ProviderType
+  ProviderType,
+  ProviderWorkingHour
 } from '../../../core/models/marketplace.models';
 
 interface FacilityGroup {
@@ -29,6 +34,14 @@ const emptyProfileForm: ProviderProfilePayload = {
   postcode: '',
   country: 'Australia',
   isActive: true,
+  businessEntityType: 'Business',
+  preferredLeadChannel: 'Email',
+  contactVisibility: 'AfterRequestAccepted',
+  primaryGeographyAreaId: null,
+  acceptingRequests: true,
+  timeZone: 'Australia/Sydney',
+  latitude: null,
+  longitude: null,
   providerTypeIds: [],
   facilityIds: [],
   supportedSpecies: []
@@ -72,6 +85,16 @@ export class ProviderProfileComponent implements OnInit {
   providerTypes: ProviderType[] = [];
   facilities: ProviderFacility[] = [];
   speciesOptions: string[] = [];
+  geographies: GeographyArea[] = [];
+  workingHours: ProviderWorkingHour[] = [];
+  expertise: ProviderExpertise[] = [];
+  gallery: ProviderMedia[] = [];
+  newExpertise: ProviderExpertise = { title: '', description: '', yearsExperience: 0 };
+  galleryCaption = '';
+  isSavingHours = false;
+  isSavingExpertise = false;
+  isUploadingMedia = false;
+  isSavingGallery = false;
   form: ProviderProfilePayload = { ...emptyProfileForm };
   facilitySearch = '';
   isEditorOpen = false;
@@ -85,6 +108,7 @@ export class ProviderProfileComponent implements OnInit {
   ngOnInit(): void {
     this.loadReferenceData();
     this.loadProfile();
+    this.loadGallery();
   }
 
   get hasProfile(): boolean {
@@ -96,7 +120,8 @@ export class ProviderProfileComponent implements OnInit {
       return 'providerProfile.statusInactive';
     }
 
-    return this.profile?.verificationStatus?.toLowerCase() === 'verified'
+    const verificationStatus = this.profile?.verificationStatus?.toLowerCase();
+    return verificationStatus === 'verified' || verificationStatus === 'approved'
       ? 'providerProfile.statusVerified'
       : 'providerProfile.statusActive';
   }
@@ -106,7 +131,8 @@ export class ProviderProfileComponent implements OnInit {
       return 'neutral';
     }
 
-    return this.profile?.verificationStatus?.toLowerCase() === 'verified' ? 'success' : 'warning';
+    const verificationStatus = this.profile?.verificationStatus?.toLowerCase();
+    return verificationStatus === 'verified' || verificationStatus === 'approved' ? 'success' : 'warning';
   }
 
   get locationLabel(): string {
@@ -179,6 +205,153 @@ export class ProviderProfileComponent implements OnInit {
     this.apiService.get<ApiResponse<string[]>>('/pet-species').subscribe({
       next: (response) => this.speciesOptions = response.data || []
     });
+    this.apiService.get<ApiResponse<GeographyArea[]>>('/geography').subscribe({
+      next: (response) => this.geographies = response.data || [],
+      error: () => this.geographies = []
+    });
+  }
+
+  selectPrimaryGeography(areaId: string | null): void {
+    this.form.primaryGeographyAreaId = areaId || null;
+    const area = this.geographies.find((item) => item.id === areaId);
+    if (!area) return;
+    this.form.suburb = area.suburb;
+    this.form.state = area.state;
+    this.form.postcode = area.postcode;
+    this.form.country = area.country || 'Australia';
+    this.form.latitude = area.latitude ?? null;
+    this.form.longitude = area.longitude ?? null;
+  }
+
+  loadGallery(): void {
+    this.apiService.get<ApiResponse<ProviderMedia[]>>('/provider-media/me').subscribe({
+      next: (response) => this.gallery = response.data || [],
+      error: () => this.gallery = []
+    });
+  }
+
+  mediaUrl(media: ProviderMedia): string | null {
+    return this.apiService.resolvePublicUrl(media.url);
+  }
+
+  uploadGalleryImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.isUploadingMedia = true;
+    this.errorMessage = '';
+    this.apiService.uploadProviderGalleryImage<ApiResponse<ProviderMedia>>(file, this.galleryCaption, this.gallery.length).subscribe({
+      next: () => {
+        this.galleryCaption = '';
+        input.value = '';
+        this.loadGallery();
+      },
+      error: () => this.errorMessage = 'Unable to upload provider image.',
+      complete: () => this.isUploadingMedia = false
+    });
+  }
+
+  deleteGalleryImage(media: ProviderMedia): void {
+    this.apiService.delete<ApiResponse<unknown>>(`/provider-media/${media.id}`).subscribe({
+      next: () => this.loadGallery(),
+      error: () => this.errorMessage = 'Unable to delete provider image.'
+    });
+  }
+
+  saveGalleryItem(media: ProviderMedia): void {
+    this.isSavingGallery = true;
+    this.errorMessage = '';
+    this.apiService.put<ApiResponse<ProviderMedia>>(`/provider-media/${media.id}`, {
+      caption: media.caption || '',
+      sortOrder: media.sortOrder
+    }).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.gallery = this.gallery.map((item) => item.id === media.id ? response.data! : item);
+        }
+        this.successMessage = 'Gallery image updated.';
+      },
+      error: () => this.errorMessage = 'Unable to update provider image.',
+      complete: () => this.isSavingGallery = false
+    });
+  }
+
+  moveGalleryItem(index: number, direction: -1 | 1): void {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= this.gallery.length || this.isSavingGallery) return;
+
+    const reordered = [...this.gallery];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    reordered.forEach((item, currentIndex) => item.sortOrder = currentIndex);
+    this.gallery = reordered;
+    this.persistGalleryOrder();
+  }
+
+  private persistGalleryOrder(): void {
+    if (!this.gallery.length) return;
+    this.isSavingGallery = true;
+    this.errorMessage = '';
+    const requests = this.gallery.map((media) => this.apiService.put<ApiResponse<ProviderMedia>>(`/provider-media/${media.id}`, {
+      caption: media.caption || '',
+      sortOrder: media.sortOrder
+    }));
+
+    forkJoin(requests).subscribe({
+      next: (responses) => {
+        const savedById = new Map(responses.map((response) => [response.data?.id, response.data]));
+        this.gallery = this.gallery.map((media) => savedById.get(media.id) || media);
+        this.successMessage = 'Gallery order saved.';
+      },
+      error: () => {
+        this.errorMessage = 'Unable to reorder provider gallery.';
+        this.loadGallery();
+      },
+      complete: () => this.isSavingGallery = false
+    });
+  }
+
+  saveWorkingHours(): void {
+    if (!this.hasProfile) return;
+    this.isSavingHours = true;
+    this.apiService.put<ApiResponse<ProviderWorkingHour[]>>('/providers/me/working-hours', {
+      timeZone: this.form.timeZone || 'Australia/Sydney',
+      items: this.workingHours
+    }).subscribe({
+      next: (response) => {
+        this.workingHours = response.data || [];
+        this.successMessage = 'Working hours saved.';
+      },
+      error: () => this.errorMessage = 'Unable to save working hours.',
+      complete: () => this.isSavingHours = false
+    });
+  }
+
+  addExpertise(): void {
+    const title = this.newExpertise.title.trim();
+    if (!title) return;
+    this.expertise = [...this.expertise, {
+      title,
+      description: this.newExpertise.description?.trim() || '',
+      yearsExperience: Number(this.newExpertise.yearsExperience || 0)
+    }];
+    this.newExpertise = { title: '', description: '', yearsExperience: 0 };
+  }
+
+  removeExpertise(index: number): void {
+    this.expertise = this.expertise.filter((_, current) => current !== index);
+  }
+
+  saveExpertise(): void {
+    if (!this.hasProfile) return;
+    this.isSavingExpertise = true;
+    this.apiService.put<ApiResponse<ProviderExpertise[]>>('/providers/me/expertise', { items: this.expertise }).subscribe({
+      next: (response) => {
+        this.expertise = response.data || [];
+        this.successMessage = 'Expertise saved.';
+      },
+      error: () => this.errorMessage = 'Unable to save expertise.',
+      complete: () => this.isSavingExpertise = false
+    });
   }
 
   toggleProviderType(id: string): void {
@@ -223,6 +396,8 @@ export class ProviderProfileComponent implements OnInit {
       next: (response) => {
         this.profile = response.data || null;
         this.form = this.profile ? this.toForm(this.profile) : { ...emptyProfileForm };
+        this.workingHours = this.profile?.workingHours?.length ? this.profile.workingHours.map((item) => ({ ...item })) : this.defaultWorkingHours();
+        this.expertise = (this.profile?.expertise || []).map((item) => ({ ...item }));
         this.isLoading = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -279,8 +454,31 @@ export class ProviderProfileComponent implements OnInit {
       isActive: profile.isActive !== false,
       providerTypeIds: (profile.providerTypes || []).map((item) => item.id),
       facilityIds: (profile.facilities || []).map((item) => item.id),
-      supportedSpecies: [...(profile.supportedSpecies || [])]
+      supportedSpecies: [...(profile.supportedSpecies || [])],
+      businessEntityType: profile.businessEntityType || 'Business',
+      preferredLeadChannel: profile.preferredLeadChannel || 'Email',
+      contactVisibility: profile.contactVisibility || 'AfterRequestAccepted',
+      primaryGeographyAreaId: profile.primaryGeographyAreaId || null,
+      acceptingRequests: profile.acceptingRequests !== false,
+      timeZone: profile.timeZone || 'Australia/Sydney',
+      latitude: profile.latitude ?? null,
+      longitude: profile.longitude ?? null
     };
+  }
+
+  dayName(day: number): string {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day] || String(day);
+  }
+
+  private defaultWorkingHours(): ProviderWorkingHour[] {
+    return [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+      dayOfWeek: day,
+      opensAt: day === 0 ? null : '09:00',
+      closesAt: day === 0 ? null : '17:00',
+      isClosed: day === 0,
+      isAfterHours: false,
+      timeZone: this.form.timeZone || 'Australia/Sydney'
+    }));
   }
 
   private toggleValue(values: string[], value: string): string[] {

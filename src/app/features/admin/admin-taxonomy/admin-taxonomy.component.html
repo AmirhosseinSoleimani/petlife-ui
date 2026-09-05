@@ -1,0 +1,125 @@
+<section class="page taxonomy-page">
+  <app-page-header
+    title="Admin · Pet taxonomy"
+    description="Manage species, subgroups, breeds/morphs and dynamic pet fields from one master-data source."
+  ></app-page-header>
+
+  <div class="tabs">
+    <button
+      *ngFor="let tab of tabs"
+      type="button"
+      [class.active]="section === tab.value"
+      (click)="selectSection(tab.value)"
+    >
+      {{ tab.label | translate }}
+    </button>
+  </div>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading taxonomy...' | translate }}</div>
+
+  <div class="split" *ngIf="!isLoading">
+    <form class="editor" *ngIf="section === 'species'" (ngSubmit)="saveSpecies()" #speciesEditor="ngForm">
+      <h3>{{ (speciesForm.id ? 'Edit species' : 'New species') | translate }}</h3>
+      <app-input name="speciesName" label="Name" required [(ngModel)]="speciesForm.name"></app-input>
+      <app-input name="speciesCode" label="Stable code" required [(ngModel)]="speciesForm.code"></app-input>
+      <app-input name="speciesSort" label="Sort order" type="number" [(ngModel)]="speciesForm.sortOrder"></app-input>
+      <app-input name="speciesActive" label="Active" type="checkbox" [(ngModel)]="speciesForm.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="speciesEditor.invalid">{{ 'Save' | translate }}</app-button>
+    </form>
+
+    <form class="editor" *ngIf="section === 'subgroups'" (ngSubmit)="saveSubgroup()" #subgroupEditor="ngForm">
+      <h3>{{ (subgroupForm.id ? 'Edit subgroup' : 'New subgroup') | translate }}</h3>
+      <app-input name="subgroupSpecies" label="Species" type="select" required [options]="speciesOptions" [(ngModel)]="subgroupForm.speciesId"></app-input>
+      <app-input name="subgroupName" label="Name" required [(ngModel)]="subgroupForm.name"></app-input>
+      <app-input name="subgroupCode" label="Stable code" required [(ngModel)]="subgroupForm.code"></app-input>
+      <app-input name="subgroupSort" label="Sort order" type="number" [(ngModel)]="subgroupForm.sortOrder"></app-input>
+      <app-input name="subgroupActive" label="Active" type="checkbox" [(ngModel)]="subgroupForm.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="subgroupEditor.invalid">{{ 'Save' | translate }}</app-button>
+    </form>
+
+    <form class="editor" *ngIf="section === 'breeds'" (ngSubmit)="saveBreed()" #breedEditor="ngForm">
+      <h3>{{ (breedForm.id ? 'Edit breed/morph' : 'New breed/morph') | translate }}</h3>
+      <app-input name="breedSpecies" label="Species" type="select" required [options]="speciesOptions" [(ngModel)]="breedForm.speciesId"></app-input>
+      <app-input name="breedSubgroup" label="Subgroup" type="select" [options]="subgroupOptionsForBreed" [(ngModel)]="breedForm.subgroupId"></app-input>
+      <app-input name="breedName" label="Name" required [(ngModel)]="breedForm.name"></app-input>
+      <app-input name="breedCode" label="Stable code" required [(ngModel)]="breedForm.code"></app-input>
+      <app-input name="breedSort" label="Sort order" type="number" [(ngModel)]="breedForm.sortOrder"></app-input>
+      <app-input name="breedActive" label="Active" type="checkbox" [(ngModel)]="breedForm.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="breedEditor.invalid">{{ 'Save' | translate }}</app-button>
+    </form>
+
+    <form class="editor" *ngIf="section === 'fields'" (ngSubmit)="saveField()" #fieldEditor="ngForm">
+      <h3>{{ (fieldForm.id ? 'Edit dynamic field' : 'New dynamic field') | translate }}</h3>
+      <app-input name="fieldSpecies" label="Species" type="select" required [options]="speciesOptions" [(ngModel)]="fieldForm.speciesId"></app-input>
+      <app-input name="fieldLabel" label="Label" required [(ngModel)]="fieldForm.label"></app-input>
+      <app-input name="fieldKey" label="Stable key" required [(ngModel)]="fieldForm.key"></app-input>
+      <app-input name="fieldType" label="Data type" type="select" required [options]="dataTypes" [(ngModel)]="fieldForm.dataType"></app-input>
+      <app-input *ngIf="fieldForm.dataType === 'select' || fieldForm.dataType === 'multiselect'" name="fieldOptions" label="Options (comma separated)" required [(ngModel)]="fieldForm.optionsText"></app-input>
+      <app-input name="fieldUnit" label="Unit" [(ngModel)]="fieldForm.unit"></app-input>
+      <app-input name="fieldPlaceholder" label="Placeholder" [(ngModel)]="fieldForm.placeholder"></app-input>
+      <app-input name="fieldSort" label="Sort order" type="number" [(ngModel)]="fieldForm.sortOrder"></app-input>
+      <app-input name="fieldRequired" label="Required" type="checkbox" [(ngModel)]="fieldForm.isRequired"></app-input>
+      <app-input name="fieldActive" label="Active" type="checkbox" [(ngModel)]="fieldForm.isActive"></app-input>
+      <app-button type="submit" [loading]="isSaving" [disabled]="fieldEditor.invalid">{{ 'Save' | translate }}</app-button>
+    </form>
+
+    <div class="list">
+      <ng-container *ngIf="section === 'species'">
+        <article *ngFor="let item of species">
+          <div>
+            <strong>{{ item.name }}</strong>
+            <small>{{ item.code }} · {{ (item.isActive ? 'Active' : 'Inactive') | translate }}</small>
+          </div>
+          <div>
+            <button type="button" (click)="editSpecies(item)">{{ 'Edit' | translate }}</button>
+            <button type="button" class="danger" (click)="remove('species', item.id)">{{ 'Delete' | translate }}</button>
+          </div>
+        </article>
+      </ng-container>
+
+      <ng-container *ngIf="section === 'subgroups'">
+        <article *ngFor="let item of allSubgroups">
+          <div>
+            <strong>{{ item.name }}</strong>
+            <small>{{ speciesName(item.speciesId) }} · {{ item.code }}</small>
+          </div>
+          <div>
+            <button type="button" (click)="editSubgroup(item)">{{ 'Edit' | translate }}</button>
+            <button type="button" class="danger" (click)="remove('subgroup', item.id)">{{ 'Delete' | translate }}</button>
+          </div>
+        </article>
+      </ng-container>
+
+      <ng-container *ngIf="section === 'breeds'">
+        <article *ngFor="let item of allBreeds">
+          <div>
+            <strong>{{ item.name }}</strong>
+            <small>{{ speciesName(item.speciesId) }} · {{ subgroupName(item.subgroupId) }} · {{ item.code }}</small>
+          </div>
+          <div>
+            <button type="button" (click)="editBreed(item)">{{ 'Edit' | translate }}</button>
+            <button type="button" class="danger" (click)="remove('breed', item.id)">{{ 'Delete' | translate }}</button>
+          </div>
+        </article>
+      </ng-container>
+
+      <ng-container *ngIf="section === 'fields'">
+        <article *ngFor="let item of fields">
+          <div>
+            <strong>{{ item.label }}</strong>
+            <small>
+              {{ speciesName(item.speciesId) }} · {{ item.key }} · {{ item.dataType }}
+              <ng-container *ngIf="item.isRequired"> · {{ 'Required' | translate }}</ng-container>
+            </small>
+          </div>
+          <div>
+            <button type="button" (click)="editField(item)">{{ 'Edit' | translate }}</button>
+            <button type="button" class="danger" (click)="remove('field', item.id)">{{ 'Delete' | translate }}</button>
+          </div>
+        </article>
+      </ng-container>
+    </div>
+  </div>
+</section>

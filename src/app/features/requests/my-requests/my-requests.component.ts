@@ -19,6 +19,8 @@ export class MyRequestsComponent implements OnInit {
   providerNameById: Record<string, string> = {};
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
+  isUpdating = false;
   statusFilter: 'all' | 'active' | 'completed' | 'rejected' = 'all';
 
   readonly statusFilters: Array<{ value: 'all' | 'active' | 'completed' | 'rejected'; label: string }> = [
@@ -95,16 +97,12 @@ export class MyRequestsComponent implements OnInit {
 
   getStatusTone(request: ServiceRequest): 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
     switch (this.getStatus(request).toLowerCase()) {
-      case 'accepted':
-        return 'success';
-      case 'rejected':
-        return 'danger';
-      case 'completed':
-        return 'info';
-      case 'requested':
-        return 'warning';
-      default:
-        return 'neutral';
+      case 'accepted': return 'success';
+      case 'rejected': return 'danger';
+      case 'completed': return 'info';
+      case 'requested': case 'needmoreinfo': return 'warning';
+      case 'viewed': case 'available': case 'contacted': return 'info';
+      default: return 'neutral';
     }
   }
 
@@ -133,11 +131,23 @@ export class MyRequestsComponent implements OnInit {
 
   getStatusStep(request: ServiceRequest): number {
     switch (this.getStatus(request).toLowerCase()) {
-      case 'accepted': return 2;
-      case 'completed': return 3;
-      case 'rejected': return 3;
+      case 'viewed': case 'needmoreinfo': case 'available': case 'contacted': return 2;
+      case 'accepted': case 'completed': case 'rejected': return 3;
       default: return 1;
     }
+  }
+
+  confirmBooking(request: ServiceRequest): void {
+    this.isUpdating = true; this.errorMessage = ''; this.successMessage = '';
+    this.apiService.put<ApiResponse<ServiceRequest>>(`/service-requests/${request.id}/booking/confirm`, { confirm: true }).subscribe({
+      next: response => {
+        this.selectedRequest = response.data || request;
+        this.successMessage = 'Booking time confirmed.';
+        this.loadRequests();
+      },
+      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'Unable to confirm booking.'; this.isUpdating = false; },
+      complete: () => this.isUpdating = false
+    });
   }
 
   loadRequests(): void {

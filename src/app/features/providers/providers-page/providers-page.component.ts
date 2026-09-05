@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Provider, ProviderService } from '../../../core/models/marketplace.models';
+import { Provider, ProviderMedia, ProviderService, TrustBadge } from '../../../core/models/marketplace.models';
 
 @Component({
   selector: 'app-providers-page',
@@ -12,6 +12,7 @@ import { Provider, ProviderService } from '../../../core/models/marketplace.mode
 export class ProvidersPageComponent implements OnInit {
   providers: Provider[] = [];
   services: ProviderService[] = [];
+  providerGallery: ProviderMedia[] = [];
   selectedProvider: Provider | null = null;
   suburbFilter = '';
   stateFilter = '';
@@ -42,11 +43,26 @@ export class ProvidersPageComponent implements OnInit {
   }
 
   isVerified(provider: Provider): boolean {
-    return !!(provider.isVerified || provider.verified);
+    return provider.verificationStatus === 'Approved'
+      || !!(provider.isVerified || provider.verified)
+      || this.getTrustBadges(provider).some((badge) => badge.key === 'VerifiedProvider');
+  }
+
+  getTrustBadges(provider: Provider): TrustBadge[] {
+    return (provider.trustBadges || []).filter((badge) => badge.isActive !== false);
+  }
+
+  recordContactClick(provider: Provider): void {
+    const entityId = this.getProviderRouteId(provider) || null;
+    this.apiService.post<ApiResponse<object>>('/product-events', {
+      eventType: 'ProviderContactClick',
+      entityType: 'Provider',
+      entityId
+    }).subscribe({ next: () => undefined, error: () => undefined });
   }
 
   isAvailable(provider: Provider): boolean {
-    return provider.isAvailable !== false && provider.isActive !== false;
+    return provider.isAvailable !== false && provider.isActive !== false && provider.acceptingRequests !== false;
   }
 
   getProviderServices(provider: Provider): ProviderService[] {
@@ -76,26 +92,48 @@ export class ProvidersPageComponent implements OnInit {
   }
 
   selectProvider(provider: Provider): void {
+    this.providerGallery = [];
     this.apiService.get<ApiResponse<Provider>>(`/providers/${this.getProviderRouteId(provider)}`).subscribe({
       next: (response) => {
-        this.selectedProvider = response.data || provider;
+        const resolvedProvider = response.data || provider;
+        this.selectedProvider = resolvedProvider;
         this.isDetailOpen = true;
+        this.loadProviderGallery(resolvedProvider);
       },
       error: () => {
         this.selectedProvider = provider;
         this.isDetailOpen = true;
+        this.loadProviderGallery(provider);
       }
     });
   }
 
   closeDetails(): void {
     this.isDetailOpen = false;
+    this.providerGallery = [];
+  }
+
+  galleryUrl(media: ProviderMedia): string {
+    return this.apiService.resolvePublicUrl(media.url) || '';
   }
 
   private loadProviderServices(): void {
     this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
       next: (response) => this.services = response.data || [],
       error: () => this.services = []
+    });
+  }
+
+  private loadProviderGallery(provider: Provider): void {
+    const providerProfileId = this.getProviderRouteId(provider);
+    if (!providerProfileId) {
+      this.providerGallery = [];
+      return;
+    }
+
+    this.apiService.get<ApiResponse<ProviderMedia[]>>(`/provider-media/provider/${providerProfileId}`).subscribe({
+      next: (response) => this.providerGallery = response.data || [],
+      error: () => this.providerGallery = []
     });
   }
 

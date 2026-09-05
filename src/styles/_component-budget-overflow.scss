@@ -1,0 +1,46 @@
+// Styles moved from component stylesheets to the global bundle because the
+// production `anyComponentStyle` budget is intentionally strict. Each block
+// remains scoped to its component host to prevent styles leaking across pages.
+
+app-login {
+  .register-link { margin-top: 16px; text-align: center; color: var(--color-muted); }
+  .register-link a { color: var(--color-primary); font-weight: 800; }
+}
+
+app-pet-health-records {
+  .type-fields { display: grid; gap: 11px; padding: 13px; border: 1px solid var(--color-border); border-radius: 14px; background: #fbfcfe; }
+  .type-fields h4 { margin: 0; color: #344054; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .structured-details { margin: 12px 0 0; padding-inline-start: 18px; color: #475467; }
+  .success { padding: 10px 12px; border-radius: 8px; background: #ecfdf3; color: #067647; }
+  @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
+}
+
+app-provider-services-page {
+  .discovery-filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; align-items:flex-end; background:var(--app-surface-soft); border-radius:.85rem; padding:1rem; }
+  .filter-check { display:flex; gap:.45rem; align-items:center; min-height:42px; }
+  .filter-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+  .service-request-cta.disabled { pointer-events:none; opacity:.5; }
+  @media (max-width:900px) { .discovery-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:640px) { .discovery-filters { grid-template-columns:1fr; } }
+
+  .recommendation-panel {
+    border: 1px solid var(--app-border);
+    border-radius: .9rem;
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .recommendation-heading { display:grid; grid-template-columns:minmax(0,1fr) minmax(14rem,.35fr); gap:1rem; align-items:flex-end; }
+  .recommendation-heading h3, .recommendation-heading p { margin:.2rem 0; }
+  .recommendation-heading > div > p:last-child, .recommendation-empty { color:var(--app-muted); }
+  .recommendation-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; }
+  .recommendation-grid article { background:var(--app-surface-soft); border-radius:.8rem; display:grid; grid-template-columns:auto 1fr; gap:.75rem; padding:.9rem; }
+  .recommendation-grid h4, .recommendation-grid p { margin:0; }
+  .recommendation-grid ul { margin:.55rem 0 0; padding-inline-start:1.1rem; color:var(--app-muted); font-size:.82rem; }
+  .recommendation-score { align-items:center; background:var(--accent-soft); border-radius:.7rem; color:var(--accent-strong); display:flex; flex-direction:column; justify-content:center; min-width:4.5rem; padding:.5rem; text-align:center; }
+  .recommendation-score strong { font-size:1.25rem; }
+  .recommendation-score span { font-size:.66rem; }
+  @media (max-width:900px) { .recommendation-grid { grid-template-columns:1fr; } }
+  @media (max-width:640px) { .recommendation-heading { grid-template-columns:1fr; } }
+}

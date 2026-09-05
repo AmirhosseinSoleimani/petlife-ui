@@ -7,6 +7,7 @@ import {
   Provider,
   ProviderService,
   ProviderServicePayload,
+  ProviderServiceAvailabilityWindow,
   ServiceDefinition
 } from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
@@ -17,6 +18,10 @@ const emptyServiceForm: ProviderServicePayload = {
   category: '',
   description: '',
   price: null,
+  priceMax: null,
+  pricingType: 'Fixed',
+  pricingNotes: '',
+  specialConditions: '',
   currency: 'AUD',
   durationMinutes: null,
   deliveryMode: 'AtProviderLocation',
@@ -29,6 +34,11 @@ const emptyServiceForm: ProviderServicePayload = {
   styleUrls: ['./provider-services-management.component.scss']
 })
 export class ProviderServicesManagementComponent implements OnInit {
+  readonly pricingTypeOptions: AppInputOption[] = [
+    { label: 'Fixed price', value: 'Fixed' },
+    { label: 'From price', value: 'From' },
+    { label: 'Quote required', value: 'Quote' }
+  ];
   readonly deliveryModeOptions: AppInputOption[] = [
     { label: 'deliveryMode.atProvider', value: 'AtProviderLocation' },
     { label: 'deliveryMode.atCustomer', value: 'AtCustomerLocation' },
@@ -45,6 +55,9 @@ export class ProviderServicesManagementComponent implements OnInit {
   isSaving = false;
   errorMessage = '';
   successMessage = '';
+  availabilityWindows: ProviderServiceAvailabilityWindow[] = [];
+  isTemporarilyClosed = false;
+  temporaryClosedUntil = '';
 
   constructor(private readonly apiService: ApiService) {}
 
@@ -109,16 +122,18 @@ export class ProviderServicesManagementComponent implements OnInit {
       : this.apiService.post<ApiResponse<ProviderService>>('/provider-services', payload);
 
     request.subscribe({
-      next: () => {
-        this.successMessage = this.editingId ? 'providerServices.updateSuccess' : 'providerServices.createSuccess';
-        this.isEditorOpen = false;
-        this.resetForm();
-        this.loadServices();
+      next: (response) => {
+        const serviceId = response.data?.id || this.editingId;
+        if (!serviceId) { this.errorMessage = 'The service was saved but its identifier was not returned.'; this.isSaving = false; return; }
+        this.saveAvailability(serviceId, () => {
+          this.successMessage = this.editingId ? 'Service and availability updated.' : 'Service and availability created.';
+          this.isEditorOpen = false;
+          this.resetForm();
+          this.loadServices();
+        });
       },
-      error: () => {
-        this.errorMessage = 'providerServices.saveError';
-      },
-      complete: () => {
+      error: (error) => {
+        this.errorMessage = error?.error?.errors?.join(' ') || error?.error?.message || 'providerServices.saveError';
         this.isSaving = false;
       }
     });
@@ -132,11 +147,18 @@ export class ProviderServicesManagementComponent implements OnInit {
       category: service.serviceCategoryName || service.category || '',
       description: service.description || '',
       price: service.price ?? null,
+      priceMax: service.priceMax ?? null,
+      pricingType: service.pricingType || 'Fixed',
+      pricingNotes: service.pricingNotes || '',
+      specialConditions: service.specialConditions || '',
       currency: service.currency || 'AUD',
       durationMinutes: service.durationMinutes ?? null,
       deliveryMode: service.deliveryMode || 'AtProviderLocation',
       isActive: service.isActive !== false
     };
+    this.availabilityWindows = (service.availabilityWindows || []).map(window => ({ ...window, startTime: (window.startTime || '').slice(0, 5), endTime: (window.endTime || '').slice(0, 5) }));
+    this.isTemporarilyClosed = !!service.isTemporarilyClosed;
+    this.temporaryClosedUntil = service.temporaryClosedUntil ? this.toDateTimeLocal(service.temporaryClosedUntil) : '';
     this.errorMessage = '';
     this.successMessage = '';
     this.isEditorOpen = true;
@@ -176,7 +198,20 @@ export class ProviderServicesManagementComponent implements OnInit {
   resetForm(): void {
     this.editingId = null;
     this.form = { ...emptyServiceForm };
+    this.availabilityWindows = [];
+    this.isTemporarilyClosed = false;
+    this.temporaryClosedUntil = '';
   }
+
+  addAvailabilityWindow(): void {
+    this.availabilityWindows = [...this.availabilityWindows, { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', capacity: null }];
+  }
+
+  removeAvailabilityWindow(index: number): void {
+    this.availabilityWindows = this.availabilityWindows.filter((_, i) => i !== index);
+  }
+
+  dayLabel(day: number): string { return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][day] || 'Day'; }
 
   getServiceName(service: ProviderService): string {
     return service.serviceName || service.name || '';
@@ -191,13 +226,34 @@ export class ProviderServicesManagementComponent implements OnInit {
     }
   }
 
+  private saveAvailability(serviceId: string, done: () => void): void {
+    const temporaryClosedUntil = this.isTemporarilyClosed && this.temporaryClosedUntil ? new Date(this.temporaryClosedUntil).toISOString() : null;
+    const windows = this.availabilityWindows.map(window => ({ dayOfWeek: Number(window.dayOfWeek), startTime: window.startTime, endTime: window.endTime, capacity: window.capacity == null ? null : Number(window.capacity) }));
+    this.apiService.put<ApiResponse<ProviderService>>(`/provider-services/${serviceId}/availability`, { isTemporarilyClosed: this.isTemporarilyClosed, temporaryClosedUntil, windows }).subscribe({
+      next: () => done(),
+      error: error => { this.errorMessage = error?.error?.errors?.join(' ') || error?.error?.message || 'Service saved, but availability could not be saved.'; this.isSaving = false; },
+      complete: () => this.isSaving = false
+    });
+  }
+
+  private toDateTimeLocal(value: string): string {
+    const date = new Date(value);
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  }
+
   private toPayload(): ProviderServicePayload {
     return {
       ...this.form,
       category: this.selectedDefinition?.categoryName || '',
-      price: this.form.price === null ? 0 : Number(this.form.price),
+      price: this.form.pricingType === 'Quote' ? 0 : (this.form.price === null ? 0 : Number(this.form.price)),
+      priceMax: this.form.priceMax === null || this.form.priceMax === undefined ? null : Number(this.form.priceMax),
+      pricingType: this.form.pricingType || 'Fixed',
+      pricingNotes: this.form.pricingNotes?.trim() || '',
+      specialConditions: this.form.specialConditions?.trim() || '',
       durationMinutes: this.form.durationMinutes === null ? 0 : Number(this.form.durationMinutes),
       isActive: !!this.form.isActive
     };
   }
+
 }

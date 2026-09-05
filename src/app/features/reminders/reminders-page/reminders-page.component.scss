@@ -1,1 +1,26 @@
-:host { display: block; }
+.reminders-page { display: grid; gap: 1rem; }
+.header-actions, .reminder-actions, .drawer-actions, .bulk { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+.center-toolbar { display: grid; gap: 1rem; }
+.buckets { display: flex; gap: .35rem; flex-wrap: wrap; border-bottom: 1px solid var(--border-color, #e5e7eb); padding-bottom: .75rem; }
+.buckets button { border: 0; background: transparent; padding: .55rem .8rem; border-radius: .65rem; cursor: pointer; font: inherit; }
+.buckets button.active { background: rgba(64, 113, 244, .1); font-weight: 700; }
+.filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: .75rem; align-items: end; }
+.bulk { padding: .75rem; border-radius: .75rem; background: rgba(64, 113, 244, .07); }
+.reminder-list { display: grid; gap: .8rem; }
+.reminder-card { display: grid; grid-template-columns: auto 4rem minmax(0, 1fr); gap: 1rem; align-items: start; }
+.selector { padding-top: .6rem; }
+.reminder-date { display: grid; justify-items: center; padding: .6rem; border-radius: .75rem; background: rgba(64, 113, 244, .07); }
+.reminder-date strong { font-size: 1.45rem; }
+.reminder-copy { min-width: 0; display: grid; gap: .65rem; }
+.reminder-title { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.reminder-title h3, .reminder-title p, .notes { margin: 0; }
+.reminder-title p, .metadata { opacity: .68; font-size: .9rem; }
+.metadata { display: flex; gap: .8rem; flex-wrap: wrap; }
+.reminder-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.full-field, .form-error, .privacy-hint, .drawer-actions { grid-column: 1 / -1; }
+.drawer-actions { justify-content: flex-end; }
+.form-error, .error { color: var(--danger-color, #b42318); } .success { color: #157347; }
+.privacy-hint { margin: 0; opacity: .68; font-size: .9rem; }
+.state, .care-empty { padding: 2rem; text-align: center; }
+@media (max-width: 720px) { .filters, .reminder-editor { grid-template-columns: 1fr; } .full-field, .form-error, .privacy-hint, .drawer-actions { grid-column: auto; } .reminder-card { grid-template-columns: auto 3.5rem minmax(0, 1fr); } .reminder-title { flex-direction: column; } }
+@media (max-width: 500px) { .reminder-card { grid-template-columns: auto minmax(0, 1fr); } .selector { grid-row: 1 / span 2; } .reminder-date { grid-column: 2; width: fit-content; } .reminder-copy { grid-column: 2; } }

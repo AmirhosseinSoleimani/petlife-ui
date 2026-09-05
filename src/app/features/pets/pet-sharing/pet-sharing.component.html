@@ -1,0 +1,66 @@
+<section class="page share-page">
+  <app-page-header title="sharing.title" description="sharing.description" backLink="/pets" backLabel="common.back"></app-page-header>
+
+  <app-card class="privacy-note">
+    <strong>{{ 'sharing.privacyTitle' | translate }}</strong>
+    <p>{{ 'sharing.privacyCopy' | translate }}</p>
+  </app-card>
+
+  <div class="share-layout">
+    <form class="share-form" (ngSubmit)="createShare()" #shareForm="ngForm">
+      <h3>{{ 'sharing.newShare' | translate }}</h3>
+      <fieldset>
+        <legend>{{ 'sharing.sections' | translate }}</legend>
+        <label class="scope" *ngFor="let scope of availableScopes">
+          <input type="checkbox" [checked]="hasScope(scope)" (change)="toggleScope(scope, $any($event.target).checked)" />
+          <span>{{ ('sharing.scope.' + scope) | translate }}</span>
+        </label>
+      </fieldset>
+      <app-input name="expiresAt" label="sharing.expiresAt" type="date" required [(ngModel)]="form.expiresAt"></app-input>
+      <app-input name="recipientLabel" label="sharing.recipientLabel" helper="sharing.recipientLabelHelp" [(ngModel)]="form.recipientLabel"></app-input>
+      <app-input name="recipientUserId" label="sharing.providerUserId" helper="sharing.providerUserIdHelp" [(ngModel)]="form.recipientUserId"></app-input>
+      <app-input name="purpose" label="sharing.purpose" type="textarea" [rows]="3" [(ngModel)]="form.purpose"></app-input>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage | translate }}</p>
+      <app-button type="submit" [loading]="isSaving" [disabled]="shareForm.invalid">{{ 'sharing.create' | translate }}</app-button>
+    </form>
+
+    <section class="grants">
+      <div class="generated" *ngIf="generatedLink">
+        <strong>{{ 'sharing.linkShownOnce' | translate }}</strong>
+        <code>{{ generatedLink }}</code>
+        <app-button type="button" variant="secondary" (buttonClick)="copyGeneratedLink()">{{ 'sharing.copyLink' | translate }}</app-button>
+      </div>
+      <p class="success" *ngIf="successMessage">{{ successMessage | translate }}</p>
+      <div class="state" *ngIf="isLoading">{{ 'sharing.loading' | translate }}</div>
+      <div class="state" *ngIf="!isLoading && !grants.length">{{ 'sharing.empty' | translate }}</div>
+      <app-card class="grant" *ngFor="let grant of grants">
+        <div class="grant-heading">
+          <div><strong>{{ grant.recipientLabel || ('sharing.linkRecipient' | translate) }}</strong><small>{{ grant.createdAt | date:'medium' }}</small></div>
+          <app-badge [tone]="grant.isActive ? 'success' : 'warning'">{{ (grant.isActive ? 'sharing.active' : 'sharing.inactive') | translate }}</app-badge>
+        </div>
+        <p>{{ 'sharing.expiresAt' | translate }}: {{ grant.expiresAt | date:'medium' }}</p>
+        <p>{{ 'sharing.sharedSections' | translate }}: {{ grant.scopes.join(', ') }}</p>
+        <p>{{ 'sharing.accessCount' | translate }}: {{ grant.accessCount }}<span *ngIf="grant.lastAccessedAt"> · {{ 'sharing.lastAccess' | translate }} {{ grant.lastAccessedAt | date:'medium' }}</span></p>
+        <div class="grant-actions">
+          <app-button type="button" variant="secondary" (buttonClick)="showPreview(grant)">{{ 'sharing.preview' | translate }}</app-button>
+          <app-button type="button" variant="secondary" (buttonClick)="showAudit(grant)">{{ 'sharing.audit' | translate }}</app-button>
+          <app-button type="button" variant="danger" [disabled]="!grant.isActive" (buttonClick)="revoke(grant)">{{ 'sharing.revoke' | translate }}</app-button>
+        </div>
+      </app-card>
+    </section>
+  </div>
+
+  <app-card class="preview" *ngIf="auditShareId">
+    <h3>{{ 'sharing.auditTitle' | translate }}</h3>
+    <p *ngIf="!audit.length">{{ 'sharing.noAudit' | translate }}</p>
+    <div class="audit-row" *ngFor="let item of audit"><strong>{{ item.action | translate }}</strong><span>{{ item.accessMode | translate }}</span><small>{{ item.createdAt | date:'medium' }}</small></div>
+  </app-card>
+
+  <app-card class="preview" *ngIf="preview">
+    <h3>{{ 'sharing.previewTitle' | translate }}</h3>
+    <p>{{ 'sharing.previewNotice' | translate }}</p>
+    <div *ngIf="preview.petProfile"><strong>{{ preview.petProfile.petName }}</strong><p>{{ preview.petProfile.species }} · {{ preview.petProfile.breed || '—' }}</p></div>
+    <div *ngIf="preview.vitalSummary"><p><strong>{{ 'healthTimeline.allergies' | translate }}:</strong> {{ preview.vitalSummary.allergyNotes || '—' }}</p><p><strong>{{ 'healthTimeline.specialNeeds' | translate }}:</strong> {{ preview.vitalSummary.specialNeeds || '—' }}</p></div>
+    <p *ngIf="preview.healthTimeline">{{ 'sharing.timelineItems' | translate }}: {{ preview.healthTimeline.length }}</p>
+  </app-card>
+</section>

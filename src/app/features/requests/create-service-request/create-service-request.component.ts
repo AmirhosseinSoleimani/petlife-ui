@@ -30,7 +30,11 @@ export class CreateServiceRequestComponent implements OnInit {
     serviceAddressLine1: '',
     serviceSuburb: '',
     serviceState: '',
-    servicePostcode: ''
+    servicePostcode: '',
+    serviceGeographyAreaId: null,
+    consentSharePetProfile: false,
+    consentShareHealthSummary: false,
+    consentShareContactDetails: false
   };
   isLoading = false;
   isSubmitting = false;
@@ -68,6 +72,14 @@ export class CreateServiceRequestComponent implements OnInit {
   get needsCustomerLocation(): boolean {
     return this.selectedService?.deliveryMode === 'AtCustomerLocation'
       || this.selectedService?.deliveryMode === 'Hybrid';
+  }
+
+  get isConsentValid(): boolean {
+    return !this.form.consentShareHealthSummary || this.form.consentSharePetProfile;
+  }
+
+  onHealthConsentChanged(): void {
+    if (this.form.consentShareHealthSummary) this.form.consentSharePetProfile = true;
   }
 
   get isSelectedPetCompatible(): boolean {
@@ -141,6 +153,10 @@ export class CreateServiceRequestComponent implements OnInit {
   submitRequest(): void {
     if (!this.isSelectedPetCompatible) {
       this.errorMessage = 'requestForm.incompatiblePet';
+      return;
+    }
+    if (!this.isConsentValid) {
+      this.errorMessage = 'Health sharing requires pet profile sharing.';
       return;
     }
 

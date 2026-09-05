@@ -1,50 +1,70 @@
-<section class="page">
-  <app-page-header
-    title="Pet Expenses"
-    description="Capture recurring and one-off costs for each pet."
-    backLink="/pets"
-    backLabel="Back to pets"
-  ></app-page-header>
+<section class="page expense-page">
+  <app-page-header title="expenses.title" description="expenses.description" backLink="/pets" backLabel="common.back"></app-page-header>
 
-  <div class="summary">
-    <app-card><span>{{ 'Total' | translate }}</span><strong>{{ summary?.totalAmount || 0 | currency }}</strong></app-card>
-    <app-card><span>{{ 'This month' | translate }}</span><strong>{{ summary?.thisMonthAmount || 0 | currency }}</strong></app-card>
-    <app-card><span>{{ 'Top category' | translate }}</span><strong>{{ (summary?.topCategory || 'N/A') | translate }}</strong></app-card>
-  </div>
+  <app-card class="report-panel">
+    <div class="report-controls">
+      <app-input name="reportPeriod" label="expenses.reportPeriod" type="select" [options]="['monthly', 'yearly']" [(ngModel)]="reportPeriod"></app-input>
+      <app-input name="reportYear" label="expenses.year" type="select" [options]="yearOptions" [(ngModel)]="reportYear"></app-input>
+      <app-input *ngIf="reportPeriod === 'monthly'" name="reportMonth" label="expenses.month" type="select" [options]="monthOptions" [(ngModel)]="reportMonth"></app-input>
+      <app-button type="button" variant="secondary" (buttonClick)="loadReport()">{{ 'expenses.refreshReport' | translate }}</app-button>
+    </div>
+    <div *ngIf="isReportLoading" class="state">{{ 'expenses.loadingReport' | translate }}</div>
+    <ng-container *ngIf="report && !isReportLoading">
+      <div class="currency-totals">
+        <div *ngFor="let total of report.totals"><span>{{ total.currency }}</span><strong>{{ total.amount | currency:total.currency }}</strong></div>
+      </div>
+      <p class="currency-note">{{ 'expenses.currencyNotice' | translate }}</p>
+      <div class="breakdowns">
+        <div><h4>{{ 'expenses.byCategory' | translate }}</h4><div class="breakdown-row" *ngFor="let row of report.byCategory"><span>{{ row.label }}</span><span *ngFor="let total of row.totals">{{ total.amount | currency:total.currency }}</span></div></div>
+        <div><h4>{{ 'expenses.byPet' | translate }}</h4><div class="breakdown-row" *ngFor="let row of report.byPet"><span>{{ row.label }}</span><span *ngFor="let total of row.totals">{{ total.amount | currency:total.currency }}</span></div></div>
+      </div>
+    </ng-container>
+  </app-card>
 
   <div class="layout">
     <form class="panel" (ngSubmit)="saveExpense()" #expenseForm="ngForm">
-      <h3>{{ (editingId ? 'Edit expense' : 'Add expense') | translate }}</h3>
-      <app-input name="description" label="Description" required [(ngModel)]="form.description"></app-input>
-      <app-input name="category" label="Category" type="select" placeholder="Select category" [options]="categoryOptions" [(ngModel)]="form.category"></app-input>
-      <app-input name="amount" label="Amount" type="number" min="0" step="0.01" required [(ngModel)]="form.amount"></app-input>
-      <app-input name="expenseDate" label="Date" type="date" required [(ngModel)]="form.expenseDate"></app-input>
-      <app-input name="currency" label="Currency" required [(ngModel)]="form.currency"></app-input>
+      <h3>{{ (editingId ? 'expenses.edit' : 'expenses.add') | translate }}</h3>
+      <app-input name="description" label="expenses.descriptionLabel" [(ngModel)]="form.description"></app-input>
+      <app-input name="categoryId" label="expenses.category" type="select" placeholder="expenses.selectCategory" [placeholderValue]="null" [options]="categoryOptions" [ngModel]="form.categoryId" (ngModelChange)="onCategoryChange($event)"></app-input>
+      <app-input name="amount" label="expenses.amount" type="number" min="0.01" step="0.01" required [(ngModel)]="form.amount"></app-input>
+      <app-input name="expenseDate" label="expenses.date" type="date" required [(ngModel)]="form.expenseDate"></app-input>
+      <app-input name="currency" label="expenses.currency" required [(ngModel)]="form.currency"></app-input>
+      <app-input name="vendorName" label="expenses.vendor" [(ngModel)]="form.vendorName"></app-input>
+      <app-input name="paymentMethod" label="expenses.paymentMethod" [(ngModel)]="form.paymentMethod"></app-input>
+      <app-input name="isRecurring" label="expenses.recurring" type="checkbox" [(ngModel)]="form.isRecurring"></app-input>
+      <app-input name="sharedExpense" label="expenses.sharedCost" type="checkbox" [ngModel]="sharedExpense" (ngModelChange)="onSharedChange($event)"></app-input>
+
+      <fieldset class="allocations" *ngIf="sharedExpense">
+        <legend>{{ 'expenses.allocations' | translate }}</legend>
+        <p>{{ 'expenses.allocationHelp' | translate }}</p>
+        <div class="allocation-row" *ngFor="let allocation of allocations">
+          <label><input type="checkbox" [(ngModel)]="allocation.selected" [name]="'allocate-' + allocation.petId" /> {{ allocation.petName }}</label>
+          <input type="number" min="0.01" step="0.01" [disabled]="!allocation.selected" [(ngModel)]="allocation.amount" [name]="'amount-' + allocation.petId" [attr.aria-label]="allocationAmountAria(allocation.petName)" />
+        </div>
+        <div class="allocation-total"><span>{{ 'expenses.allocated' | translate }}</span><strong>{{ selectedAllocationTotal | number:'1.2-2' }} / {{ form.amount || 0 | number:'1.2-2' }} {{ form.currency }}</strong></div>
+      </fieldset>
+
+      <div class="receipt-picker">
+        <label>{{ 'expenses.receipt' | translate }}</label>
+        <app-file-upload accept="image/jpeg,image/png,image/webp,application/pdf" [allowedExtensions]="['.jpg','.jpeg','.png','.webp','.pdf']" [allowedContentTypes]="['image/jpeg','image/png','image/webp','application/pdf']" allowedTypesLabelKey="expenses.receiptTypes" [maxSizeBytes]="10485760" (filesChange)="onReceiptFiles($event)"></app-file-upload>
+        <small *ngIf="editingId">{{ 'expenses.receiptReplaceHelp' | translate }}</small>
+      </div>
+
       <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
       <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-      <div class="actions">
-        <app-button type="submit" [loading]="isSaving" [disabled]="expenseForm.invalid">{{ (isSaving ? 'Saving...' : 'Save expense') | translate }}</app-button>
-        <app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'Cancel' | translate }}</app-button>
-      </div>
+      <div class="actions"><app-button type="submit" [loading]="isSaving" [disabled]="expenseForm.invalid">{{ 'common.save' | translate }}</app-button><app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'common.cancel' | translate }}</app-button></div>
     </form>
 
     <div class="list">
-      <div *ngIf="isLoading" class="state">{{ 'Loading expenses...' | translate }}</div>
-      <div *ngIf="!isLoading && !expenses.length" class="state">{{ 'No expenses recorded yet.' | translate }}</div>
-
-      <app-card class="expense" [interactive]="true" *ngFor="let expense of expenses">
-        <div>
-          <h3>{{ expense.description || (expense.category | translate) || ('Expense' | translate) }}</h3>
-          <p>{{ (expense.category || 'Uncategorized') | translate }} - {{ expense.expenseDate || ('Date not set' | translate) }}</p>
-        </div>
-        <strong>{{ expense.amount | currency:(expense.currency || 'AUD') }}</strong>
-        <p class="notes">{{ expense.description || ('No notes.' | translate) }}</p>
-        <div class="actions">
-          <app-button type="button" variant="secondary" (buttonClick)="editExpense(expense)">{{ 'Edit' | translate }}</app-button>
-          <app-button type="button" variant="danger" (buttonClick)="deleteExpense(expense)">{{ 'Delete' | translate }}</app-button>
-        </div>
+      <div *ngIf="isLoading" class="state">{{ 'expenses.loading' | translate }}</div>
+      <div *ngIf="!isLoading && !expenses.length" class="state">{{ 'expenses.empty' | translate }}</div>
+      <app-card class="expense" *ngFor="let expense of expenses">
+        <div class="expense-heading"><div><h3>{{ expense.description || expense.category || ('expenses.expense' | translate) }}</h3><p>{{ expense.category || ('expenses.uncategorized' | translate) }} · {{ expense.expenseDate | date }}</p></div><strong>{{ expense.amount | currency:(expense.currency || 'AUD') }}</strong></div>
+        <p *ngIf="expense.vendorName"><strong>{{ 'expenses.vendor' | translate }}:</strong> {{ expense.vendorName }}</p>
+        <div class="allocation-chips" *ngIf="expense.allocations?.length"><span *ngFor="let allocation of expense.allocations">{{ allocation.petName }}: {{ allocation.amount | currency:(expense.currency || 'AUD') }}</span></div>
+        <div class="receipt-actions" *ngIf="expense.receiptFileId"><span>📎 {{ expense.receiptFileName || ('expenses.receipt' | translate) }}</span><button type="button" (click)="downloadReceipt(expense)">{{ 'expenses.downloadReceipt' | translate }}</button><button type="button" class="danger-link" (click)="deleteReceipt(expense)">{{ 'common.delete' | translate }}</button></div>
+        <div class="actions"><app-button type="button" variant="secondary" (buttonClick)="editExpense(expense)">{{ 'common.edit' | translate }}</app-button><app-button type="button" variant="danger" (buttonClick)="deleteExpense(expense)">{{ 'common.delete' | translate }}</app-button></div>
       </app-card>
     </div>
   </div>
 </section>
-

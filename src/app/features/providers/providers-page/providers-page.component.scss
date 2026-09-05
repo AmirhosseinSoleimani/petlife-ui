@@ -1,1 +1,35 @@
 :host { display: block; }
+
+.provider-gallery {
+  margin: 1.25rem 0;
+}
+
+.provider-gallery h4 {
+  margin: 0 0 .75rem;
+}
+
+.provider-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: .75rem;
+}
+
+.provider-gallery-grid figure {
+  margin: 0;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: .75rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.provider-gallery-grid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.provider-gallery-grid figcaption {
+  padding: .55rem .65rem;
+  font-size: .85rem;
+}

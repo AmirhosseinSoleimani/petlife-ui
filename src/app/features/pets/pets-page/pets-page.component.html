@@ -1,129 +1,133 @@
 <section class="page pets-page">
-  <app-page-header
-    eyebrow="pets.eyebrow"
-    title="pets.title"
-    description="pets.subtitle"
-  >
+  <app-page-header eyebrow="pets.eyebrow" title="pets.title" description="pets.description">
     <app-button type="button" (buttonClick)="openCreatePet()">{{ 'pets.addPet' | translate }}</app-button>
   </app-page-header>
 
-  <div class="page-feedback error" *ngIf="errorMessage && !isPetEditorOpen">{{ errorMessage | translate }}</div>
-  <div class="page-feedback success" *ngIf="successMessage">{{ successMessage | translate }}</div>
+  <p *ngIf="errorMessage && !isPetEditorOpen" class="form-error">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="form-success">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading pets...' | translate }}</div>
+  <div *ngIf="!isLoading && !pets.length" class="state">{{ 'No pets yet.' | translate }}</div>
 
-  <div class="pets-toolbar" *ngIf="!isLoading && pets.length">
-    <div>
-      <strong>{{ pets.length }}</strong>
-      <span>{{ 'pets.profileCount' | translate }}</span>
-    </div>
-    <p>{{ 'pets.collectionHint' | translate }}</p>
-  </div>
-
-  <div *ngIf="isLoading" class="state">{{ 'pets.loading' | translate }}</div>
-
-  <section *ngIf="!isLoading && !petsLoadFailed && !pets.length" class="pets-empty">
-    <span class="empty-paw" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
-    </span>
-    <h3>{{ 'pets.emptyTitle' | translate }}</h3>
-    <p>{{ 'pets.emptyDescription' | translate }}</p>
-    <app-button type="button" (buttonClick)="openCreatePet()">{{ 'pets.addFirstPet' | translate }}</app-button>
-  </section>
-
-  <div class="pet-grid" *ngIf="!isLoading && pets.length">
-    <app-card class="pet-profile-card" [interactive]="true" *ngFor="let pet of pets">
-      <div class="pet-visual" [class.has-photo]="profileImageSource(pet)">
-        <img
-          *ngIf="profileImageSource(pet) as profileImage"
-          [src]="profileImage"
-          [alt]="pet.petName + ' - ' + ('pets.profileImage' | translate)"
-        />
-        <div class="pet-placeholder" *ngIf="!profileImageSource(pet)">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 10.4c1.1 0 2-1.2 2-2.7S9.7 5 8.6 5s-2 1.2-2 2.7.9 2.7 2 2.7Zm6.8 0c1.1 0 2-1.2 2-2.7S16.5 5 15.4 5s-2 1.2-2 2.7.9 2.7 2 2.7ZM5.7 13.7c1 0 1.8-1 1.8-2.2S6.7 9.3 5.7 9.3s-1.8 1-1.8 2.2.8 2.2 1.8 2.2Zm12.6 0c1 0 1.8-1 1.8-2.2s-.8-2.2-1.8-2.2-1.8 1-1.8 2.2.8 2.2 1.8 2.2ZM12 12.8c-2.9 0-5.4 2.5-5.4 5.1 0 1.4 1.1 2.1 2.3 1.7 1-.3 1.9-.6 3.1-.6s2.1.3 3.1.6c1.2.4 2.3-.3 2.3-1.7 0-2.6-2.5-5.1-5.4-5.1Z"/></svg>
-          <strong>{{ (pet.petName || 'P').charAt(0) }}</strong>
+  <div class="pet-grid" *ngIf="pets.length">
+    <app-card *ngFor="let pet of pets" [interactive]="true">
+      <div class="pet-card-head">
+        <div class="avatar">
+          <img *ngIf="profileImageSource(pet) as src; else initials" [src]="src" [alt]="pet.petName" />
+          <ng-template #initials>{{ pet.petName.charAt(0) }}</ng-template>
         </div>
-        <app-badge tone="success">{{ (pet.gender || 'pets.profile') | translate }}</app-badge>
+        <div><h3>{{ pet.petName }}</h3><p>{{ pet.speciesName || pet.species }}<span *ngIf="pet.breedName || pet.breed"> · {{ pet.breedName || pet.breed }}</span></p></div>
       </div>
-
-      <div class="pet-identity">
-        <div>
-          <h3>{{ pet.petName }}</h3>
-          <p>{{ (pet.species || 'Pet') | translate }}<span *ngIf="pet.breed"> · {{ pet.breed }}</span></p>
-        </div>
+      <div class="pet-meta">
+        <span>{{ pet.gender || ('Unknown' | translate) }}</span>
+        <span>{{ pet.weight ? (pet.weight + ' kg') : ('Weight not set' | translate) }}</span>
+        <span *ngIf="pet.specialNeeds">{{ 'Special needs' | translate }}</span>
       </div>
-
-      <dl class="pet-facts">
-        <div><dt>{{ 'pets.age' | translate }}</dt><dd>{{ pet.approxAge || ('N/A' | translate) }}</dd></div>
-        <div><dt>{{ 'pets.weight' | translate }}</dt><dd>{{ pet.weight || ('N/A' | translate) }}</dd></div>
-      </dl>
-
-      <div class="notes-preview">
-        <span>{{ 'pets.notes' | translate }}</span>
-        <p>{{ pet.behaviourNotes || pet.medicalNotes || ('pets.noNotes' | translate) }}</p>
-      </div>
-
-      <div class="pet-actions">
-        <a [routerLink]="['/pets', pet.id, 'health-records']">{{ 'pets.health' | translate }}</a>
-        <a [routerLink]="['/pets', pet.id, 'expenses']">{{ 'pets.expenses' | translate }}</a>
-        <app-button type="button" variant="ghost" (buttonClick)="editPet(pet)">{{ 'pets.edit' | translate }}</app-button>
-        <app-button type="button" variant="danger" (buttonClick)="deletePet(pet)">{{ 'pets.delete' | translate }}</app-button>
+      <div class="card-actions">
+        <a [routerLink]="['/pets', pet.id, 'health-records']">{{ 'Health records' | translate }}</a>
+        <a [routerLink]="['/pets', pet.id, 'health-timeline']">{{ 'healthTimeline.shortTitle' | translate }}</a>
+        <a [routerLink]="['/pets', pet.id, 'share']">{{ 'sharing.shortTitle' | translate }}</a>
+        <a [routerLink]="['/pets', pet.id, 'expenses']">{{ 'Expenses' | translate }}</a>
+        <button type="button" (click)="editPet(pet)">{{ 'Edit' | translate }}</button>
+        <button type="button" class="danger" (click)="deletePet(pet)">{{ 'Delete' | translate }}</button>
       </div>
     </app-card>
   </div>
 
-  <app-modal
-    [open]="isPetEditorOpen"
-    [title]="editorTitleKey"
-    [description]="editorDescriptionKey"
-    [closeOnBackdrop]="false"
-    (closed)="closePetEditor()"
-  >
-    <form class="pet-editor-form" (ngSubmit)="savePet()" #petForm="ngForm">
-      <div class="editor-fields">
-        <app-input name="petName" label="Name" required [(ngModel)]="form.petName"></app-input>
-        <app-input name="species" label="Species" type="select" placeholder="Select species" [options]="petTypeOptions" required [(ngModel)]="form.species"></app-input>
-        <app-input class="full-field" name="breed" label="Breed" [(ngModel)]="form.breed"></app-input>
-        <app-input name="approxAge" label="Age" [(ngModel)]="form.approxAge"></app-input>
-        <app-input name="weight" label="Weight" type="number" min="0" step="0.1" [(ngModel)]="form.weight"></app-input>
-        <app-input class="full-field" name="gender" label="Gender" type="select" placeholder="Select gender" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
-        <app-input class="full-field" name="behaviourNotes" label="Notes" type="textarea" [rows]="3" [(ngModel)]="form.behaviourNotes"></app-input>
-      </div>
-
-      <section class="profile-image-editor">
-        <div class="editor-section-head">
-          <div><h3>{{ 'pets.profileImage' | translate }}</h3><p>{{ 'pets.profileImageHelp' | translate }}</p></div>
-          <ng-container *ngIf="editingPet as petBeingEdited">
-            <div class="current-profile-image" *ngIf="petBeingEdited.profileImageUrl">
-              <img *ngIf="profileImageSource(petBeingEdited) as currentImage" [src]="currentImage" [alt]="'pets.currentProfileImage' | translate" />
-            </div>
-          </ng-container>
+  <app-modal [open]="isPetEditorOpen" [title]="editorTitleKey" [description]="editorDescriptionKey" (closed)="closePetEditor()">
+    <form class="pet-editor" (ngSubmit)="savePet()" #petForm="ngForm">
+      <section class="editor-section">
+        <h3>{{ 'Identity' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="petName" label="Pet name" required [(ngModel)]="form.petName"></app-input>
+          <app-input name="speciesId" label="Species" type="select" placeholder="Select species" required [options]="speciesOptions" [ngModel]="form.speciesId" (ngModelChange)="onSpeciesChange($event)"></app-input>
+          <app-input *ngIf="subgroupOptions.length" name="subgroupId" label="Subgroup" type="select" [options]="subgroupOptions" [ngModel]="form.subgroupId" (ngModelChange)="onSubgroupChange($event)"></app-input>
+          <app-input *ngIf="breedOptions.length" name="breedId" label="Breed / Morph" type="select" [options]="breedOptions" [ngModel]="form.breedId" (ngModelChange)="onBreedChange($event)"></app-input>
+          <app-input name="gender" label="Gender" type="select" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
+          <app-input name="dateOfBirth" label="Date of birth" type="date" [(ngModel)]="form.dateOfBirth"></app-input>
+          <app-input name="approxAge" label="Approximate age" [(ngModel)]="form.approxAge"></app-input>
+          <app-input name="weight" label="Weight (kg)" type="number" min="0.01" step="0.01" [(ngModel)]="form.weight"></app-input>
+          <app-input name="colour" label="Colour / markings" [(ngModel)]="form.colour"></app-input>
+          <app-input name="microchipNumber" label="Microchip number" [(ngModel)]="form.microchipNumber"></app-input>
         </div>
-        <app-file-upload
-          #petImageUpload
-          [accept]="profileImageExtensions.join(',')"
-          [allowedExtensions]="profileImageExtensions"
-          [allowedContentTypes]="profileImageContentTypes"
-          allowedTypesLabelKey="files.petImageTypes"
-          [maxSizeBytes]="profileImageMaxSize"
-          [showImagePreview]="true"
-          [loading]="isSaving"
-          (filesChange)="onPetImageFilesChange($event)"
-        ></app-file-upload>
-        <app-button
-          *ngIf="editingPet?.profileImageUrl"
-          type="button"
-          variant="danger"
-          [loading]="removingImagePetId === editingPetId"
-          (buttonClick)="removeProfileImage()"
-        >{{ 'pets.removeProfileImage' | translate }}</app-button>
+      </section>
+
+      <section class="editor-section">
+        <h3>{{ 'Reproduction' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="desexedStatus" label="Desexed status" type="select" [options]="desexedOptions" [(ngModel)]="form.desexedStatus"></app-input>
+          <app-input name="reproductiveStatus" label="Reproductive status" type="select" [options]="reproductiveOptions" [(ngModel)]="form.reproductiveStatus"></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <h3>{{ 'Behaviour & handling' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="temperament" label="Temperament" [(ngModel)]="form.temperament"></app-input>
+          <app-input name="socialCompatibility" label="Social compatibility" [(ngModel)]="form.socialCompatibility"></app-input>
+          <app-input name="behaviourNotes" label="Behaviour notes" type="textarea" [(ngModel)]="form.behaviourNotes"></app-input>
+          <app-input name="handlingNotes" label="Handling notes" type="textarea" [(ngModel)]="form.handlingNotes"></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <h3>{{ 'Health & special needs' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="medicalNotes" label="Current health notes" type="textarea" [(ngModel)]="form.medicalNotes"></app-input>
+          <app-input name="allergyNotes" label="Allergies" type="textarea" [(ngModel)]="form.allergyNotes"></app-input>
+          <app-input name="medicationNotes" label="Current medication notes" type="textarea" [(ngModel)]="form.medicationNotes"></app-input>
+          <app-input name="specialNeeds" label="Special needs" type="textarea" [(ngModel)]="form.specialNeeds"></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <h3>{{ 'Environment & care' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="livingEnvironment" label="Living environment" type="textarea" [(ngModel)]="form.livingEnvironment"></app-input>
+          <app-input name="equipmentNotes" label="Equipment / enclosure" type="textarea" [(ngModel)]="form.equipmentNotes"></app-input>
+          <app-input name="feedingNotes" label="Feeding notes" type="textarea" [(ngModel)]="form.feedingNotes"></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section" *ngIf="dynamicFields.length">
+        <h3>{{ 'Species-specific details' | translate }}</h3>
+        <div class="form-grid">
+          <app-input
+            *ngFor="let field of dynamicFields"
+            [name]="'dynamic_' + field.id"
+            [label]="field.label"
+            [type]="dynamicInputType(field)"
+            [options]="dynamicOptions(field)"
+            [required]="field.isRequired"
+            [placeholder]="field.placeholder || ''"
+            [helper]="dynamicHelper(field)"
+            [(ngModel)]="form.dynamicValues[field.id]"
+          ></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <h3>{{ 'Care contacts' | translate }}</h3>
+        <div class="form-grid">
+          <app-input name="primaryVetName" label="Primary vet" [(ngModel)]="form.primaryVetName"></app-input>
+          <app-input name="primaryVetPhone" label="Primary vet phone" [(ngModel)]="form.primaryVetPhone"></app-input>
+          <app-input name="emergencyContactName" label="Emergency contact" [(ngModel)]="form.emergencyContactName"></app-input>
+          <app-input name="emergencyContactPhone" label="Emergency contact phone" [(ngModel)]="form.emergencyContactPhone"></app-input>
+        </div>
+      </section>
+
+      <section class="editor-section image-editor">
+        <h3>{{ 'pets.profileImage' | translate }}</h3>
+        <ng-container *ngIf="editingPet as petBeingEdited">
+          <div class="current-profile-image" *ngIf="profileImageSource(petBeingEdited) as currentImage"><img [src]="currentImage" [alt]="'pets.currentProfileImage' | translate" /></div>
+        </ng-container>
+        <app-file-upload #petImageUpload [accept]="profileImageExtensions.join(',')" [allowedExtensions]="profileImageExtensions" [allowedContentTypes]="profileImageContentTypes" allowedTypesLabelKey="files.petImageTypes" [maxSizeBytes]="profileImageMaxSize" [showImagePreview]="true" [loading]="isSaving" (filesChange)="onPetImageFilesChange($event)"></app-file-upload>
+        <app-button *ngIf="editingPet?.profileImageUrl" type="button" variant="danger" [loading]="removingImagePetId === editingPetId" (buttonClick)="removeProfileImage()">{{ 'pets.removeProfileImage' | translate }}</app-button>
       </section>
 
       <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
-
       <footer class="editor-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closePetEditor()">{{ 'common.cancel' | translate }}</app-button>
-        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid">
-          {{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}
-        </app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid || !form.speciesId">{{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}</app-button>
       </footer>
     </form>
   </app-modal>

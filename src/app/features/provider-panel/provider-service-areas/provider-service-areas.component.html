@@ -62,6 +62,7 @@
       <div>
         <p>{{ 'providerAreas.serviceArea' | translate }}</p>
         <h3>{{ area.suburb || ('providerAreas.areaFallback' | translate) }}</h3>
+        <small *ngIf="area.city">{{ area.city }}</small>
       </div>
       <div class="area-tags">
         <span *ngIf="area.state">{{ area.state }}</span>
@@ -96,6 +97,17 @@
             <p>{{ 'providerAreas.locationHelp' | translate }}</p>
           </div>
         </div>
+        <app-input
+          name="geographyAreaId"
+          label="Managed geography"
+          helper="Choose a managed suburb/postcode or enter an address manually."
+          type="select"
+          placeholder="Manual area"
+          [placeholderValue]="null"
+          [options]="geographyOptions"
+          [ngModel]="form.geographyAreaId"
+          (ngModelChange)="selectGeography($event)"
+        ></app-input>
         <app-input name="suburb" label="providerAreas.suburb" required [(ngModel)]="form.suburb"></app-input>
         <div class="provider-form-grid two">
           <app-input name="state" label="providerAreas.state" required [(ngModel)]="form.state"></app-input>
@@ -106,7 +118,7 @@
           label="providerAreas.radiusKm"
           helper="providerAreas.radiusHelp"
           type="number"
-          min="0"
+          min="1"
           required
           [(ngModel)]="form.radiusKm"
         ></app-input>

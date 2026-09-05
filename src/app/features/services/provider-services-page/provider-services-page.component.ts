@@ -8,6 +8,8 @@ import { Pet } from '../../../core/models/customer-core.models';
 import {
   DeliveryMode,
   Provider,
+  ProviderExpertise,
+  ProviderRecommendation,
   ProviderService,
   ServiceCategory
 } from '../../../core/models/marketplace.models';
@@ -23,6 +25,9 @@ export class ProviderServicesPageComponent implements OnInit {
   pets: Pet[] = [];
   categories: ServiceCategory[] = [];
   services: ProviderService[] = [];
+  recommendations: ProviderRecommendation[] = [];
+  selectedRecommendationDefinitionId: string | null = null;
+  isLoadingRecommendations = false;
   selectedPetId: string | null = null;
   selectedCategoryId: string | null = null;
   providerId: string | null = null;
@@ -32,6 +37,16 @@ export class ProviderServicesPageComponent implements OnInit {
   isLoadingCategories = false;
   isLoadingServices = false;
   errorMessage = '';
+  deliveryMode: DeliveryMode | '' = '';
+  suburbFilter = '';
+  postcodeFilter = '';
+  radiusKm: number | null = 25;
+  latitude: number | null = null;
+  longitude: number | null = null;
+  acceptingRequestsOnly = true;
+  openNowOnly = false;
+  afterHoursOnly = false;
+  isLocating = false;
 
   constructor(
     private readonly apiService: ApiService,
@@ -51,6 +66,14 @@ export class ProviderServicesPageComponent implements OnInit {
     this.preferencesService.load().subscribe(() => this.loadPets());
   }
 
+  readonly deliveryModeOptions: AppInputOption[] = [
+    { label: 'All delivery modes', value: '' },
+    { label: 'deliveryMode.atProvider', value: 'AtProviderLocation' },
+    { label: 'deliveryMode.atCustomer', value: 'AtCustomerLocation' },
+    { label: 'deliveryMode.online', value: 'Online' },
+    { label: 'deliveryMode.hybrid', value: 'Hybrid' }
+  ];
+
   get petOptions(): AppInputOption[] {
     return this.pets.map((pet) => ({
       label: `${pet.petName}${pet.species ? ` — ${pet.species}` : ''}`,
@@ -60,6 +83,22 @@ export class ProviderServicesPageComponent implements OnInit {
 
   get selectedPet(): Pet | null {
     return this.pets.find((pet) => pet.id === this.selectedPetId) || null;
+  }
+
+  get recommendationDefinitionOptions(): AppInputOption[] {
+    const seen = new Set<string>();
+    return this.services
+      .filter((service) => !!service.serviceDefinitionId)
+      .filter((service) => {
+        const id = service.serviceDefinitionId!;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .map((service) => ({
+        label: this.getServiceName(service),
+        value: service.serviceDefinitionId!
+      }));
   }
 
   get visibleServices(): ProviderService[] {
@@ -108,6 +147,8 @@ export class ProviderServicesPageComponent implements OnInit {
     this.selectedCategoryId = null;
     this.categories = [];
     this.services = [];
+    this.recommendations = [];
+    this.selectedRecommendationDefinitionId = null;
     this.errorMessage = '';
 
     if (!petId) {
@@ -133,21 +174,114 @@ export class ProviderServicesPageComponent implements OnInit {
     }
 
     this.selectedCategoryId = categoryId;
+    this.loadServices();
+  }
+
+  applyFilters(): void {
+    if (this.selectedCategoryId) this.loadServices();
+  }
+
+  useMyLocation(): void {
+    if (!navigator.geolocation) {
+      this.errorMessage = 'Location is not available in this browser.';
+      return;
+    }
+    this.isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
+        this.isLocating = false;
+        this.applyFilters();
+      },
+      () => {
+        this.errorMessage = 'Unable to read your current location.';
+        this.isLocating = false;
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }
+
+  clearLocation(): void {
+    this.latitude = null;
+    this.longitude = null;
+  }
+
+  private loadServices(): void {
+    if (!this.selectedPetId || !this.selectedCategoryId) return;
     this.services = [];
     this.errorMessage = '';
     this.isLoadingServices = true;
-    this.apiService.get<ApiResponse<ProviderService[]>>(
-      `/provider-services?petId=${this.selectedPetId}&categoryId=${categoryId}`
-    ).subscribe({
+    const params = this.buildSearchParams();
+    this.apiService.get<ApiResponse<ProviderService[]>>(`/provider-services?${params.toString()}`).subscribe({
       next: (response) => {
         this.services = response.data || [];
         this.isLoadingServices = false;
+        this.recordProductEvent('ProviderSearch', 'ServiceCategory', this.selectedCategoryId);
+
+        if (!this.providerId) {
+          const firstDefinition = this.recommendationDefinitionOptions[0]?.value as string | undefined;
+          this.selectedRecommendationDefinitionId = firstDefinition || null;
+          this.loadRecommendations();
+        }
       },
       error: () => {
         this.errorMessage = 'services.loadError';
         this.isLoadingServices = false;
       }
     });
+  }
+
+  selectRecommendationDefinition(serviceDefinitionId: string | null): void {
+    this.selectedRecommendationDefinitionId = serviceDefinitionId;
+    this.loadRecommendations();
+  }
+
+  private loadRecommendations(): void {
+    if (this.providerId || !this.selectedPetId || !this.selectedCategoryId || !this.selectedRecommendationDefinitionId) {
+      this.recommendations = [];
+      return;
+    }
+
+    const params = this.buildSearchParams();
+    params.set('serviceDefinitionId', this.selectedRecommendationDefinitionId);
+    this.isLoadingRecommendations = true;
+    this.apiService.get<ApiResponse<ProviderRecommendation[]>>(`/provider-recommendations?${params.toString()}`).subscribe({
+      next: (response) => {
+        this.recommendations = (response.data || []).slice(0, 3);
+        this.isLoadingRecommendations = false;
+      },
+      error: () => {
+        this.recommendations = [];
+        this.isLoadingRecommendations = false;
+      }
+    });
+  }
+
+  private buildSearchParams(): URLSearchParams {
+    const params = new URLSearchParams();
+    if (this.selectedPetId) params.set('petId', this.selectedPetId);
+    if (this.selectedCategoryId) params.set('categoryId', this.selectedCategoryId);
+    if (this.deliveryMode) params.set('deliveryMode', this.deliveryMode);
+    if (this.suburbFilter.trim()) params.set('suburb', this.suburbFilter.trim());
+    if (this.postcodeFilter.trim()) params.set('postcode', this.postcodeFilter.trim());
+    if (this.acceptingRequestsOnly) params.set('acceptingRequests', 'true');
+    if (this.openNowOnly) params.set('openNow', 'true');
+    if (this.afterHoursOnly) params.set('afterHours', 'true');
+    if (this.latitude !== null && this.longitude !== null) {
+      params.set('latitude', String(this.latitude));
+      params.set('longitude', String(this.longitude));
+      if (this.radiusKm !== null) params.set('radiusKm', String(this.radiusKm));
+    }
+    return params;
+  }
+
+  private recordProductEvent(eventType: string, entityType?: string, entityId?: string | null): void {
+    this.apiService.post<ApiResponse<object>>('/product-events', {
+      eventType,
+      entityType: entityType || null,
+      entityId: entityId || null
+    }).subscribe({ next: () => undefined, error: () => undefined });
   }
 
   getServiceName(service: ProviderService): string {
@@ -170,6 +304,12 @@ export class ProviderServicesPageComponent implements OnInit {
       service.providerState,
       service.providerPostcode
     ].filter(Boolean).join(', ');
+  }
+
+  getTopExpertise(service: ProviderService): ProviderExpertise | null {
+    return service.providerExpertise && service.providerExpertise.length > 0
+      ? service.providerExpertise[0]
+      : null;
   }
 
   getDeliveryModeKey(deliveryMode: DeliveryMode | undefined): string {

@@ -4,6 +4,7 @@
   </app-page-header>
 
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success page-message">{{ successMessage }}</p>
   <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
   <section *ngIf="!isLoading && !requests.length" class="request-empty">
     <span aria-hidden="true">↗</span><h3>{{ 'requests.emptyTitle' | translate }}</h3><p>{{ 'requests.emptyDescription' | translate }}</p><a routerLink="/services">{{ 'requests.startRequest' | translate }}</a>
@@ -37,6 +38,10 @@
         <h3>{{ getServiceName(selectedRequest) || ('requests.unknownService' | translate) }}</h3>
         <dl><div><dt>{{ 'requests.petLabel' | translate }}</dt><dd>{{ getPetName(selectedRequest) || ('requests.unknownPet' | translate) }}</dd></div><div><dt>{{ 'requests.providerLabel' | translate }}</dt><dd>{{ getProviderName(selectedRequest) || ('requests.unknownProvider' | translate) }}</dd></div><div><dt>{{ 'requests.requestedDate' | translate }}</dt><dd>{{ getRequestDate(selectedRequest) ? (getRequestDate(selectedRequest) | date:'mediumDate') : ('common.notAvailable' | translate) }}</dd></div></dl>
         <div class="detail-message"><span>{{ 'requests.messageLabel' | translate }}</span><p>{{ selectedRequest.requestMessage || ('requests.noMessage' | translate) }}</p></div>
+        <div class="detail-message" *ngIf="selectedRequest.providerResponseMessage"><span>Provider response</span><p>{{ selectedRequest.providerResponseMessage }}</p></div>
+        <section class="booking-proposal" *ngIf="selectedRequest.bookingStatus === 'Proposed' && selectedRequest.proposedServiceAt"><h4>Provider proposed a service time</h4><strong>{{ selectedRequest.proposedServiceAt | date:'medium' }}</strong><p>Confirm only if this time works for you. Confirmation updates the request schedule.</p><app-button type="button" [loading]="isUpdating" (buttonClick)="confirmBooking(selectedRequest)">Confirm booking time</app-button></section>
+        <section class="booking-proposal confirmed" *ngIf="selectedRequest.bookingStatus === 'Confirmed'"><h4>Booking confirmed</h4><strong>{{ selectedRequest.confirmedServiceAt | date:'medium' }}</strong></section>
+        <section class="request-history" *ngIf="selectedRequest.statusHistory?.length"><h4>Status timeline</h4><ol><li *ngFor="let event of selectedRequest.statusHistory"><div><strong>{{ event.newStatus }}</strong><small>{{ event.changedAt | date:'short' }} · {{ event.actorRole }}</small></div><p *ngIf="event.note">{{ event.note }}</p></li></ol></section>
       </app-card>
     </div>
   </ng-container>

@@ -107,7 +107,8 @@
       }
     }
   },
+  "defaultProject": "petlife-ui",
   "cli": {
-    "analytics": "aa3df759-a6b9-4759-9291-b3f09d62a4bf"
+    "analytics": "9dfeffef-1d98-4436-9e05-ce105ecd17e3"
   }
 }
