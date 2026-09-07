@@ -28,6 +28,23 @@ export class ApiService {
     return this.http.delete<T>(this.buildUrl(endpoint));
   }
 
+  postForm<T>(endpoint: string, formData: FormData): Observable<T> {
+    return this.http.post<T>(this.buildUrl(endpoint), formData);
+  }
+
+  download(endpoint: string): Observable<Blob> {
+    return this.http.get(this.buildUrl(endpoint), { responseType: 'blob' });
+  }
+
+
+  uploadProviderGalleryImage<T>(file: File, caption = '', sortOrder = 0): Observable<T> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('caption', caption);
+    formData.append('sortOrder', String(sortOrder));
+    return this.http.post<T>(this.buildUrl('/provider-media'), formData);
+  }
+
   uploadPetProfileImage<T>(petId: string, file: File): Observable<T> {
     return this.postFile<T>(`/pets/${petId}/profile-image`, file);
   }
@@ -53,6 +70,18 @@ export class ApiService {
       this.buildUrl(`/health-records/${recordId}/attachments/${attachmentId}/download`),
       { responseType: 'blob' }
     );
+  }
+
+  uploadExpenseReceipt<T>(expenseId: string, file: File): Observable<T> {
+    return this.postFile<T>(`/expenses/${expenseId}/receipt`, file);
+  }
+
+  downloadExpenseReceipt(expenseId: string): Observable<Blob> {
+    return this.http.get(this.buildUrl(`/expenses/${expenseId}/receipt`), { responseType: 'blob' });
+  }
+
+  deleteExpenseReceipt<T>(expenseId: string): Observable<T> {
+    return this.delete<T>(`/expenses/${expenseId}/receipt`);
   }
 
   resolvePublicUrl(url: string | null | undefined): string | null {

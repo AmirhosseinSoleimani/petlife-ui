@@ -1,0 +1,31 @@
+<section class="verify-page">
+  <div class="verify-card">
+    <h1>{{ 'Verify contact channel' | translate }}</h1>
+    <p>{{ 'A six-digit code is required. Codes expire after 10 minutes and resend is rate-limited.' | translate }}</p>
+
+    <div class="channel-tabs">
+      <button type="button" [class.active]="channel === 'Email'" [disabled]="!status?.email" (click)="setChannel('Email')">
+        {{ 'Email' | translate }} <span *ngIf="status?.isEmailVerified">✓</span>
+      </button>
+      <button type="button" [class.active]="channel === 'Mobile'" [disabled]="!status?.mobileNumber" (click)="setChannel('Mobile')">
+        {{ 'Mobile' | translate }} <span *ngIf="status?.isMobileVerified">✓</span>
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="state">{{ 'Loading...' | translate }}</div>
+    <ng-container *ngIf="!isLoading">
+      <div class="destination"><span>{{ channel | translate }}</span><strong>{{ destination || ('Not configured' | translate) }}</strong></div>
+      <div *ngIf="verified" class="verified">✓ {{ 'This contact channel is verified.' | translate }}</div>
+      <ng-container *ngIf="!verified && destination">
+        <app-input name="code" label="Verification code" placeholder="000000" [(ngModel)]="code"></app-input>
+        <div class="actions">
+          <app-button type="button" variant="secondary" [loading]="isSending" (buttonClick)="sendCode()">{{ 'Resend code' | translate }}</app-button>
+          <app-button type="button" [loading]="isVerifying" [disabled]="!canVerify" (buttonClick)="verify()">{{ 'Verify' | translate }}</app-button>
+        </div>
+      </ng-container>
+    </ng-container>
+    <p *ngIf="message" class="success">{{ message | translate }}</p>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+    <button class="continue" type="button" (click)="continue()">{{ 'Continue to dashboard' | translate }}</button>
+  </div>
+</section>

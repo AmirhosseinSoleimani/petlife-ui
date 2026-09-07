@@ -56,17 +56,21 @@
         <p>{{ service.serviceCategoryName || service.category || ('providerServices.categoryFallback' | translate) }}</p>
         <h3>{{ getServiceName(service) || ('providerServices.serviceFallback' | translate) }}</h3>
         <span>{{ service.description || ('providerServices.noDescription' | translate) }}</span>
+        <small *ngIf="service.specialConditions"><strong>Conditions:</strong> {{ service.specialConditions }}</small>
+        <small *ngIf="service.isTemporarilyClosed" class="temporary-closed">Temporarily closed<ng-container *ngIf="service.temporaryClosedUntil"> until {{ service.temporaryClosedUntil | date:'medium' }}</ng-container></small>
         <div class="service-context">
           <app-badge tone="info">{{ getDeliveryModeKey(service.deliveryMode) | translate }}</app-badge>
           <span *ngIf="service.applicableSpecies?.length">
             {{ 'providerServices.eligibleFor' | translate }}: {{ service.applicableSpecies?.join(', ') }}
           </span>
+          <span *ngIf="service.availabilityWindows?.length">{{ service.availabilityWindows?.length }} availability window(s)</span>
         </div>
       </div>
       <div class="service-metrics">
         <div>
           <span>{{ 'providerServices.price' | translate }}</span>
-          <strong>{{ service.price != null ? (service.price | currency:(service.currency || 'AUD')) : ('providerServices.priceNotSet' | translate) }}</strong>
+          <strong *ngIf="service.pricingType !== 'Quote'">{{ service.pricingType === 'From' ? 'From ' : '' }}{{ service.price != null ? (service.price | currency:(service.currency || 'AUD')) : ('providerServices.priceNotSet' | translate) }}<ng-container *ngIf="service.priceMax != null"> – {{ service.priceMax | currency:(service.currency || 'AUD') }}</ng-container></strong>
+          <strong *ngIf="service.pricingType === 'Quote'">Quote required</strong>
         </div>
         <div>
           <span>{{ 'providerServices.duration' | translate }}</span>
@@ -127,7 +131,7 @@
             </div>
             <div>
               <dt>{{ 'providerServices.eligibleFor' | translate }}</dt>
-              <dd>{{ selectedDefinition.applicableSpecies?.join(', ') || ('common.notAvailable' | translate) }}</dd>
+              <dd>{{ selectedDefinition.applicableSpecies.join(', ') || ('common.notAvailable' | translate) }}</dd>
             </div>
             <div class="definition-description">
               <dt>{{ 'providerServices.defaultDescription' | translate }}</dt>
@@ -137,6 +141,7 @@
         </div>
         <app-input name="serviceName" label="providerServices.customName" helper="providerServices.customNameHelp" [(ngModel)]="form.serviceName"></app-input>
         <app-input name="description" label="providerServices.description" type="textarea" [rows]="4" [(ngModel)]="form.description"></app-input>
+        <app-input name="specialConditions" label="Special conditions" type="textarea" [rows]="3" [(ngModel)]="form.specialConditions"></app-input>
       </div>
       <div class="form-section">
         <div class="form-section-heading">
@@ -146,10 +151,13 @@
             <p>{{ 'providerServices.pricingHelp' | translate }}</p>
           </div>
         </div>
-        <div class="provider-form-grid two">
-          <app-input name="price" label="providerServices.price" type="number" min="0" step="0.01" required [(ngModel)]="form.price"></app-input>
+        <app-input name="pricingType" label="Pricing model" type="select" [options]="pricingTypeOptions" [(ngModel)]="form.pricingType"></app-input>
+        <div class="provider-form-grid three">
+          <app-input name="price" label="Base / from price" type="number" min="0" step="0.01" [required]="form.pricingType !== 'Quote'" [(ngModel)]="form.price"></app-input>
+          <app-input name="priceMax" label="Maximum price (optional)" type="number" min="0" step="0.01" [(ngModel)]="form.priceMax"></app-input>
           <app-input name="currency" label="providerServices.currency" required [(ngModel)]="form.currency"></app-input>
         </div>
+        <app-input name="pricingNotes" label="Pricing notes" type="textarea" [rows]="2" [(ngModel)]="form.pricingNotes"></app-input>
         <app-input name="durationMinutes" label="providerServices.durationMinutes" type="number" min="0" required [(ngModel)]="form.durationMinutes"></app-input>
         <app-input
           name="deliveryMode"
@@ -163,6 +171,20 @@
         <p *ngIf="form.isActive && !isProfileReady" class="provider-notice warning">
           {{ 'providerServices.cannotPublish' | translate }}
         </p>
+      </div>
+
+      <div class="form-section availability-editor">
+        <div class="form-section-heading"><span>03</span><div><h3>Simple availability</h3><p>Optional weekly windows constrain booking proposals. Leaving them empty preserves the current request-only behavior.</p></div></div>
+        <label class="closure-toggle"><input type="checkbox" name="isTemporarilyClosed" [(ngModel)]="isTemporarilyClosed"> Temporarily close this service</label>
+        <label *ngIf="isTemporarilyClosed">Closed until <input type="datetime-local" name="temporaryClosedUntil" [(ngModel)]="temporaryClosedUntil"></label>
+        <div class="availability-window" *ngFor="let window of availabilityWindows; let i = index">
+          <label>Day<select [name]="'availabilityDay' + i" [(ngModel)]="window.dayOfWeek"><option *ngFor="let day of [0,1,2,3,4,5,6]" [ngValue]="day">{{ dayLabel(day) }}</option></select></label>
+          <label>From<input type="time" [name]="'availabilityStart' + i" required [(ngModel)]="window.startTime"></label>
+          <label>To<input type="time" [name]="'availabilityEnd' + i" required [(ngModel)]="window.endTime"></label>
+          <label>Capacity<input type="number" min="1" [name]="'availabilityCapacity' + i" [(ngModel)]="window.capacity" placeholder="Unlimited"></label>
+          <button type="button" (click)="removeAvailabilityWindow(i)">Remove</button>
+        </div>
+        <button class="add-window" type="button" (click)="addAvailabilityWindow()">+ Add availability window</button>
       </div>
       <div class="provider-form-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button>

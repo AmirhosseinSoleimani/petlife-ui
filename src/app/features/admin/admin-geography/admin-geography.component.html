@@ -1,0 +1,17 @@
+<section class="page admin-master-page">
+  <app-page-header title="Geography master data" description="Manage reusable city, suburb, postcode and coordinates used by provider locations, service areas and marketplace search."></app-page-header>
+  <p class="error" *ngIf="errorMessage">{{errorMessage}}</p><p class="success" *ngIf="successMessage">{{successMessage}}</p>
+  <div class="search-row"><app-input name="geoSearch" label="Search" [(ngModel)]="search"></app-input><app-button type="button" (buttonClick)="load()">Search</app-button></div>
+  <div class="split">
+    <form class="editor" (ngSubmit)="save()" #editor="ngForm">
+      <h3>{{editingId?'Edit geography':'New geography'}}</h3>
+      <div class="two"><app-input name="city" label="City" required [(ngModel)]="form.city"></app-input><app-input name="suburb" label="Suburb" required [(ngModel)]="form.suburb"></app-input></div>
+      <div class="two"><app-input name="state" label="State" required [(ngModel)]="form.state"></app-input><app-input name="postcode" label="Postcode" required [(ngModel)]="form.postcode"></app-input></div>
+      <app-input name="country" label="Country" required [(ngModel)]="form.country"></app-input>
+      <div class="two"><app-input name="latitude" label="Latitude" type="number" step="0.000001" [(ngModel)]="form.latitude"></app-input><app-input name="longitude" label="Longitude" type="number" step="0.000001" [(ngModel)]="form.longitude"></app-input></div>
+      <div class="two"><app-input name="sortOrder" label="Sort order" type="number" [(ngModel)]="form.sortOrder"></app-input><app-input name="active" label="Active" type="checkbox" [(ngModel)]="form.isActive"></app-input></div>
+      <div class="actions"><app-button type="submit" [loading]="isSaving" [disabled]="editor.invalid">Save</app-button><app-button *ngIf="editingId" type="button" variant="secondary" (buttonClick)="reset()">Cancel</app-button></div>
+    </form>
+    <div class="list"><div class="state" *ngIf="isLoading">Loading…</div><app-card *ngFor="let item of areas"><div class="heading"><div><strong>{{item.suburb}} · {{item.postcode}}</strong><small>{{item.city}}, {{item.state}} · {{item.country}}</small></div><app-badge [tone]="item.isActive?'success':'warning'">{{item.isActive?'Active':'Inactive'}}</app-badge></div><p *ngIf="item.latitude!=null && item.longitude!=null">{{item.latitude}}, {{item.longitude}}</p><div class="actions"><app-button type="button" variant="secondary" (buttonClick)="edit(item)">Edit</app-button><app-button type="button" variant="danger" (buttonClick)="remove(item)">Remove</app-button></div></app-card></div>
+  </div>
+</section>

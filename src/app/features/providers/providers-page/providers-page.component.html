@@ -14,7 +14,7 @@
     <app-card class="market-provider-card" *ngFor="let provider of filteredProviders">
       <div class="provider-card-head">
         <span class="provider-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11h-5v-6H9v6H4Zm7-8h2V9h3V7h-3V5h-2v2H8v2h3v3Z"/></svg></span>
-        <div class="provider-badges"><app-badge tone="info" *ngIf="isVerified(provider)">{{ 'providers.verified' | translate }}</app-badge><app-badge [tone]="isAvailable(provider) ? 'success' : 'neutral'">{{ (isAvailable(provider) ? 'providers.available' : 'providers.inactive') | translate }}</app-badge></div>
+        <div class="provider-badges"><app-badge tone="info" *ngFor="let badge of getTrustBadges(provider)">{{ badge.label }}</app-badge><app-badge tone="info" *ngIf="isVerified(provider) && !getTrustBadges(provider).length">{{ 'providers.verified' | translate }}</app-badge><app-badge [tone]="isAvailable(provider) ? 'success' : 'neutral'">{{ (isAvailable(provider) ? 'providers.available' : 'providers.inactive') | translate }}</app-badge></div>
       </div>
       <div class="provider-identity"><h3>{{ getProviderName(provider) || ('providers.providerFallback' | translate) }}</h3><p>{{ provider.suburb || ('providers.areaUnavailable' | translate) }}<span *ngIf="provider.state">, {{ provider.state }}</span></p></div>
       <p class="provider-description">{{ provider.description || provider.businessDescription || ('providers.descriptionFallback' | translate) }}</p>
@@ -24,7 +24,7 @@
       </div>
       <div class="provider-summary">
         <span><strong>{{ getProviderServices(provider).length }}</strong>{{ 'providers.servicesCount' | translate }}</span>
-        <span><strong>{{ provider.phone || '—' }}</strong>{{ 'providers.contact' | translate }}</span>
+        <span><strong>{{ provider.phone || provider.phoneNumber || '—' }}</strong>{{ 'providers.contact' | translate }}</span>
       </div>
       <div class="provider-actions">
         <a [routerLink]="['/providers', getProviderRouteId(provider), 'services']">{{ 'providers.viewServices' | translate }}</a>
@@ -36,7 +36,7 @@
   <app-modal [open]="isDetailOpen" title="providers.detailsTitle" description="providers.detailsDescription" (closed)="closeDetails()">
     <section class="provider-detail" *ngIf="selectedProvider">
       <div class="detail-identity"><span class="provider-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11h-5v-6H9v6H4Zm7-8h2V9h3V7h-3V5h-2v2H8v2h3v3Z"/></svg></span><div><h3>{{ getProviderName(selectedProvider) || ('providers.providerFallback' | translate) }}</h3><p>{{ selectedProvider.suburb }}<span *ngIf="selectedProvider.state">, {{ selectedProvider.state }}</span></p></div></div>
-      <div class="provider-badges"><app-badge tone="info" *ngIf="isVerified(selectedProvider)">{{ 'providers.verified' | translate }}</app-badge><app-badge [tone]="isAvailable(selectedProvider) ? 'success' : 'neutral'">{{ (isAvailable(selectedProvider) ? 'providers.available' : 'providers.inactive') | translate }}</app-badge></div>
+      <div class="provider-badges"><app-badge tone="info" *ngFor="let badge of getTrustBadges(selectedProvider)">{{ badge.label }}</app-badge><app-badge tone="info" *ngIf="isVerified(selectedProvider) && !getTrustBadges(selectedProvider).length">{{ 'providers.verified' | translate }}</app-badge><app-badge [tone]="isAvailable(selectedProvider) ? 'success' : 'neutral'">{{ (isAvailable(selectedProvider) ? 'providers.available' : 'providers.inactive') | translate }}</app-badge></div>
       <p class="provider-detail-copy">{{ selectedProvider.description || selectedProvider.businessDescription || ('providers.descriptionFallback' | translate) }}</p>
       <div class="category-row" *ngIf="selectedProvider.providerTypes?.length">
         <app-badge tone="info" *ngFor="let providerType of selectedProvider.providerTypes">{{ providerType.name }}</app-badge>
@@ -44,7 +44,16 @@
       <div class="category-row" *ngIf="selectedProvider.facilities?.length">
         <app-badge tone="neutral" *ngFor="let facility of selectedProvider.facilities">{{ facility.name }}</app-badge>
       </div>
-      <dl class="detail-list"><div><dt>{{ 'providers.area' | translate }}</dt><dd>{{ selectedProvider.suburb || ('common.notAvailable' | translate) }}, {{ selectedProvider.state || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.phone' | translate }}</dt><dd>{{ selectedProvider.phone || selectedProvider.phoneNumber || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.email' | translate }}</dt><dd>{{ selectedProvider.email || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.website' | translate }}</dt><dd>{{ selectedProvider.website || selectedProvider.websiteUrl || ('common.notAvailable' | translate) }}</dd></div></dl>
+      <section class="provider-gallery" *ngIf="providerGallery.length">
+        <h4>Gallery</h4>
+        <div class="provider-gallery-grid">
+          <figure *ngFor="let media of providerGallery">
+            <img *ngIf="galleryUrl(media) as imageUrl" [src]="imageUrl" [alt]="media.caption || getProviderName(selectedProvider)" loading="lazy" />
+            <figcaption *ngIf="media.caption">{{ media.caption }}</figcaption>
+          </figure>
+        </div>
+      </section>
+      <dl class="detail-list"><div><dt>{{ 'providers.area' | translate }}</dt><dd>{{ selectedProvider.suburb || ('common.notAvailable' | translate) }}, {{ selectedProvider.state || ('common.notAvailable' | translate) }}</dd></div><div><dt>{{ 'providers.phone' | translate }}</dt><dd><a *ngIf="selectedProvider.phone || selectedProvider.phoneNumber; else noPhone" [href]="'tel:' + (selectedProvider.phone || selectedProvider.phoneNumber)" (click)="recordContactClick(selectedProvider)">{{ selectedProvider.phone || selectedProvider.phoneNumber }}</a><ng-template #noPhone>{{ 'common.notAvailable' | translate }}</ng-template></dd></div><div><dt>{{ 'providers.email' | translate }}</dt><dd><a *ngIf="selectedProvider.email; else noEmail" [href]="'mailto:' + selectedProvider.email" (click)="recordContactClick(selectedProvider)">{{ selectedProvider.email }}</a><ng-template #noEmail>{{ 'common.notAvailable' | translate }}</ng-template></dd></div><div><dt>{{ 'providers.website' | translate }}</dt><dd>{{ selectedProvider.website || selectedProvider.websiteUrl || ('common.notAvailable' | translate) }}</dd></div></dl>
       <a class="primary-detail-action" [routerLink]="['/providers', getProviderRouteId(selectedProvider), 'services']">{{ 'providers.viewServices' | translate }}</a>
     </section>
   </app-modal>

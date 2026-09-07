@@ -80,6 +80,54 @@
       <p>{{ 'services.compatibleServicesHelp' | translate }}</p>
     </div>
 
+    <div class="discovery-filters">
+      <app-input name="deliveryModeFilter" label="Delivery mode" type="select" [options]="deliveryModeOptions" [(ngModel)]="deliveryMode"></app-input>
+      <app-input name="suburbFilter" label="Suburb" [(ngModel)]="suburbFilter"></app-input>
+      <app-input name="postcodeFilter" label="Postcode" [(ngModel)]="postcodeFilter"></app-input>
+      <app-input name="radiusKm" label="Radius (km)" type="number" min="1" [(ngModel)]="radiusKm"></app-input>
+      <label class="filter-check"><input type="checkbox" [(ngModel)]="acceptingRequestsOnly" [ngModelOptions]="{standalone:true}"> Accepting requests</label>
+      <label class="filter-check"><input type="checkbox" [(ngModel)]="openNowOnly" [ngModelOptions]="{standalone:true}"> Open now</label>
+      <label class="filter-check"><input type="checkbox" [(ngModel)]="afterHoursOnly" [ngModelOptions]="{standalone:true}"> After-hours</label>
+      <div class="filter-actions">
+        <app-button type="button" variant="secondary" [loading]="isLocating" (buttonClick)="useMyLocation()">Use my location</app-button>
+        <app-button type="button" (buttonClick)="applyFilters()">Apply filters</app-button>
+      </div>
+      <small *ngIf="latitude !== null && longitude !== null">Location enabled · {{ latitude | number:'1.2-2' }}, {{ longitude | number:'1.2-2' }}</small>
+    </div>
+
+    <section class="recommendation-panel" *ngIf="!providerId && !isLoadingServices && recommendationDefinitionOptions.length">
+      <div class="recommendation-heading">
+        <div>
+          <p class="step-kicker">Explainable match</p>
+          <h3>Recommended providers</h3>
+          <p>Compatibility is checked first. Scores are deterministic matching signals, not a quality guarantee.</p>
+        </div>
+        <app-input
+          name="recommendationDefinition"
+          label="Service"
+          type="select"
+          [options]="recommendationDefinitionOptions"
+          [ngModel]="selectedRecommendationDefinitionId"
+          (ngModelChange)="selectRecommendationDefinition($event)"
+        ></app-input>
+      </div>
+
+      <div *ngIf="isLoadingRecommendations" class="state">Loading recommendations...</div>
+      <div class="recommendation-grid" *ngIf="!isLoadingRecommendations && recommendations.length">
+        <article *ngFor="let recommendation of recommendations">
+          <div class="recommendation-score"><strong>{{ recommendation.score }}</strong><span>match score</span></div>
+          <div>
+            <h4>{{ getProviderName(recommendation.service) }}</h4>
+            <p>{{ getServiceName(recommendation.service) }}</p>
+            <ul>
+              <li *ngFor="let reason of recommendation.reasons">{{ reason.label }}</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+      <p class="recommendation-empty" *ngIf="!isLoadingRecommendations && !recommendations.length">No eligible recommendation is available for this exact service and filter combination.</p>
+    </section>
+
     <div *ngIf="isLoadingServices" class="state">{{ 'services.loading' | translate }}</div>
     <section *ngIf="!isLoadingServices && !visibleServices.length" class="catalog-empty">
       <h3>{{ (providerId ? 'services.emptyProviderServices' : 'services.noCompatibleServices') | translate }}</h3>
@@ -121,6 +169,15 @@
             <dt>{{ 'services.eligibleSpecies' | translate }}</dt>
             <dd>{{ service.applicableSpecies?.join(', ') || ('common.notAvailable' | translate) }}</dd>
           </div>
+          <div *ngIf="service.distanceKm != null">
+            <dt>Distance</dt><dd>{{ service.distanceKm | number:'1.0-1' }} km</dd>
+          </div>
+          <div>
+            <dt>Availability</dt><dd>{{ service.providerAcceptingRequests === false ? 'Not accepting requests' : 'Accepting requests' }}</dd>
+          </div>
+          <div *ngIf="getTopExpertise(service) as expertise">
+            <dt>Expertise</dt><dd>{{ expertise.title }}<ng-container *ngIf="expertise.yearsExperience"> · {{ expertise.yearsExperience }} years</ng-container></dd>
+          </div>
         </dl>
 
         <div class="facility-row" *ngIf="service.facilities?.length">
@@ -130,7 +187,8 @@
         <div class="service-commercials">
           <div>
             <span>{{ 'services.price' | translate }}</span>
-            <strong>{{ service.price | currency:(service.currency || 'AUD') }}</strong>
+            <strong *ngIf="service.pricingType !== 'Quote'">{{ service.pricingType === 'From' ? 'From ' : '' }}{{ service.price | currency:(service.currency || 'AUD') }}<ng-container *ngIf="service.priceMax != null"> – {{ service.priceMax | currency:(service.currency || 'AUD') }}</ng-container></strong>
+            <strong *ngIf="service.pricingType === 'Quote'">Quote required</strong>
           </div>
           <div>
             <span>{{ 'services.duration' | translate }}</span>
@@ -139,8 +197,9 @@
         </div>
         <a
           class="service-request-cta"
-          [routerLink]="['/service-requests/new', service.id]"
+          [routerLink]="service.providerAcceptingRequests === false ? null : ['/service-requests/new', service.id]"
           [queryParams]="{ petId: selectedPetId }"
+          [class.disabled]="service.providerAcceptingRequests === false"
         >
           <span>{{ 'services.request' | translate }}</span>
           <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h12m-4-4 4 4-4 4"/></svg>

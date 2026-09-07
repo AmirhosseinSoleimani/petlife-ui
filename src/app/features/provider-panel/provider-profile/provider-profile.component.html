@@ -136,6 +136,72 @@
     </ng-template>
   </ng-container>
 
+
+  <section *ngIf="hasProfile" class="provider-advanced-grid">
+    <app-card>
+      <div class="form-section-heading">
+        <span>04</span><div><h3>Working hours</h3><p>Used by discovery for open-now and after-hours filtering.</p></div>
+      </div>
+      <div class="working-hours-list">
+        <div class="working-hour-row" *ngFor="let item of workingHours">
+          <strong>{{ dayName(item.dayOfWeek) }}</strong>
+          <label><input type="checkbox" [(ngModel)]="item.isClosed" [ngModelOptions]="{standalone: true}"> Closed</label>
+          <input type="time" [(ngModel)]="item.opensAt" [ngModelOptions]="{standalone: true}" [disabled]="item.isClosed">
+          <input type="time" [(ngModel)]="item.closesAt" [ngModelOptions]="{standalone: true}" [disabled]="item.isClosed">
+          <label><input type="checkbox" [(ngModel)]="item.isAfterHours" [ngModelOptions]="{standalone: true}" [disabled]="item.isClosed"> After-hours</label>
+        </div>
+      </div>
+      <app-button type="button" [loading]="isSavingHours" (buttonClick)="saveWorkingHours()">Save hours</app-button>
+    </app-card>
+
+    <app-card>
+      <div class="form-section-heading">
+        <span>05</span><div><h3>Expertise</h3><p>Public expertise claims shown on marketplace cards.</p></div>
+      </div>
+      <div class="expertise-list">
+        <div *ngFor="let item of expertise; let i = index" class="expertise-item">
+          <div><strong>{{ item.title }}</strong><small>{{ item.yearsExperience }} years · {{ item.description }}</small></div>
+          <button type="button" (click)="removeExpertise(i)">×</button>
+        </div>
+      </div>
+      <div class="provider-form-grid three">
+        <app-input name="expertiseTitle" label="Title" [(ngModel)]="newExpertise.title"></app-input>
+        <app-input name="expertiseYears" label="Years experience" type="number" min="0" [(ngModel)]="newExpertise.yearsExperience"></app-input>
+        <app-input name="expertiseDescription" label="Description" [(ngModel)]="newExpertise.description"></app-input>
+      </div>
+      <div class="provider-card-actions">
+        <app-button type="button" variant="secondary" (buttonClick)="addExpertise()">Add expertise</app-button>
+        <app-button type="button" [loading]="isSavingExpertise" (buttonClick)="saveExpertise()">Save expertise</app-button>
+      </div>
+    </app-card>
+
+    <app-card>
+      <div class="form-section-heading">
+        <span>06</span><div><h3>Gallery</h3><p>Public provider images. JPG, PNG or WebP, up to 8 MB each.</p></div>
+      </div>
+      <div class="provider-form-grid two">
+        <app-input name="galleryCaption" label="Image caption" [(ngModel)]="galleryCaption"></app-input>
+        <label class="gallery-upload">
+          <span>{{ isUploadingMedia ? 'Uploading…' : 'Choose image' }}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="isUploadingMedia" (change)="uploadGalleryImage($event)">
+        </label>
+      </div>
+      <div class="provider-gallery" *ngIf="gallery.length; else emptyGallery">
+        <figure *ngFor="let media of gallery; let i = index">
+          <img *ngIf="mediaUrl(media) as imageUrl" [src]="imageUrl" [alt]="media.caption || media.originalFileName">
+          <input class="gallery-caption-edit" type="text" maxlength="500" [(ngModel)]="media.caption" [ngModelOptions]="{ standalone: true }" placeholder="Caption">
+          <div class="gallery-item-actions">
+            <button type="button" [disabled]="i === 0 || isSavingGallery" (click)="moveGalleryItem(i, -1)">Move up</button>
+            <button type="button" [disabled]="i === gallery.length - 1 || isSavingGallery" (click)="moveGalleryItem(i, 1)">Move down</button>
+            <button type="button" [disabled]="isSavingGallery" (click)="saveGalleryItem(media)">Save</button>
+            <button type="button" [disabled]="isSavingGallery" (click)="deleteGalleryImage(media)">Remove</button>
+          </div>
+        </figure>
+      </div>
+      <ng-template #emptyGallery><p>No gallery images yet.</p></ng-template>
+    </app-card>
+  </section>
+
   <app-modal
     [open]="isEditorOpen"
     [title]="hasProfile ? 'providerProfile.editTitle' : 'providerProfile.createTitle'"
@@ -282,6 +348,21 @@
           <app-input name="phoneNumber" label="providerProfile.phone" [(ngModel)]="form.phoneNumber"></app-input>
           <app-input name="email" label="providerProfile.email" type="email" [(ngModel)]="form.email"></app-input>
         </div>
+        <div class="provider-form-grid three">
+          <app-input name="businessEntityType" label="Business type" type="select" [options]="['Independent', 'Business']" [(ngModel)]="form.businessEntityType"></app-input>
+          <app-input name="preferredLeadChannel" label="Preferred lead channel" type="select" [options]="['Email', 'Phone', 'SMS']" [(ngModel)]="form.preferredLeadChannel"></app-input>
+          <app-input name="contactVisibility" label="Contact visibility" type="select" [options]="['Always', 'AfterRequestAccepted', 'Never']" [(ngModel)]="form.contactVisibility"></app-input>
+        </div>
+        <div class="provider-form-grid two">
+          <label class="provider-native-field">
+            <span>Primary service location</span>
+            <select [ngModel]="form.primaryGeographyAreaId" (ngModelChange)="selectPrimaryGeography($event)" name="primaryGeographyAreaId">
+              <option [ngValue]="null">Manual address</option>
+              <option *ngFor="let area of geographies" [ngValue]="area.id">{{ area.suburb }} — {{ area.postcode }} — {{ area.city }}</option>
+            </select>
+          </label>
+          <app-input name="timeZone" label="Timezone" [(ngModel)]="form.timeZone"></app-input>
+        </div>
         <app-input name="addressLine1" label="providerProfile.address" [(ngModel)]="form.addressLine1"></app-input>
         <app-input name="addressLine2" label="providerProfile.addressLine2" [(ngModel)]="form.addressLine2"></app-input>
         <div class="provider-form-grid three">
@@ -290,7 +371,10 @@
           <app-input name="postcode" label="providerProfile.postcode" [(ngModel)]="form.postcode"></app-input>
         </div>
         <app-input name="country" label="providerProfile.country" [(ngModel)]="form.country"></app-input>
-        <app-input name="isActive" label="providerProfile.profileActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+        <div class="provider-form-grid two">
+          <app-input name="isActive" label="providerProfile.profileActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+          <app-input name="acceptingRequests" label="Accepting new requests" type="checkbox" [(ngModel)]="form.acceptingRequests"></app-input>
+        </div>
       </div>
 
       <div class="provider-form-actions">

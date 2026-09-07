@@ -1,0 +1,34 @@
+<section class="page profile-page">
+  <app-page-header title="Customer profile" description="Manage your contact preferences and location details."></app-page-header>
+
+  <div *ngIf="isLoading" class="state">{{ 'Loading profile...' | translate }}</div>
+  <form *ngIf="!isLoading" class="profile-card" (ngSubmit)="save()" #profileForm="ngForm">
+    <section *ngIf="profile" class="identity">
+      <div><span>{{ 'Name' | translate }}</span><strong>{{ profile.firstName }} {{ profile.lastName }}</strong></div>
+      <div><span>{{ 'Email' | translate }}</span><strong>{{ profile.email || ('Not set' | translate) }} <em>✓ {{ (profile.isEmailVerified ? 'Verified' : 'Pending') | translate }}</em></strong></div>
+      <div><span>{{ 'Mobile' | translate }}</span><strong>{{ profile.mobileNumber || ('Not set' | translate) }} <em>✓ {{ (profile.isMobileVerified ? 'Verified' : 'Pending') | translate }}</em></strong></div>
+      <a routerLink="/verify-contact">{{ 'Manage verification' | translate }}</a>
+    </section>
+
+    <h3>{{ 'Location' | translate }}</h3>
+    <app-input name="address" label="Address" [(ngModel)]="form.address"></app-input>
+    <div class="grid">
+      <app-input name="country" label="Country" required [(ngModel)]="form.country"></app-input>
+      <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
+      <app-input name="city" label="City" [(ngModel)]="form.city"></app-input>
+      <app-input name="suburb" label="Suburb" [(ngModel)]="form.suburb"></app-input>
+      <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
+      <app-input name="preferredContactMethod" label="Preferred contact" type="select" [options]="contactOptions" [(ngModel)]="form.preferredContactMethod"></app-input>
+    </div>
+
+    <h3>{{ 'Preferences' | translate }}</h3>
+    <div class="checks">
+      <app-input name="notificationByEmail" type="checkbox" label="Email notifications" [(ngModel)]="form.notificationByEmail"></app-input>
+      <app-input name="notificationInApp" type="checkbox" label="In-app notifications" [(ngModel)]="form.notificationInApp"></app-input>
+      <app-input name="marketingConsent" type="checkbox" label="Marketing consent" [(ngModel)]="form.marketingConsent"></app-input>
+    </div>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+    <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
+    <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid">{{ 'Save profile' | translate }}</app-button>
+  </form>
+</section>

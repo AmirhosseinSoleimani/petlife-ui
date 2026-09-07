@@ -1,0 +1,67 @@
+<section class="page timeline-page">
+  <app-page-header title="healthTimeline.title" description="healthTimeline.description" backLink="/pets" backLabel="common.back"></app-page-header>
+
+  <section class="vital-grid" *ngIf="summary">
+    <app-card class="vital-card identity">
+      <span class="eyebrow">{{ 'healthTimeline.vitalSummary' | translate }}</span>
+      <h2>{{ summary.petName }}</h2>
+      <p>{{ summary.species }}<span *ngIf="summary.breed"> · {{ summary.breed }}</span></p>
+      <small>{{ 'healthTimeline.generatedFromRecordedData' | translate }}</small>
+    </app-card>
+    <app-card class="vital-card" *ngIf="summary.allergyNotes || summary.medicalNotes || summary.specialNeeds">
+      <h3>{{ 'healthTimeline.importantNotes' | translate }}</h3>
+      <p *ngIf="summary.allergyNotes"><strong>{{ 'healthTimeline.allergies' | translate }}:</strong> {{ summary.allergyNotes }}</p>
+      <p *ngIf="summary.medicalNotes"><strong>{{ 'healthTimeline.conditions' | translate }}:</strong> {{ summary.medicalNotes }}</p>
+      <p *ngIf="summary.specialNeeds"><strong>{{ 'healthTimeline.specialNeeds' | translate }}:</strong> {{ summary.specialNeeds }}</p>
+    </app-card>
+    <app-card class="vital-card">
+      <h3>{{ 'healthTimeline.latestMeasurements' | translate }}</h3>
+      <p *ngIf="!summary.latestMeasurements.length" class="muted">{{ 'healthTimeline.noMeasurements' | translate }}</p>
+      <div class="metric" *ngFor="let metric of summary.latestMeasurements">
+        <span>{{ metric.type | translate }}</span>
+        <strong>{{ metric.value }} {{ metric.unit }}</strong>
+        <small>{{ metric.recordedOn | date }}</small>
+      </div>
+    </app-card>
+    <app-card class="vital-card">
+      <h3>{{ 'healthTimeline.recentMedications' | translate }}</h3>
+      <p *ngIf="!summary.recentMedications.length" class="muted">{{ 'healthTimeline.noMedications' | translate }}</p>
+      <div class="medication" *ngFor="let medication of summary.recentMedications">
+        <strong>{{ medication.name }}</strong>
+        <span>{{ medication.dose || '—' }}<ng-container *ngIf="medication.frequency"> · {{ medication.frequency }}</ng-container></span>
+        <small>{{ medication.recordedOn | date }}</small>
+      </div>
+    </app-card>
+  </section>
+
+  <app-card class="filters">
+    <app-input name="timelineType" label="healthTimeline.type" type="select" [options]="typeOptions" [(ngModel)]="selectedType"></app-input>
+    <app-input name="timelineFrom" label="healthTimeline.from" type="date" [(ngModel)]="fromDate"></app-input>
+    <app-input name="timelineTo" label="healthTimeline.to" type="date" [(ngModel)]="toDate"></app-input>
+    <app-input name="includeReminderActivity" label="healthTimeline.includeReminderActivity" type="checkbox" [(ngModel)]="includeReminderActivity"></app-input>
+    <div class="filter-actions">
+      <app-button type="button" (buttonClick)="load()">{{ 'common.apply' | translate }}</app-button>
+      <app-button type="button" variant="secondary" (buttonClick)="clearFilters()">{{ 'common.clear' | translate }}</app-button>
+    </div>
+  </app-card>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage | translate }}</p>
+  <div class="state" *ngIf="isLoading">{{ 'healthTimeline.loading' | translate }}</div>
+  <div class="state" *ngIf="!isLoading && !items.length">{{ 'healthTimeline.empty' | translate }}</div>
+
+  <section class="timeline" *ngIf="!isLoading && items.length">
+    <article class="timeline-item" *ngFor="let item of items">
+      <div class="marker"></div>
+      <app-card class="timeline-card">
+        <div class="timeline-heading">
+          <div><small>{{ item.date | date:'mediumDate' }}</small><h3>{{ item.title }}</h3></div>
+          <app-badge [tone]="itemTone(item)">{{ item.type | translate }}</app-badge>
+        </div>
+        <p *ngIf="item.description">{{ item.description }}</p>
+        <p *ngIf="item.measurementValue !== null && item.measurementValue !== undefined" class="detail"><strong>{{ item.measurementValue }} {{ item.measurementUnit }}</strong></p>
+        <p *ngIf="item.medicationName" class="detail">{{ 'healthTimeline.medication' | translate }}: <strong>{{ item.medicationName }}</strong></p>
+        <small *ngIf="item.status">{{ 'healthTimeline.status' | translate }}: {{ item.status | translate }}</small>
+      </app-card>
+    </article>
+  </section>
+</section>

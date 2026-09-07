@@ -112,8 +112,18 @@
             <h3>{{ 'requestForm.details' | translate }}</h3>
             <p>{{ 'requestForm.detailsHelp' | translate }}</p>
           </div>
-          <app-input name="requestedDate" label="requestForm.dateLabel" required type="date" [(ngModel)]="form.requestedDate"></app-input>
+          <app-input name="requestedDate" label="requestForm.dateLabel" required type="date" [min]="minRequestedDate" [(ngModel)]="form.requestedDate"></app-input>
           <app-input name="requestMessage" label="requestForm.messageLabel" type="textarea" [rows]="5" placeholder="requestForm.messagePlaceholder" [(ngModel)]="form.requestMessage"></app-input>
+        </div>
+      </section>
+
+      <section class="request-step consent-step">
+        <span class="step-number">4</span>
+        <div class="step-content">
+          <div class="step-heading"><h3>Information sharing consent</h3><p>Sensitive pet and contact information is off by default. Choose exactly what this provider may see for this request.</p></div>
+          <label class="consent-option"><input type="checkbox" name="consentSharePetProfile" [(ngModel)]="form.consentSharePetProfile"><span><strong>Share pet profile</strong><small>Pet name, species and breed needed to understand the request.</small></span></label>
+          <label class="consent-option"><input type="checkbox" name="consentShareHealthSummary" [(ngModel)]="form.consentShareHealthSummary" (change)="onHealthConsentChanged()"><span><strong>Share health summary</strong><small>Medical notes, allergies and medication. Enabling this also enables pet profile sharing.</small></span></label>
+          <label class="consent-option"><input type="checkbox" name="consentShareContactDetails" [(ngModel)]="form.consentShareContactDetails"><span><strong>Share contact details</strong><small>Your name and email may be shown to this provider for this request.</small></span></label>
         </div>
       </section>
     </div>
@@ -127,12 +137,13 @@
         <div><dt>{{ 'requestForm.providerLabel' | translate }}</dt><dd>{{ getProviderName() }}</dd></div>
         <div><dt>{{ 'requestForm.deliveryMode' | translate }}</dt><dd>{{ getDeliveryModeKey(selectedService.deliveryMode) | translate }}</dd></div>
         <div><dt>{{ 'requestForm.dateLabel' | translate }}</dt><dd>{{ form.requestedDate ? (form.requestedDate | date:'mediumDate') : ('requestForm.notSelected' | translate) }}</dd></div>
+        <div><dt>Consent scope</dt><dd>{{ form.consentSharePetProfile ? 'Pet profile' : 'No pet profile' }} · {{ form.consentShareHealthSummary ? 'Health shared' : 'Health private' }} · {{ form.consentShareContactDetails ? 'Contact shared' : 'Contact private' }}</dd></div>
       </dl>
       <p *ngIf="errorMessage" class="error form-message">{{ errorMessage | translate }}</p>
       <app-button
         type="submit"
         [loading]="isSubmitting"
-        [disabled]="requestForm.invalid || !isSelectedPetCompatible"
+        [disabled]="requestForm.invalid || !isSelectedPetCompatible || !isConsentValid"
       >{{ (isSubmitting ? 'requestForm.submitting' : 'requestForm.submit') | translate }}</app-button>
       <small>{{ 'requestForm.submitNote' | translate }}</small>
     </aside>

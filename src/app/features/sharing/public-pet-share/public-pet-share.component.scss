@@ -1,0 +1,10 @@
+.public-share { min-height: 100vh; padding: 2rem 1rem; background: #f5f7f8; }
+.share-shell { width: min(860px, 100%); margin: 0 auto; display: grid; gap: 1rem; }
+.share-shell > header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 0; }
+.section, .notice { display: grid; gap: .7rem; }
+.section h1, .section h2, .section p, .notice p { margin: 0; }
+dl { display: grid; grid-template-columns: minmax(8rem, .4fr) 1fr; gap: .5rem 1rem; margin: 0; } dt { font-weight: 700; } dd { margin: 0; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: .2rem 1rem; padding-block: .55rem; border-top: 1px solid #e5e7eb; } .row small { grid-column: 1 / -1; opacity: .65; }
+.timeline-row { display: grid; grid-template-columns: 7rem 1fr; gap: .25rem 1rem; padding-block: .7rem; border-top: 1px solid #e5e7eb; } .timeline-row span { grid-column: 2; opacity: .75; }
+.state { padding: 3rem; text-align: center; } .error { color: #b42318; }
+@media (max-width: 600px) { .public-share { padding: 1rem .6rem; } .share-shell > header { align-items: flex-start; flex-direction: column; } dl, .timeline-row { grid-template-columns: 1fr; } .timeline-row span { grid-column: 1; } }

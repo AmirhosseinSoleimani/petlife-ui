@@ -1,0 +1,30 @@
+<section class="admin-verification-page">
+  <app-page-header eyebrow="Admin · Trust" title="Provider verification" description="Review private provider evidence, record clear correction reasons, and control customer-visible verification."></app-page-header>
+  <p class="notice error" *ngIf="errorMessage">{{ errorMessage }}</p><p class="notice success" *ngIf="successMessage">{{ successMessage }}</p>
+  <div class="toolbar"><label>Status filter<select [(ngModel)]="statusFilter" (change)="loadQueue()"><option value="">All</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="NeedsCorrection">Needs correction</option><option value="Rejected">Rejected</option><option value="Expired">Expired</option><option value="Suspended">Suspended</option></select></label><button type="button" (click)="loadQueue()">Refresh</button></div>
+  <div class="verification-layout">
+    <section class="queue">
+      <p class="state" *ngIf="isLoading">Loading review queue…</p>
+      <button type="button" class="queue-item" *ngFor="let item of documents" [class.selected]="selected?.providerUserId === item.providerUserId" (click)="openProvider(item)">
+        <span><strong>{{ item.documentType }}</strong><small>{{ item.originalFileName }}</small><small>Uploaded {{ item.createdAt | date:'short' }}</small></span><app-badge [tone]="statusTone(item.status)">{{ item.status }}</app-badge>
+      </button>
+      <p class="state" *ngIf="!isLoading && !documents.length">No documents match the filter.</p>
+    </section>
+    <app-card class="provider-review" *ngIf="selected; else selectPrompt">
+      <div class="review-heading"><div><p>Provider</p><h2>{{ selected.businessName }}</h2><small>{{ selected.providerUserId }}</small></div><app-badge [tone]="statusTone(selected.verificationStatus)">{{ selected.verificationStatus }}</app-badge></div>
+      <div class="badge-row"><app-badge tone="success" *ngFor="let badge of selected.badges">{{ badge.label }}</app-badge></div>
+      <section class="verification-control"><h3>Provider verification</h3><select [(ngModel)]="verificationStatus"><option *ngFor="let status of verificationStatuses" [value]="status">{{ status }}</option></select><textarea rows="2" placeholder="Reason when correction/rejection/suspension is selected" [(ngModel)]="verificationReason"></textarea><app-button type="button" [loading]="isSaving" (buttonClick)="updateVerification()">Save provider status</app-button></section>
+      <section class="document-review" *ngFor="let item of selected.documents">
+        <div class="document-head"><div><h3>{{ item.documentType }}</h3><p>{{ item.originalFileName }}</p><small *ngIf="item.expiryDate">Expires {{ item.expiryDate | date:'mediumDate' }}</small></div><app-badge [tone]="statusTone(item.status)">{{ item.status }}</app-badge></div>
+        <p class="reason" *ngIf="item.rejectionReason">{{ item.rejectionReason }}</p>
+        <div class="review-history" *ngIf="item.reviews?.length">
+          <strong>Review history</strong>
+          <p *ngFor="let history of item.reviews">{{ history.createdAt | date:'short' }} · {{ history.previousStatus }} → {{ history.newStatus }}<span *ngIf="history.reason"> · {{ history.reason }}</span></p>
+        </div>
+        <button type="button" class="download" (click)="download(item)">Download private file</button>
+        <div class="review-form"><select [(ngModel)]="reviewStatus"><option *ngFor="let status of reviewStatuses" [value]="status">{{ status }}</option></select><textarea rows="2" placeholder="Clear correction/rejection reason" [(ngModel)]="reviewReason"></textarea><app-button type="button" [loading]="isSaving" (buttonClick)="review(item)">Save review</app-button></div>
+      </section>
+    </app-card>
+    <ng-template #selectPrompt><div class="state detail-empty">Select a provider document to review its evidence and status.</div></ng-template>
+  </div>
+</section>

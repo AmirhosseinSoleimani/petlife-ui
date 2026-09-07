@@ -1,0 +1,85 @@
+<section class="page admin-page">
+  <app-page-header
+    title="Admin · Users"
+    description="Search users, review operational account metadata, and auditably suspend or activate accounts."
+  ></app-page-header>
+
+  <div class="filters">
+    <input [(ngModel)]="search" (keyup.enter)="load(true)" [placeholder]="'Search name, email or mobile' | translate" />
+    <select [(ngModel)]="role">
+      <option value="">{{ 'All roles' | translate }}</option>
+      <option value="Customer">{{ 'Customer' | translate }}</option><option value="Provider">{{ 'Provider' | translate }}</option><option value="Admin">{{ 'Admin' | translate }}</option>
+    </select>
+    <select [(ngModel)]="status">
+      <option value="">{{ 'All statuses' | translate }}</option>
+      <option value="Active">{{ 'Active' | translate }}</option><option value="Suspended">{{ 'Suspended' | translate }}</option><option value="Pending">{{ 'Pending' | translate }}</option>
+    </select>
+    <app-button type="button" (buttonClick)="load(true)">{{ 'Apply filters' | translate }}</app-button>
+  </div>
+
+  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'Loading users...' | translate }}</div>
+
+  <div class="table-wrap" *ngIf="!isLoading">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'User' | translate }}</th><th>{{ 'Role' | translate }}</th><th>{{ 'Status' | translate }}</th>
+          <th>{{ 'Verification' | translate }}</th><th>{{ 'Location' | translate }}</th><th>{{ 'Pets' | translate }}</th>
+          <th>{{ 'Last activity' | translate }}</th><th>{{ 'Actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>
+            <button class="entity-link" type="button" (click)="viewUser(user)"><strong>{{ user.firstName }} {{ user.lastName }}</strong></button>
+            <small>{{ user.email || user.mobileNumber || '—' }}</small>
+          </td>
+          <td>{{ user.role | translate }}</td>
+          <td><app-badge [tone]="user.status === 'Active' ? 'success' : 'warning'">{{ user.status | translate }}</app-badge></td>
+          <td><span title="Email">E {{ user.isEmailVerified ? '✓' : '–' }}</span> · <span title="Mobile">M {{ user.isMobileVerified ? '✓' : '–' }}</span></td>
+          <td>{{ user.city || user.state || '—' }}</td>
+          <td>{{ user.petCount }}</td>
+          <td>{{ user.lastLoginAt ? (user.lastLoginAt | date:'medium') : ('Never' | translate) }}</td>
+          <td class="row-actions">
+            <app-button type="button" variant="secondary" (buttonClick)="viewUser(user)">{{ 'Details' | translate }}</app-button>
+            <app-button *ngIf="user.status !== 'Suspended'" type="button" variant="danger" [loading]="actionUserId === user.id" (buttonClick)="setStatus(user, 'Suspended')">{{ 'Suspend' | translate }}</app-button>
+            <app-button *ngIf="user.status === 'Suspended'" type="button" [loading]="actionUserId === user.id" (buttonClick)="setStatus(user, 'Active')">{{ 'Activate' | translate }}</app-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <span>{{ totalCount }} {{ 'users' | translate }}</span>
+    <div>
+      <button type="button" [disabled]="page <= 1" (click)="previous()">{{ 'Previous' | translate }}</button>
+      <span>{{ 'Page' | translate }} {{ page }} / {{ totalPages || 1 }}</span>
+      <button type="button" [disabled]="page >= totalPages" (click)="next()">{{ 'Next' | translate }}</button>
+    </div>
+  </div>
+
+  <app-modal
+    [open]="!!selectedUser"
+    title="User details"
+    description="Operational account data only"
+    (closed)="closeDetail()"
+  >
+    <div *ngIf="isDetailLoading" class="state">{{ 'Loading...' | translate }}</div>
+    <dl *ngIf="selectedUser && !isDetailLoading" class="detail-grid">
+      <div><dt>{{ 'Name' | translate }}</dt><dd>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</dd></div>
+      <div><dt>{{ 'Role' | translate }}</dt><dd>{{ selectedUser.role | translate }}</dd></div>
+      <div><dt>{{ 'Status' | translate }}</dt><dd>{{ selectedUser.status | translate }}</dd></div>
+      <div><dt>{{ 'Email' | translate }}</dt><dd>{{ selectedUser.email || '—' }}</dd></div>
+      <div><dt>{{ 'Mobile' | translate }}</dt><dd>{{ selectedUser.mobileNumber || '—' }}</dd></div>
+      <div><dt>{{ 'Email verified' | translate }}</dt><dd>{{ selectedUser.isEmailVerified ? '✓' : '–' }}</dd></div>
+      <div><dt>{{ 'Mobile verified' | translate }}</dt><dd>{{ selectedUser.isMobileVerified ? '✓' : '–' }}</dd></div>
+      <div><dt>{{ 'Location' | translate }}</dt><dd>{{ selectedUser.city || selectedUser.state || '—' }}</dd></div>
+      <div><dt>{{ 'Marketing consent' | translate }}</dt><dd>{{ selectedUser.marketingConsent ? ('Yes' | translate) : ('No' | translate) }}</dd></div>
+      <div><dt>{{ 'Pets' | translate }}</dt><dd>{{ selectedUser.petCount }}</dd></div>
+      <div><dt>{{ 'Last activity' | translate }}</dt><dd>{{ selectedUser.lastLoginAt ? (selectedUser.lastLoginAt | date:'medium') : ('Never' | translate) }}</dd></div>
+      <div><dt>{{ 'Created' | translate }}</dt><dd>{{ selectedUser.createdAt | date:'medium' }}</dd></div>
+    </dl>
+  </app-modal>
+</section>

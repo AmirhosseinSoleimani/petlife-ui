@@ -1,0 +1,21 @@
+<section class="page admin-master-page">
+  <app-page-header title="reminderTemplates.adminTitle" description="reminderTemplates.adminDescription"></app-page-header>
+  <p class="error" *ngIf="errorMessage">{{ errorMessage | translate }}</p><p class="success" *ngIf="successMessage">{{ successMessage | translate }}</p>
+  <div class="split">
+    <form class="editor" (ngSubmit)="save()" #templateEditor="ngForm">
+      <h3>{{ (editingId ? 'reminderTemplates.edit' : 'reminderTemplates.new') | translate }}</h3>
+      <app-input name="name" label="reminderTemplates.name" required [(ngModel)]="form.name"></app-input>
+      <app-input name="code" label="reminderTemplates.code" required [(ngModel)]="form.code"></app-input>
+      <app-input name="type" label="reminders.typeLabel" type="select" [options]="reminderTypes" required [(ngModel)]="form.reminderType"></app-input>
+      <app-input name="defaultTitle" label="reminderTemplates.defaultTitle" required [(ngModel)]="form.defaultTitle"></app-input>
+      <app-input name="defaultDescription" label="reminderTemplates.defaultDescription" type="textarea" [(ngModel)]="form.defaultDescription"></app-input>
+      <app-input name="description" label="reminderTemplates.adminNotes" type="textarea" [(ngModel)]="form.description"></app-input>
+      <div class="two"><app-input name="recurrence" label="reminders.recurrence" type="select" [options]="recurrenceTypes" [(ngModel)]="form.defaultRecurrenceType"></app-input><app-input name="interval" label="reminders.interval" type="number" min="1" [(ngModel)]="form.defaultRecurrenceInterval"></app-input></div>
+      <app-input name="offset" label="reminderTemplates.suggestedOffset" helper="reminderTemplates.noMedicalSchedule" type="number" [(ngModel)]="form.suggestedOffsetDays"></app-input>
+      <fieldset><legend>{{ 'reminderTemplates.species' | translate }}</legend><p>{{ 'reminderTemplates.speciesHelp' | translate }}</p><label *ngFor="let species of taxonomy.species"><input type="checkbox" [checked]="hasSpecies(species.id)" (change)="toggleSpecies(species.id, $any($event.target).checked)" /> {{ species.name }}</label></fieldset>
+      <app-input name="active" label="common.active" type="checkbox" [(ngModel)]="form.isActive"></app-input>
+      <div class="actions"><app-button type="submit" [loading]="isSaving" [disabled]="templateEditor.invalid">{{ 'common.save' | translate }}</app-button><app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="reset()">{{ 'common.cancel' | translate }}</app-button></div>
+    </form>
+    <div class="list"><div class="state" *ngIf="isLoading">{{ 'common.loading' | translate }}</div><app-card *ngFor="let item of templates"><div class="heading"><div><strong>{{ item.name }}</strong><small>{{ item.code }} · v{{ item.version }}</small></div><app-badge [tone]="item.isActive ? 'success' : 'warning'">{{ (item.isActive ? 'common.active' : 'common.inactive') | translate }}</app-badge></div><p>{{ item.defaultTitle }}</p><small>{{ item.reminderType | translate }} · {{ item.defaultRecurrenceType | translate }} · {{ speciesNames(item.speciesIds) }}</small><div class="actions"><app-button type="button" variant="secondary" (buttonClick)="edit(item)">{{ 'common.edit' | translate }}</app-button><app-button type="button" variant="danger" (buttonClick)="remove(item)">{{ 'common.delete' | translate }}</app-button></div></app-card></div>
+  </div>
+</section>

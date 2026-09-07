@@ -1,0 +1,22 @@
+.timeline-page { display: grid; gap: 1.25rem; }
+.vital-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.vital-card { display: grid; gap: .65rem; min-width: 0; }
+.vital-card h2, .vital-card h3, .vital-card p { margin: 0; }
+.eyebrow { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .65; }
+.muted { opacity: .65; }
+.metric, .medication { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; align-items: baseline; padding-block: .5rem; border-top: 1px solid var(--border-color, #e6e8ec); }
+.metric small, .medication small { grid-column: 1 / -1; opacity: .6; }
+.filters { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.2fr auto; gap: .8rem; align-items: end; }
+.filter-actions { display: flex; gap: .5rem; padding-bottom: .1rem; }
+.timeline { position: relative; display: grid; gap: 1rem; padding-inline-start: 1.6rem; }
+.timeline::before { content: ''; position: absolute; inset-block: .6rem; inset-inline-start: .45rem; width: 2px; background: var(--border-color, #e2e5e9); }
+.timeline-item { position: relative; }
+.marker { position: absolute; inset-inline-start: -1.5rem; top: 1.3rem; width: .75rem; height: .75rem; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px var(--surface, #fff); }
+.timeline-card { display: grid; gap: .65rem; }
+.timeline-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.timeline-heading h3, .timeline-heading small, .timeline-card p { margin: 0; }
+.detail { opacity: .8; }
+.error { color: var(--danger-color, #b42318); }
+.state { padding: 2rem; text-align: center; opacity: .7; }
+@media (max-width: 1100px) { .vital-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-actions { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .vital-grid, .filters { grid-template-columns: 1fr; } .filter-actions { grid-column: auto; flex-wrap: wrap; } .timeline-heading { flex-direction: column; } }

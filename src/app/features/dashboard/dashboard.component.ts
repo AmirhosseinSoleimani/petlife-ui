@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ApiResponse } from '../../core/models/api-response.model';
+import { AuthUser } from '../../core/models/auth.models';
 import { HealthRecord, Pet, Reminder } from '../../core/models/customer-core.models';
 import { Provider, ProviderService, ServiceArea, ServiceRequest } from '../../core/models/marketplace.models';
 import {
@@ -22,7 +23,7 @@ import { UserPreferencesService } from '../../core/preferences/user-preferences.
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  readonly currentUser = this.authService.getCurrentUser();
+  readonly currentUser: AuthUser | null;
   pets: Pet[] = [];
   reminders: Reminder[] = [];
   healthRecords: HealthRecord[] = [];
@@ -54,7 +55,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly apiService: ApiService,
     private readonly preferencesService: UserPreferencesService
-  ) {}
+  ) {
+    this.currentUser = this.authService.getCurrentUser();
+  }
 
   ngOnInit(): void {
     this.preferencesSubscription = this.preferencesService.preferences$.subscribe((preferences) => {

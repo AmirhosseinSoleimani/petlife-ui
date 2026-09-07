@@ -135,3 +135,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+.provider-advanced-grid { display: grid; gap: 1rem; margin-top: 1rem; }
+.working-hours-list { display: grid; gap: .55rem; margin: 1rem 0; }
+.working-hour-row { display: grid; grid-template-columns: 100px 90px 1fr 1fr 120px; gap: .6rem; align-items: center; }
+.working-hour-row input[type='time'], .provider-native-field select { width: 100%; min-height: 42px; border: 1px solid var(--border, #d9e0e7); border-radius: 10px; padding: .45rem .6rem; background: var(--surface, #fff); }
+.provider-native-field { display: grid; gap: .4rem; font-size: .9rem; }
+.expertise-list { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.expertise-item { display:flex; justify-content:space-between; gap:1rem; align-items:center; padding:.7rem; border:1px solid var(--border, #e1e6eb); border-radius:10px; }
+.expertise-item div { display:grid; gap:.2rem; }
+.expertise-item button { border:0; background:transparent; font-size:1.25rem; cursor:pointer; }
+.gallery-upload { display:flex; align-items:center; justify-content:center; border:1px dashed var(--border, #cfd8df); border-radius:10px; padding:.75rem; cursor:pointer; }
+.gallery-upload input { display:none; }
+.provider-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1rem; margin-top:1rem; }
+.provider-gallery figure { margin:0; display:grid; gap:.4rem; }
+.provider-gallery img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:12px; }
+.gallery-caption-edit { width:100%; min-height:38px; box-sizing:border-box; border:1px solid var(--border, #d9e0e7); border-radius:9px; padding:.45rem .55rem; background:var(--surface, #fff); }
+.gallery-item-actions { display:flex; flex-wrap:wrap; gap:.35rem; }
+.gallery-item-actions button { border:1px solid var(--border, #d9e0e7); border-radius:8px; background:var(--surface, #fff); padding:.35rem .5rem; cursor:pointer; }
+.gallery-item-actions button:disabled { opacity:.5; cursor:not-allowed; }
+@media (max-width: 760px) { .working-hour-row { grid-template-columns:1fr 1fr; } }

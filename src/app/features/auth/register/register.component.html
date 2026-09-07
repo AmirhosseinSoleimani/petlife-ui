@@ -1,0 +1,44 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <a routerLink="/login" class="brand">PetLife AU</a>
+    <h1>{{ 'Create your account' | translate }}</h1>
+    <p>{{ 'Register with email or mobile. You can verify both contact channels later.' | translate }}</p>
+
+    <div class="mode-switch" role="tablist">
+      <button type="button" [class.active]="mode === 'email'" (click)="setMode('email')">{{ 'Email' | translate }}</button>
+      <button type="button" [class.active]="mode === 'mobile'" (click)="setMode('mobile')">{{ 'Mobile' | translate }}</button>
+    </div>
+
+    <form (ngSubmit)="register()" #registerForm="ngForm">
+      <div class="two-col">
+        <app-input name="firstName" label="First name" required [(ngModel)]="firstName"></app-input>
+        <app-input name="lastName" label="Last name" required [(ngModel)]="lastName"></app-input>
+      </div>
+      <app-input
+        *ngIf="mode === 'email'"
+        name="email"
+        label="Email"
+        type="email"
+        required
+        [(ngModel)]="email"
+      ></app-input>
+      <app-input
+        *ngIf="mode === 'mobile'"
+        name="mobileNumber"
+        label="Mobile number"
+        required
+        [(ngModel)]="mobileNumber"
+      ></app-input>
+      <div class="two-col">
+        <app-input name="password" label="Password" type="password" required [(ngModel)]="password"></app-input>
+        <app-input name="confirmPassword" label="Confirm password" type="password" required [(ngModel)]="confirmPassword"></app-input>
+      </div>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <app-button type="submit" [loading]="isSubmitting" [disabled]="registerForm.invalid || password.length < 8">
+        {{ (isSubmitting ? 'Creating account...' : 'Create account') | translate }}
+      </app-button>
+    </form>
+
+    <p class="footer-copy">{{ 'Already have an account?' | translate }} <a routerLink="/login">{{ 'Sign in' | translate }}</a></p>
+  </div>
+</section>

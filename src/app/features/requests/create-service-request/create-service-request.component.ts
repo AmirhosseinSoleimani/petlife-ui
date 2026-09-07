@@ -30,7 +30,11 @@ export class CreateServiceRequestComponent implements OnInit {
     serviceAddressLine1: '',
     serviceSuburb: '',
     serviceState: '',
-    servicePostcode: ''
+    servicePostcode: '',
+    serviceGeographyAreaId: null,
+    consentSharePetProfile: false,
+    consentShareHealthSummary: false,
+    consentShareContactDetails: false
   };
   isLoading = false;
   isSubmitting = false;
@@ -68,6 +72,20 @@ export class CreateServiceRequestComponent implements OnInit {
   get needsCustomerLocation(): boolean {
     return this.selectedService?.deliveryMode === 'AtCustomerLocation'
       || this.selectedService?.deliveryMode === 'Hybrid';
+  }
+
+  get isConsentValid(): boolean {
+    return !this.form.consentShareHealthSummary || this.form.consentSharePetProfile;
+  }
+
+  get minRequestedDate(): string {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  onHealthConsentChanged(): void {
+    if (this.form.consentShareHealthSummary) this.form.consentSharePetProfile = true;
   }
 
   get isSelectedPetCompatible(): boolean {
@@ -143,6 +161,10 @@ export class CreateServiceRequestComponent implements OnInit {
       this.errorMessage = 'requestForm.incompatiblePet';
       return;
     }
+    if (!this.isConsentValid) {
+      this.errorMessage = 'Health sharing requires pet profile sharing.';
+      return;
+    }
 
     this.isSubmitting = true;
     this.errorMessage = '';
@@ -157,8 +179,8 @@ export class CreateServiceRequestComponent implements OnInit {
 
     this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({
       next: () => this.router.navigate(['/service-requests/my']),
-      error: () => {
-        this.errorMessage = 'requestForm.compatibilityError';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'requestForm.compatibilityError';
         this.isSubmitting = false;
       }
     });

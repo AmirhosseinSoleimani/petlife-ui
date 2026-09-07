@@ -1,0 +1,28 @@
+<section class="workflow-page">
+  <app-page-header eyebrow="Trust & verification" title="Provider documents" description="Upload private evidence, see review outcomes, and renew expiring documents."></app-page-header>
+  <p class="notice success" *ngIf="message">{{ message }}</p>
+  <p class="notice error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <app-card class="document-form">
+    <div class="section-heading"><div><h3>{{ renewingDocument ? 'Renew document' : 'Upload document' }}</h3><p>Files are private and visible only to you and authorised admins.</p></div><button *ngIf="renewingDocument" type="button" class="link-button" (click)="cancelRenew()">Cancel renewal</button></div>
+    <form (ngSubmit)="submit()" #documentForm="ngForm">
+      <label>Document type<select name="documentType" [(ngModel)]="documentType" [disabled]="!!renewingDocument"><option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option></select></label>
+      <label>Expiry date <small *ngIf="documentType === 'Insurance'">required for insurance</small><input name="expiryDate" type="date" [(ngModel)]="expiryDate"></label>
+      <label class="wide">Provider note<textarea name="providerNote" rows="3" maxlength="1000" [(ngModel)]="providerNote"></textarea></label>
+      <label class="wide">File<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" (change)="onFileSelected($event)"><small>PDF, JPEG, PNG or WebP; maximum 12 MB.</small></label>
+      <div class="wide actions"><app-button type="submit" [loading]="isSaving">{{ renewingDocument ? 'Submit renewal' : 'Upload for review' }}</app-button></div>
+    </form>
+  </app-card>
+
+  <div class="state" *ngIf="isLoading">Loading documents…</div>
+  <div class="document-list" *ngIf="!isLoading">
+    <app-card *ngFor="let item of documents" class="document-card">
+      <div class="document-head"><div><h3>{{ item.documentType }}</h3><p>{{ item.originalFileName }}</p></div><app-badge [tone]="statusTone(item.status)">{{ item.status }}</app-badge></div>
+      <dl><div><dt>Uploaded</dt><dd>{{ item.createdAt | date:'medium' }}</dd></div><div><dt>Expires</dt><dd>{{ item.expiryDate ? (item.expiryDate | date:'mediumDate') : 'Not applicable' }}</dd></div><div><dt>Size</dt><dd>{{ item.sizeBytes / 1024 | number:'1.0-0' }} KB</dd></div></dl>
+      <div class="review-note" *ngIf="item.rejectionReason"><strong>Review reason</strong><p>{{ item.rejectionReason }}</p></div>
+      <div class="review-history" *ngIf="item.reviews?.length"><strong>Review history</strong><p *ngFor="let history of item.reviews">{{ history.createdAt | date:'short' }} · {{ history.previousStatus }} → {{ history.newStatus }}<span *ngIf="history.reason"> · {{ history.reason }}</span></p></div>
+      <div class="actions"><button type="button" (click)="download(item)">Download</button><button type="button" (click)="beginRenew(item)">Renew</button><button type="button" class="danger" *ngIf="item.status !== 'Approved'" (click)="remove(item)">Delete</button></div>
+    </app-card>
+    <p class="state" *ngIf="!documents.length">No documents uploaded yet.</p>
+  </div>
+</section>
