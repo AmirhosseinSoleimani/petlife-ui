@@ -32,7 +32,7 @@ export class PetHealthRecordsComponent implements OnInit {
   readonly attachmentContentTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
   readonly attachmentMaxSize = 10 * 1024 * 1024;
 
-  petId = this.route.snapshot.paramMap.get('petId') || '';
+  petId = '';
   records: HealthRecord[] = [];
   summary: HealthSummary | null = null;
   measurements: HealthRecord[] = [];
@@ -49,7 +49,9 @@ export class PetHealthRecordsComponent implements OnInit {
   selectedAttachmentFilesForCreate: File[] = [];
   selectedAttachmentFilesForEdit: File[] = [];
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {
+    this.petId = this.route.snapshot.paramMap.get('petId') || '';
+  }
 
   ngOnInit(): void {
     this.loadPage();

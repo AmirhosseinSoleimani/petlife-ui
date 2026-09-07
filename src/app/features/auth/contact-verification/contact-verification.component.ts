@@ -74,8 +74,8 @@ export class ContactVerificationComponent implements OnInit {
         this.message = response.message || 'Verification code sent.';
         this.isSending = false;
       },
-      error: (error: { error?: { message?: string } }) => {
-        this.errorMessage = error.error?.message || 'Unable to send verification code.';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Unable to send verification code.';
         this.isSending = false;
       }
     });
@@ -91,8 +91,8 @@ export class ContactVerificationComponent implements OnInit {
         this.message = response.message || 'Contact verified.';
         this.isVerifying = false;
       },
-      error: (error: { error?: { message?: string } }) => {
-        this.errorMessage = error.error?.message || 'Verification failed.';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Verification failed.';
         this.isVerifying = false;
       }
     });

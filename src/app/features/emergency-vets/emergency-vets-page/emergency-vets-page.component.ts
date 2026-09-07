@@ -42,7 +42,7 @@ export class EmergencyVetsPageComponent implements OnInit {
   speciesFilter = '';
   afterHoursOnly = false;
   twentyFourHoursOnly = false;
-  openNowOnly = false;
+  speciesOptions: string[] = [];
   latitude: number | null = null;
   longitude: number | null = null;
   radiusKm: number | null = 25;
@@ -54,6 +54,7 @@ export class EmergencyVetsPageComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
+    this.loadSpecies();
     this.loadVets();
   }
 
@@ -72,11 +73,10 @@ export class EmergencyVetsPageComponent implements OnInit {
     if (this.speciesFilter.trim()) params.set('species', this.speciesFilter.trim());
     if (this.afterHoursOnly) params.set('offersAfterHours', 'true');
     if (this.twentyFourHoursOnly) params.set('offers24HourService', 'true');
-    if (this.openNowOnly) params.set('isOpenNow', 'true');
     if (this.latitude !== null && this.longitude !== null) {
       params.set('latitude', String(this.latitude));
       params.set('longitude', String(this.longitude));
-      if (this.radiusKm !== null) params.set('radiusKm', String(this.radiusKm));
+      if (this.radiusKm !== null && this.radiusKm > 0) params.set('radiusKm', String(this.radiusKm));
     }
 
     this.apiService.get<ApiResponse<EmergencyVet[]>>(`/emergency-vets?${params.toString()}`).subscribe({
@@ -85,11 +85,24 @@ export class EmergencyVetsPageComponent implements OnInit {
         this.selectedVet = null;
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'emergency.loadError';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'emergency.loadError';
         this.isLoading = false;
       }
     });
+  }
+
+  private loadSpecies(): void {
+    this.apiService.get<ApiResponse<string[]>>('/pet-species').subscribe({
+      next: (response) => this.speciesOptions = response.data || [],
+      error: () => this.speciesOptions = []
+    });
+  }
+
+  clearLocation(): void {
+    this.latitude = null;
+    this.longitude = null;
+    this.loadVets();
   }
 
   useMyLocation(): void {
@@ -155,7 +168,7 @@ export class EmergencyVetsPageComponent implements OnInit {
       is24Hours: !!(vet.offers24HourService || vet.is24Hours || vet.is24h || vet.open24Hours),
       description: vet.emergencyInstructions || vet.description || vet.notes || vet.instructions || '',
       supportedSpecies: vet.supportedSpecies || [],
-      isVerified: vet.isVerified !== false,
+      isVerified: vet.isVerified === true,
       lastVerifiedAt: vet.lastVerifiedAt || null,
       distanceKm: vet.distanceKm ?? null,
       mapsUrl: vet.mapsUrl || '',

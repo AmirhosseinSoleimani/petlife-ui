@@ -112,7 +112,7 @@
             <h3>{{ 'requestForm.details' | translate }}</h3>
             <p>{{ 'requestForm.detailsHelp' | translate }}</p>
           </div>
-          <app-input name="requestedDate" label="requestForm.dateLabel" required type="date" [(ngModel)]="form.requestedDate"></app-input>
+          <app-input name="requestedDate" label="requestForm.dateLabel" required type="date" [min]="minRequestedDate" [(ngModel)]="form.requestedDate"></app-input>
           <app-input name="requestMessage" label="requestForm.messageLabel" type="textarea" [rows]="5" placeholder="requestForm.messagePlaceholder" [(ngModel)]="form.requestMessage"></app-input>
         </div>
       </section>

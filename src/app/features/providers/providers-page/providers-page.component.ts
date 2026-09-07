@@ -84,8 +84,8 @@ export class ProvidersPageComponent implements OnInit {
         this.loadProviderServices();
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'providers.loadError';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'providers.loadError';
         this.isLoading = false;
       }
     });

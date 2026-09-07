@@ -12,7 +12,7 @@ import { HealthTimelineItem, VitalSummary } from '../../../core/models/phase1-ca
 })
 export class PetHealthTimelineComponent implements OnInit {
   readonly typeOptions = ['All', 'Vaccination', 'Medication', 'PreventiveCare', 'VetVisit', 'Measurement', 'General', 'Reminder'];
-  petId = this.route.snapshot.paramMap.get('petId') || '';
+  petId = '';
   items: HealthTimelineItem[] = [];
   summary: VitalSummary | null = null;
   selectedType = 'All';
@@ -22,7 +22,9 @@ export class PetHealthTimelineComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {
+    this.petId = this.route.snapshot.paramMap.get('petId') || '';
+  }
 
   ngOnInit(): void {
     this.load();

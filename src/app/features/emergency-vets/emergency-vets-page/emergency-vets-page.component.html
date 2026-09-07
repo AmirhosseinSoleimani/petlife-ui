@@ -9,17 +9,19 @@
   <section class="filter-toolbar emergency-filters">
     <div class="filter-copy"><strong>{{ 'emergency.findNearby' | translate }}</strong><span>{{ filteredVets.length }} {{ 'emergency.results' | translate }}</span></div>
     <div class="filter-fields">
+      <app-input name="emergencyCity" label="City" placeholder="Sydney" [(ngModel)]="cityFilter"></app-input>
       <app-input name="emergencySuburb" label="emergency.suburbLabel" placeholder="emergency.searchSuburb" [(ngModel)]="suburbFilter"></app-input>
-      <app-input name="emergencyPostcode" label="Postcode" [(ngModel)]="postcodeFilter"></app-input>
-      <app-input name="emergencySpecies" label="Species" placeholder="Dog, Cat…" [(ngModel)]="speciesFilter"></app-input>
-      <app-input name="emergencyRadius" label="Radius (km)" type="number" min="1" [(ngModel)]="radiusKm"></app-input>
       <app-input name="emergencyState" label="emergency.stateLabel" placeholder="emergency.searchState" [(ngModel)]="stateFilter"></app-input>
-      <app-input name="emergencyOpenNow" label="Open now" type="checkbox" [(ngModel)]="openNowOnly"></app-input>
+      <app-input name="emergencyPostcode" label="Postcode" [(ngModel)]="postcodeFilter"></app-input>
+      <app-input name="emergencySpecies" label="Species" type="select" placeholder="All supported species" [options]="speciesOptions" [(ngModel)]="speciesFilter"></app-input>
+      <app-input *ngIf="latitude !== null && longitude !== null" name="emergencyRadius" label="Radius (km)" type="number" min="1" [(ngModel)]="radiusKm"></app-input>
       <app-input name="emergencyAfterHours" label="emergency.afterHours" type="checkbox" [(ngModel)]="afterHoursOnly"></app-input>
       <app-input name="emergency24h" label="emergency.open24h" type="checkbox" [(ngModel)]="twentyFourHoursOnly"></app-input>
+      <p class="location-status" *ngIf="latitude !== null && longitude !== null">Using your current location for nearest-first results.</p>
       <div class="emergency-filter-actions">
         <app-button type="button" variant="secondary" [loading]="isLocating" (buttonClick)="useMyLocation()">Use my location</app-button>
-        <app-button type="button" (buttonClick)="loadVets()">Apply filters</app-button>
+        <app-button *ngIf="latitude !== null && longitude !== null" type="button" variant="secondary" (buttonClick)="clearLocation()">Clear location</app-button>
+        <app-button type="button" [loading]="isLoading" (buttonClick)="loadVets()">Apply filters</app-button>
       </div>
     </div>
   </section>
@@ -27,7 +29,6 @@
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'emergency.loading' | translate }}</div>
   <div *ngIf="!isLoading && !errorMessage && !vets.length" class="state">{{ 'emergency.noClinics' | translate }}</div>
-  <div *ngIf="!isLoading && vets.length && !filteredVets.length" class="state">{{ 'emergency.noFilterResults' | translate }}</div>
 
   <div class="clinic-grid" *ngIf="!isLoading && filteredVets.length">
     <app-card class="clinic-card" *ngFor="let vet of filteredVets">

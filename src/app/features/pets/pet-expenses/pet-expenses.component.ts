@@ -20,7 +20,7 @@ const emptyForm: ExpensePayload = {
   styleUrls: ['./pet-expenses.component.scss']
 })
 export class PetExpensesComponent implements OnInit {
-  petId = this.route.snapshot.paramMap.get('petId') || '';
+  petId = '';
   pets: Pet[] = [];
   expenses: Expense[] = [];
   categories: ExpenseCategory[] = [];
@@ -39,7 +39,9 @@ export class PetExpensesComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {
+    this.petId = this.route.snapshot.paramMap.get('petId') || '';
+  }
 
   get categoryOptions(): AppInputOption[] { return this.categories.map(category => ({ label: category.name, value: category.id })); }
   get monthOptions(): AppInputOption[] { return Array.from({ length: 12 }, (_, index) => ({ label: new Date(2000, index, 1).toLocaleString(undefined, { month: 'long' }), value: index + 1 })); }

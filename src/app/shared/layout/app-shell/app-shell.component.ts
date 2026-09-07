@@ -59,13 +59,15 @@ export class AppShellComponent implements OnInit, OnDestroy {
   ];
 
   readonly languageOptions = SUPPORTED_LANGUAGES;
-  readonly currentUser: AuthUser | null = this.authService.getCurrentUser();
+  readonly currentUser: AuthUser | null;
 
   constructor(
     private readonly authService: AuthService,
     readonly i18nService: I18nService,
     private readonly preferencesService: UserPreferencesService
-  ) {}
+  ) {
+    this.currentUser = this.authService.getCurrentUser();
+  }
 
   ngOnInit(): void {
     this.preferencesService.load(true).subscribe();

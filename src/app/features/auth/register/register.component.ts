@@ -22,6 +22,12 @@ export class RegisterComponent {
 
   constructor(private readonly authService: AuthService, private readonly router: Router) {}
 
+  setMode(mode: 'email' | 'mobile'): void {
+    if (this.mode === mode) return;
+    this.mode = mode;
+    this.errorMessage = '';
+  }
+
   register(): void {
     if (this.password !== this.confirmPassword) {
       this.errorMessage = 'Passwords do not match.';
@@ -40,7 +46,12 @@ export class RegisterComponent {
         const channel = this.mode === 'email' ? 'Email' : 'Mobile';
         this.authService.sendVerification(channel).subscribe({
           next: () => this.router.navigate(['/verify-contact'], { queryParams: { channel } }),
-          error: () => this.router.navigate(['/verify-contact'], { queryParams: { channel } })
+          error: (error: { error?: { message?: string; errors?: string[] } }) => {
+            this.errorMessage = error.error?.errors?.[0]
+              || error.error?.message
+              || 'Your account was created, but the verification code could not be sent. Please try again from contact verification.';
+            this.isSubmitting = false;
+          }
         });
       },
       error: (error: { error?: { message?: string; errors?: string[] } }) => {
@@ -54,8 +65,8 @@ export class RegisterComponent {
     return {
       firstName: this.firstName,
       lastName: this.lastName,
-      email: this.email,
-      mobileNumber: this.mobileNumber,
+      email: this.email.trim(),
+      mobileNumber: '',
       password: this.password
     };
   }
@@ -64,8 +75,8 @@ export class RegisterComponent {
     return {
       firstName: this.firstName,
       lastName: this.lastName,
-      mobileNumber: this.mobileNumber,
-      email: this.email || undefined,
+      mobileNumber: this.mobileNumber.trim(),
+      email: undefined,
       password: this.password
     };
   }

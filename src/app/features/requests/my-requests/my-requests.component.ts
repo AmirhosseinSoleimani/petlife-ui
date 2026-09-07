@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Pet } from '../../../core/models/customer-core.models';
-import { Provider, ProviderService, ServiceRequest } from '../../../core/models/marketplace.models';
+import { ServiceRequest } from '../../../core/models/marketplace.models';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 @Component({
@@ -14,9 +13,6 @@ import { UserPreferencesService } from '../../../core/preferences/user-preferenc
 export class MyRequestsComponent implements OnInit {
   requests: ServiceRequest[] = [];
   selectedRequest: ServiceRequest | null = null;
-  petNameById: Record<string, string> = {};
-  serviceById: Record<string, ProviderService> = {};
-  providerNameById: Record<string, string> = {};
   isLoading = false;
   errorMessage = '';
   successMessage = '';
@@ -46,44 +42,25 @@ export class MyRequestsComponent implements OnInit {
   }
 
   getPetName(request: ServiceRequest): string {
-    return request.pet?.petName
-      || request.pet?.name
-      || request.petName
-      || this.petNameById[request.petId || '']
-      || '';
+    return request.petName || request.pet?.petName || request.pet?.name || '';
   }
 
   getServiceName(request: ServiceRequest): string {
-    const providerService = this.getProviderService(request);
-
-    return request.providerServiceName
-      || request.providerService?.name
+    return request.serviceName
+      || request.providerServiceName
       || request.providerService?.serviceName
-      || request.serviceName
-      || providerService?.name
-      || providerService?.serviceName
+      || request.providerService?.name
       || '';
   }
 
   getProviderName(request: ServiceRequest): string {
-    const providerService = this.getProviderService(request);
-
     return request.providerBusinessName
       || request.businessName
+      || request.providerName
       || request.provider?.businessName
       || request.provider?.name
       || request.providerService?.providerBusinessName
-      || request.providerService?.businessName
       || request.providerService?.providerName
-      || request.providerService?.provider?.businessName
-      || request.providerService?.provider?.name
-      || request.providerName
-      || providerService?.providerBusinessName
-      || providerService?.businessName
-      || providerService?.providerName
-      || providerService?.provider?.businessName
-      || providerService?.provider?.name
-      || this.lookupProviderName(request, providerService)
       || '';
   }
 
@@ -157,11 +134,10 @@ export class MyRequestsComponent implements OnInit {
     this.apiService.get<ApiResponse<ServiceRequest[]>>('/service-requests/my').subscribe({
       next: (response) => {
         this.requests = response.data || [];
-        this.loadLookups();
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'requests.loadError';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'requests.loadError';
         this.isLoading = false;
       }
     });
@@ -178,78 +154,4 @@ export class MyRequestsComponent implements OnInit {
     });
   }
 
-  private loadLookups(): void {
-    this.loadPets();
-    this.loadProviderServices();
-    this.loadProviders();
-  }
-
-  private loadPets(): void {
-    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
-      next: (response) => {
-        this.petNameById = (response.data || []).reduce<Record<string, string>>((map, pet) => {
-          map[pet.id] = pet.petName;
-          return map;
-        }, {});
-      }
-    });
-  }
-
-  private loadProviderServices(): void {
-    this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
-      next: (response) => {
-        this.serviceById = (response.data || []).reduce<Record<string, ProviderService>>((map, service) => {
-          map[service.id] = service;
-          return map;
-        }, {});
-      }
-    });
-  }
-
-  private loadProviders(): void {
-    this.apiService.get<ApiResponse<Provider[]>>('/providers').subscribe({
-      next: (response) => {
-        this.providerNameById = (response.data || []).reduce<Record<string, string>>((map, provider) => {
-          const providerName = provider.businessName || provider.name || '';
-
-          if (providerName) {
-            this.getProviderIds(provider).forEach((id) => map[id] = providerName);
-          }
-
-          return map;
-        }, {});
-      }
-    });
-  }
-
-  private getProviderService(request: ServiceRequest): ProviderService | null {
-    return request.providerService || this.serviceById[request.providerServiceId || ''] || null;
-  }
-
-  private lookupProviderName(request: ServiceRequest, providerService: ProviderService | null): string {
-    const providerIds = [
-      request.providerId,
-      request.providerProfileId,
-      request.providerUserId,
-      providerService?.providerId,
-      providerService?.providerProfileId,
-      providerService?.providerUserId,
-      providerService?.provider?.id,
-      providerService?.provider?.providerId,
-      providerService?.provider?.providerProfileId,
-      providerService?.provider?.userId
-    ].filter((id): id is string => !!id);
-
-    const matchedId = providerIds.find((id) => this.providerNameById[id]);
-    return matchedId ? this.providerNameById[matchedId] : '';
-  }
-
-  private getProviderIds(provider: Provider): string[] {
-    return [
-      provider.id,
-      provider.providerId,
-      provider.providerProfileId,
-      provider.userId
-    ].filter((id): id is string => !!id);
-  }
 }

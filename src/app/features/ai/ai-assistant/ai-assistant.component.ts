@@ -16,9 +16,7 @@ interface ChatMessage {
   styleUrls: ['./ai-assistant.component.scss']
 })
 export class AiAssistantComponent {
-  readonly isProvider = (this.authService.getCurrentUser()?.role || '')
-    .toLowerCase()
-    .includes('provider');
+  readonly isProvider: boolean;
   readonly customerExamples = [
     'ai.examples.customerHealth',
     'ai.examples.customerReminders',
@@ -42,7 +40,11 @@ export class AiAssistantComponent {
     private readonly aiService: AiService,
     private readonly authService: AuthService,
     private readonly i18nService: I18nService
-  ) {}
+  ) {
+    this.isProvider = (this.authService.getCurrentUser()?.role || '')
+      .toLowerCase()
+      .includes('provider');
+  }
 
   get examplePrompts(): string[] {
     return this.isProvider ? this.providerExamples : this.customerExamples;

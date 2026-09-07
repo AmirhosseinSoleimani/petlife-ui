@@ -13,7 +13,7 @@ import { CreatePetSharePayload, PET_SHARE_SCOPES, PetShareAudit, PetShareGrant, 
 })
 export class PetSharingComponent implements OnInit {
   readonly availableScopes = PET_SHARE_SCOPES;
-  petId = this.route.snapshot.paramMap.get('petId') || '';
+  petId = '';
   grants: PetShareGrant[] = [];
   preview: ScopedPetShare | null = null;
   audit: PetShareAudit[] = [];
@@ -26,7 +26,9 @@ export class PetSharingComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {
+    this.petId = this.route.snapshot.paramMap.get('petId') || '';
+  }
 
   ngOnInit(): void { this.load(); }
 

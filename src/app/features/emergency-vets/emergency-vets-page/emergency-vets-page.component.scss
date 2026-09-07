@@ -1,3 +1,5 @@
 :host { display: block; }
 
 .emergency-filter-actions { display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap; }
+
+.location-status { margin: 0; align-self: end; color: var(--text-muted, #667085); font-size: .9rem; }

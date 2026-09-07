@@ -13,8 +13,11 @@ export class PublicPetShareComponent implements OnInit {
   data: ScopedPetShare | null = null;
   isLoading = true;
   unavailable = false;
-  private readonly token = this.route.snapshot.paramMap.get('token') || '';
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
+  private readonly token: string;
+
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {
+    this.token = this.route.snapshot.paramMap.get('token') || '';
+  }
   ngOnInit(): void {
     this.apiService.get<ApiResponse<ScopedPetShare>>(`/pet-shares/public/${encodeURIComponent(this.token)}`).subscribe({
       next: response => { this.data = response.data; this.isLoading = false; },

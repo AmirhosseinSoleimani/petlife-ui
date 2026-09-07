@@ -78,6 +78,12 @@ export class CreateServiceRequestComponent implements OnInit {
     return !this.form.consentShareHealthSummary || this.form.consentSharePetProfile;
   }
 
+  get minRequestedDate(): string {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+  }
+
   onHealthConsentChanged(): void {
     if (this.form.consentShareHealthSummary) this.form.consentSharePetProfile = true;
   }
@@ -173,8 +179,8 @@ export class CreateServiceRequestComponent implements OnInit {
 
     this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({
       next: () => this.router.navigate(['/service-requests/my']),
-      error: () => {
-        this.errorMessage = 'requestForm.compatibilityError';
+      error: (error: { error?: { message?: string; errors?: string[] } }) => {
+        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'requestForm.compatibilityError';
         this.isSubmitting = false;
       }
     });
