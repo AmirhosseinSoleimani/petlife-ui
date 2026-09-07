@@ -1,7 +1,7 @@
 <section class="page admin-master-page">
   <app-page-header title="Geography master data" description="Manage reusable city, suburb, postcode and coordinates used by provider locations, service areas and marketplace search."></app-page-header>
   <p class="error" *ngIf="errorMessage">{{errorMessage}}</p><p class="success" *ngIf="successMessage">{{successMessage}}</p>
-  <div class="search-row"><app-input name="geoSearch" label="Search" [(ngModel)]="search"></app-input><app-button type="button" (buttonClick)="load()">Search</app-button></div>
+  <div class="search-row"><app-input name="geoSearch" label="Search" [(ngModel)]="search"></app-input><div class="filter-actions"><app-button type="button" (buttonClick)="load()">Search</app-button><app-button *ngIf="search.trim()" type="button" variant="ghost" (buttonClick)="clearSearch()">Clear</app-button></div></div>
   <div class="split">
     <form class="editor" (ngSubmit)="save()" #editor="ngForm">
       <h3>{{editingId?'Edit geography':'New geography'}}</h3>

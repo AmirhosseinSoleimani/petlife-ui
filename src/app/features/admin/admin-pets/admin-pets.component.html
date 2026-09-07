@@ -1,16 +1,20 @@
 <section class="page admin-page">
   <app-page-header
+    eyebrow="Administration"
     title="Admin · Pets"
     description="View and filter registered pets while preserving customer ownership boundaries."
   ></app-page-header>
 
-  <div class="filters pet-filters">
+  <div class="filters pet-filters" aria-label="Pet filters">
     <input [(ngModel)]="search" (keyup.enter)="load(true)" [placeholder]="'Search pet, breed or owner' | translate" />
-    <app-input name="speciesFilter" type="select" label="Species" [options]="speciesOptions" [(ngModel)]="speciesId"></app-input>
-    <app-button type="button" (buttonClick)="load(true)">{{ 'Apply filters' | translate }}</app-button>
+    <app-input name="speciesFilter" type="select" label="Species" placeholder="All species" [options]="speciesOptions" [(ngModel)]="speciesId"></app-input>
+    <div class="filter-actions">
+      <app-button type="button" (buttonClick)="load(true)">{{ 'Apply filters' | translate }}</app-button>
+      <app-button *ngIf="hasFilters" type="button" variant="ghost" (buttonClick)="clearFilters()">Clear filters</app-button>
+    </div>
   </div>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'Loading pets...' | translate }}</div>
 
   <div class="table-wrap" *ngIf="!isLoading">
@@ -29,7 +33,7 @@
   </div>
 
   <div class="pager">
-    <span>{{ totalCount }} {{ 'pets' | translate }}</span>
+    <span><strong>{{ totalCount }}</strong> {{ 'pets' | translate }}</span>
     <div>
       <button type="button" [disabled]="page <= 1" (click)="previous()">{{ 'Previous' | translate }}</button>
       <span>{{ page }} / {{ totalPages || 1 }}</span>
@@ -37,34 +41,83 @@
     </div>
   </div>
 
-  <app-modal [open]="isDetailLoading || !!selectedPet" title="Pet details" description="Read-only admin view" (closed)="closeDetail()">
+  <app-modal [open]="isDetailLoading || !!selectedPet || !!selectedAdminPet" title="Pet details" description="Complete read-only admin registry view" (closed)="closeDetail()">
     <div *ngIf="isDetailLoading" class="state">{{ 'Loading...' | translate }}</div>
     <ng-container *ngIf="selectedPet && !isDetailLoading">
-      <dl class="detail-grid">
-        <div><dt>{{ 'Pet name' | translate }}</dt><dd>{{ selectedPet.petName }}</dd></div>
-        <div><dt>{{ 'Species' | translate }}</dt><dd>{{ selectedPet.speciesName || selectedPet.species }}</dd></div>
-        <div><dt>{{ 'Subgroup' | translate }}</dt><dd>{{ selectedPet.subgroupName || '—' }}</dd></div>
-        <div><dt>{{ 'Breed / Morph' | translate }}</dt><dd>{{ selectedPet.breedName || selectedPet.breed || '—' }}</dd></div>
-        <div><dt>{{ 'Gender' | translate }}</dt><dd>{{ selectedPet.gender || '—' }}</dd></div>
-        <div><dt>{{ 'Date of birth' | translate }}</dt><dd>{{ selectedPet.dateOfBirth || '—' }}</dd></div>
-        <div><dt>{{ 'Weight (kg)' | translate }}</dt><dd>{{ selectedPet.weight ?? '—' }}</dd></div>
-        <div><dt>{{ 'Microchip number' | translate }}</dt><dd>{{ selectedPet.microchipNumber || '—' }}</dd></div>
-        <div><dt>{{ 'Reproductive status' | translate }}</dt><dd>{{ selectedPet.reproductiveStatus || selectedPet.desexedStatus || '—' }}</dd></div>
-        <div><dt>{{ 'Temperament' | translate }}</dt><dd>{{ selectedPet.temperament || '—' }}</dd></div>
-        <div><dt>{{ 'Special needs' | translate }}</dt><dd>{{ selectedPet.specialNeeds || '—' }}</dd></div>
-        <div><dt>{{ 'Living environment' | translate }}</dt><dd>{{ selectedPet.livingEnvironment || '—' }}</dd></div>
-      </dl>
-      <section class="detail-section" *ngIf="selectedPet.behaviourNotes || selectedPet.handlingNotes || selectedPet.medicalNotes || selectedPet.allergyNotes || selectedPet.medicationNotes">
-        <h3>{{ 'Care notes' | translate }}</h3>
-        <p *ngIf="selectedPet.behaviourNotes"><strong>{{ 'Behaviour notes' | translate }}:</strong> {{ selectedPet.behaviourNotes }}</p>
-        <p *ngIf="selectedPet.handlingNotes"><strong>{{ 'Handling notes' | translate }}:</strong> {{ selectedPet.handlingNotes }}</p>
-        <p *ngIf="selectedPet.medicalNotes"><strong>{{ 'Current health notes' | translate }}:</strong> {{ selectedPet.medicalNotes }}</p>
-        <p *ngIf="selectedPet.allergyNotes"><strong>{{ 'Allergies' | translate }}:</strong> {{ selectedPet.allergyNotes }}</p>
-        <p *ngIf="selectedPet.medicationNotes"><strong>{{ 'Current medication notes' | translate }}:</strong> {{ selectedPet.medicationNotes }}</p>
+      <header class="pet-detail-hero">
+        <span class="pet-detail-avatar">
+          <img *ngIf="selectedPetImage" [src]="selectedPetImage" [alt]="selectedPet.petName" />
+          <strong *ngIf="!selectedPetImage">{{ (selectedPet.petName || 'P').charAt(0) }}</strong>
+        </span>
+        <div>
+          <span class="pet-detail-kicker">Registry profile</span>
+          <h3>{{ selectedPet.petName }}</h3>
+          <p>{{ selectedPet.speciesName || selectedPet.species }}<ng-container *ngIf="selectedPet.breedName || selectedPet.breed"> · {{ selectedPet.breedName || selectedPet.breed }}</ng-container></p>
+        </div>
+        <app-badge tone="neutral" *ngIf="selectedPet.createdAt">Registered {{ selectedPet.createdAt | date:'mediumDate' }}</app-badge>
+      </header>
+
+      <section class="detail-section first-section">
+        <div class="detail-section-heading"><span>01</span><div><h3>Identity & classification</h3><p>Core registry fields and taxonomy.</p></div></div>
+        <dl class="detail-grid">
+          <div><dt>{{ 'Pet name' | translate }}</dt><dd>{{ selectedPet.petName }}</dd></div>
+          <div><dt>{{ 'Species' | translate }}</dt><dd>{{ selectedPet.speciesName || selectedPet.species }}</dd></div>
+          <div><dt>{{ 'Subgroup' | translate }}</dt><dd>{{ selectedPet.subgroupName || '—' }}</dd></div>
+          <div><dt>{{ 'Breed / Morph' | translate }}</dt><dd>{{ selectedPet.breedName || selectedPet.breed || '—' }}</dd></div>
+          <div><dt>{{ 'Gender' | translate }}</dt><dd>{{ selectedPet.gender || '—' }}</dd></div>
+          <div><dt>{{ 'Date of birth' | translate }}</dt><dd>{{ selectedPet.dateOfBirth ? (selectedPet.dateOfBirth | date:'mediumDate') : '—' }}</dd></div>
+          <div><dt>Approximate age</dt><dd>{{ selectedPet.approxAge || '—' }}</dd></div>
+          <div><dt>Colour</dt><dd>{{ selectedPet.colour || '—' }}</dd></div>
+          <div><dt>{{ 'Weight (kg)' | translate }}</dt><dd>{{ selectedPet.weight ?? '—' }}</dd></div>
+          <div><dt>{{ 'Microchip number' | translate }}</dt><dd>{{ selectedPet.microchipNumber || '—' }}</dd></div>
+          <div><dt>{{ 'Reproductive status' | translate }}</dt><dd>{{ selectedPet.reproductiveStatus || selectedPet.desexedStatus || '—' }}</dd></div>
+          <div><dt>{{ 'Living environment' | translate }}</dt><dd>{{ selectedPet.livingEnvironment || '—' }}</dd></div>
+        </dl>
       </section>
+
+      <section class="detail-section" *ngIf="selectedAdminPet">
+        <div class="detail-section-heading"><span>02</span><div><h3>Owner & registry</h3><p>Administrative ownership reference.</p></div></div>
+        <dl class="detail-grid">
+          <div><dt>Owner</dt><dd>{{ selectedAdminPet.ownerName || '—' }}</dd></div>
+          <div><dt>Owner email</dt><dd>{{ selectedAdminPet.ownerEmail || '—' }}</dd></div>
+          <div><dt>Owner user ID</dt><dd>{{ selectedAdminPet.ownerUserId || '—' }}</dd></div>
+          <div><dt>Pet ID</dt><dd>{{ selectedPet.id }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="detail-section" *ngIf="selectedPet.temperament || selectedPet.socialCompatibility || selectedPet.behaviourNotes || selectedPet.handlingNotes || selectedPet.specialNeeds || selectedPet.equipmentNotes || selectedPet.feedingNotes">
+        <div class="detail-section-heading"><span>03</span><div><h3>Behaviour & daily care</h3><p>Handling context that can affect safe care.</p></div></div>
+        <div class="note-grid">
+          <article *ngIf="selectedPet.temperament"><small>Temperament</small><p>{{ selectedPet.temperament }}</p></article>
+          <article *ngIf="selectedPet.socialCompatibility"><small>Social compatibility</small><p>{{ selectedPet.socialCompatibility }}</p></article>
+          <article *ngIf="selectedPet.behaviourNotes"><small>Behaviour notes</small><p>{{ selectedPet.behaviourNotes }}</p></article>
+          <article *ngIf="selectedPet.handlingNotes"><small>Handling notes</small><p>{{ selectedPet.handlingNotes }}</p></article>
+          <article *ngIf="selectedPet.specialNeeds"><small>Special needs</small><p>{{ selectedPet.specialNeeds }}</p></article>
+          <article *ngIf="selectedPet.equipmentNotes"><small>Equipment</small><p>{{ selectedPet.equipmentNotes }}</p></article>
+          <article *ngIf="selectedPet.feedingNotes"><small>Feeding</small><p>{{ selectedPet.feedingNotes }}</p></article>
+        </div>
+      </section>
+
+      <section class="detail-section" *ngIf="selectedPet.medicalNotes || selectedPet.allergyNotes || selectedPet.medicationNotes || selectedPet.primaryVetName || selectedPet.primaryVetPhone || selectedPet.emergencyContactName || selectedPet.emergencyContactPhone">
+        <div class="detail-section-heading"><span>04</span><div><h3>Medical & contacts</h3><p>Health notes and important contacts supplied by the owner.</p></div></div>
+        <div class="note-grid">
+          <article *ngIf="selectedPet.medicalNotes"><small>Current health notes</small><p>{{ selectedPet.medicalNotes }}</p></article>
+          <article *ngIf="selectedPet.allergyNotes"><small>Allergies</small><p>{{ selectedPet.allergyNotes }}</p></article>
+          <article *ngIf="selectedPet.medicationNotes"><small>Medication notes</small><p>{{ selectedPet.medicationNotes }}</p></article>
+        </div>
+        <dl class="detail-grid contact-grid" *ngIf="selectedPet.primaryVetName || selectedPet.primaryVetPhone || selectedPet.emergencyContactName || selectedPet.emergencyContactPhone">
+          <div><dt>Primary vet</dt><dd>{{ selectedPet.primaryVetName || '—' }}</dd></div>
+          <div><dt>Vet phone</dt><dd>{{ selectedPet.primaryVetPhone || '—' }}</dd></div>
+          <div><dt>Emergency contact</dt><dd>{{ selectedPet.emergencyContactName || '—' }}</dd></div>
+          <div><dt>Emergency phone</dt><dd>{{ selectedPet.emergencyContactPhone || '—' }}</dd></div>
+        </dl>
+      </section>
+
       <section class="detail-section" *ngIf="dynamicEntries.length">
-        <h3>{{ 'Species-specific details' | translate }}</h3>
-        <p *ngFor="let item of dynamicEntries"><strong>{{ item.key }}:</strong> {{ item.value }}</p>
+        <div class="detail-section-heading"><span>05</span><div><h3>{{ 'Species-specific details' | translate }}</h3><p>Additional attributes configured for this species.</p></div></div>
+        <dl class="detail-grid">
+          <div *ngFor="let item of dynamicEntries"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>
+        </dl>
       </section>
     </ng-container>
   </app-modal>

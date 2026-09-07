@@ -15,6 +15,7 @@ export class AdminPetsComponent implements OnInit {
   pets: AdminPet[] = [];
   species: PetSpecies[] = [];
   selectedPet: Pet | null = null;
+  selectedAdminPet: AdminPet | null = null;
   search = '';
   speciesId = '';
   page = 1;
@@ -35,13 +36,21 @@ export class AdminPetsComponent implements OnInit {
     return this.species.map((item) => ({ label: item.name, value: item.id }));
   }
 
-  get dynamicEntries(): Array<{ key: string; value: string }> {
+  get hasFilters(): boolean {
+    return !!(this.search.trim() || this.speciesId);
+  }
+
+  get selectedPetImage(): string | null {
+    return this.apiService.resolvePublicUrl(this.selectedPet?.profileImageUrl);
+  }
+
+  get dynamicEntries(): Array<{ key: string; label: string; value: string }> {
     if (!this.selectedPet?.dynamicValues) {
       return [];
     }
     return Object.entries(this.selectedPet.dynamicValues)
       .filter(([, value]) => !!value)
-      .map(([key, value]) => ({ key, value: value || '' }));
+      .map(([key, value]) => ({ key, label: this.formatDynamicKey(key), value: value || '' }));
   }
 
   loadTaxonomy(): void {
@@ -79,9 +88,17 @@ export class AdminPetsComponent implements OnInit {
     });
   }
 
+  clearFilters(): void {
+    this.search = '';
+    this.speciesId = '';
+    this.load(true);
+  }
+
   viewPet(pet: AdminPet): void {
+    this.selectedAdminPet = pet;
     this.selectedPet = null;
     this.isDetailLoading = true;
+    this.errorMessage = '';
     this.apiService.get<ApiResponse<Pet>>(`/admin/pets/${pet.id}`).subscribe({
       next: (response) => {
         this.selectedPet = response.data || null;
@@ -96,7 +113,15 @@ export class AdminPetsComponent implements OnInit {
 
   closeDetail(): void {
     this.selectedPet = null;
+    this.selectedAdminPet = null;
     this.isDetailLoading = false;
+  }
+
+  formatDynamicKey(key: string): string {
+    return key
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[_-]+/g, ' ')
+      .replace(/^./, (value) => value.toUpperCase());
   }
 
   previous(): void {

@@ -16,7 +16,10 @@
     <div class="filters">
       <app-input name="petFilter" label="reminders.petLabel" type="select" [options]="filterPetOptions" [(ngModel)]="petFilter"></app-input>
       <app-input name="typeFilter" label="reminders.typeLabel" type="select" [options]="typeFilterOptions" [(ngModel)]="typeFilter"></app-input>
-      <app-button type="button" variant="secondary" (buttonClick)="loadReminders()">{{ 'common.apply' | translate }}</app-button>
+      <div class="filter-actions">
+        <app-button type="button" variant="secondary" (buttonClick)="loadReminders()">{{ 'common.apply' | translate }}</app-button>
+        <app-button *ngIf="hasFilters" type="button" variant="ghost" (buttonClick)="clearFilters()">Clear filters</app-button>
+      </div>
     </div>
     <div class="bulk" *ngIf="hasSelection">
       <span>{{ selectedIds.size }} {{ 'reminders.selected' | translate }}</span>

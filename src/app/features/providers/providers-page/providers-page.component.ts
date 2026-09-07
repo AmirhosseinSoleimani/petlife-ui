@@ -26,6 +26,15 @@ export class ProvidersPageComponent implements OnInit {
     this.loadProviders();
   }
 
+  get hasFilters(): boolean {
+    return !!(this.suburbFilter.trim() || this.stateFilter.trim());
+  }
+
+  clearFilters(): void {
+    this.suburbFilter = '';
+    this.stateFilter = '';
+  }
+
   get filteredProviders(): Provider[] {
     return this.providers.filter((provider) => {
       const suburbMatch = !this.suburbFilter || (provider.suburb || '').toLowerCase().includes(this.suburbFilter.toLowerCase());

@@ -3,7 +3,7 @@
 
   <section class="filter-toolbar provider-filters">
     <div class="filter-copy"><strong>{{ 'providers.findCare' | translate }}</strong><span>{{ filteredProviders.length }} {{ 'providers.results' | translate }}</span></div>
-    <div class="filter-fields"><app-input label="providers.suburbLabel" placeholder="providers.searchSuburb" [(ngModel)]="suburbFilter"></app-input><app-input label="providers.stateLabel" placeholder="providers.searchState" [(ngModel)]="stateFilter"></app-input></div>
+    <div class="filter-fields"><app-input label="providers.suburbLabel" placeholder="providers.searchSuburb" [(ngModel)]="suburbFilter"></app-input><app-input label="providers.stateLabel" placeholder="providers.searchState" [(ngModel)]="stateFilter"></app-input><app-button *ngIf="hasFilters" type="button" variant="ghost" (buttonClick)="clearFilters()">Clear filters</app-button></div>
   </section>
 
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>

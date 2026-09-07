@@ -195,3 +195,68 @@
 .user-card strong { color: var(--color-text); font-size: 14px; }
 .user-card small { max-width: 190px; color: var(--color-muted); }
 .content { width: 100%; max-width: 1320px; padding: 32px; }
+
+/* Refined application chrome */
+.admin-workspace-label {
+  display: grid;
+  gap: 2px;
+  margin: 16px 7px -2px;
+  padding: 12px 13px;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 13px;
+  background: rgba(255,255,255,.055);
+}
+.admin-workspace-label span {
+  color: #92cec7;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.admin-workspace-label strong {
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: -.01em;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  min-height: 76px;
+  background: rgba(246,243,237,.89);
+  box-shadow: 0 8px 28px rgba(25,52,58,.035);
+}
+
+.admin-shell .sidebar {
+  --sidebar-bg: #102e35;
+  --sidebar-bg-soft: #173d44;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(92,191,180,.12), transparent 28%),
+    linear-gradient(165deg, #173d44, #102e35 76%);
+}
+.admin-shell .brand-mark {
+  background: linear-gradient(135deg, #44a99f, #167168);
+  box-shadow: 0 12px 24px rgba(0,0,0,.18);
+}
+.admin-shell .nav a.active {
+  background: rgba(86,185,174,.13);
+  border-color: rgba(111,203,193,.18);
+  color: #fff;
+  box-shadow: inset 3px 0 0 #61c0b5;
+}
+:host-context([dir='rtl']) .admin-shell .nav a.active { box-shadow: inset -3px 0 0 #61c0b5; }
+.admin-shell .active .nav-icon { background: #3c968c; }
+.admin-shell .topbar {
+  border-bottom-color: rgba(19,67,75,.1);
+  background: rgba(249,248,244,.92);
+}
+.admin-shell .service-badge {
+  color: #1b5c5c;
+  background: #e1f2ef;
+}
+.admin-shell .avatar { background: linear-gradient(135deg, #236f70, #174b53); }
+
+@media (max-width: 1023px) {
+  .topbar { min-height: 68px; }
+}

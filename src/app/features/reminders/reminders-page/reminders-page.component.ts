@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet, Reminder, ReminderPayload } from '../../../core/models/customer-core.models';
 import { RECURRENCE_TYPES, ReminderTemplate } from '../../../core/models/phase1-care.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 interface ExpiryForm {
   petId: string | null;
@@ -42,7 +42,7 @@ export class RemindersPageComponent implements OnInit {
   isReminderEditorOpen = false;
   loadFailed = false;
 
-  constructor(private readonly apiService: ApiService, private readonly i18nService: I18nService) {}
+  constructor(private readonly apiService: ApiService, private readonly dialogService: AppDialogService) {}
 
   get petOptions(): AppInputOption[] {
     return this.pets.map(pet => ({ label: pet.petName, value: pet.id }));
@@ -61,6 +61,15 @@ export class RemindersPageComponent implements OnInit {
   }
 
   get hasSelection(): boolean { return this.selectedIds.size > 0; }
+
+  get hasFilters(): boolean { return !!(this.petFilter || this.typeFilter); }
+
+  clearFilters(): void {
+    this.petFilter = '';
+    this.typeFilter = '';
+    this.loadReminders();
+  }
+
 
   ngOnInit(): void {
     this.loadPets();
@@ -244,10 +253,12 @@ export class RemindersPageComponent implements OnInit {
   }
 
   deleteReminder(reminder: Reminder): void {
-    if (!window.confirm(this.i18nService.translate('reminders.deleteConfirm'))) return;
-    this.apiService.delete<ApiResponse<unknown>>(`/reminders/${reminder.id}`).subscribe({
-      next: () => { this.successMessage = 'reminders.deleteSuccess'; this.loadReminders(); },
-      error: () => this.errorMessage = 'reminders.deleteError'
+    this.dialogService.confirm({ title: 'Delete reminder?', message: 'reminders.deleteConfirm', confirmLabel: 'Delete reminder', tone: 'danger' }).then((confirmed) => {
+      if (!confirmed) return;
+      this.apiService.delete<ApiResponse<unknown>>(`/reminders/${reminder.id}`).subscribe({
+        next: () => { this.successMessage = 'reminders.deleteSuccess'; this.loadReminders(); },
+        error: () => this.errorMessage = 'reminders.deleteError'
+      });
     });
   }
 

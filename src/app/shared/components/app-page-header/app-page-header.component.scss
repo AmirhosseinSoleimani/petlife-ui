@@ -7,69 +7,69 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xl);
-  padding: clamp(22px, 3vw, 32px);
+  overflow: hidden;
+  padding: clamp(22px, 3vw, 30px);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  background: linear-gradient(120deg, var(--color-surface) 0%, var(--color-surface-soft) 72%, var(--color-primary-soft) 100%);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #fff 0%, #fff 58%, var(--color-primary-soft) 155%);
   box-shadow: var(--shadow-soft);
 }
-
 .page-head::before {
   content: "";
   position: absolute;
-  inset-block: 22px;
-  inset-inline-start: -1px;
+  inset-block: 0;
+  inset-inline-start: 0;
   width: 4px;
-  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
-  background: var(--color-accent);
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
 }
-:host-context([dir='rtl']) .page-head::before { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
-
 .page-head::after {
   content: "";
   position: absolute;
   z-index: -1;
-  inset-inline-end: clamp(20px, 5vw, 64px);
-  top: 16px;
-  width: 72px;
-  height: 72px;
+  width: 180px;
+  height: 180px;
+  inset-inline-end: -68px;
+  inset-block-start: -92px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 34%, var(--accent) 0 7%, transparent 8%),
-    radial-gradient(circle at 66% 34%, var(--accent) 0 7%, transparent 8%),
-    radial-gradient(circle at 50% 24%, var(--accent) 0 6%, transparent 7%),
-    radial-gradient(ellipse at 50% 64%, var(--accent) 0 18%, transparent 19%);
-  opacity: .28;
+  background: radial-gradient(circle, rgba(11,128,120,.11), rgba(11,128,120,0) 68%);
   pointer-events: none;
 }
-
 .page-head > div:first-child { min-width: 0; }
+
 a {
   display: inline-flex;
+  align-items: center;
+  gap: 5px;
   margin-bottom: 10px;
   color: var(--color-primary);
   font-size: var(--font-size-caption);
   font-weight: 800;
 }
+a::before { content: "←"; }
+:host-context([dir='rtl']) a::before { content: "→"; }
 a:hover { color: var(--color-primary-dark); }
-.eyebrow,
-h2,
-.description { margin: 0; }
+
+.eyebrow, h2, .description { margin: 0; }
 .eyebrow {
   color: var(--color-primary-dark);
-  font-size: var(--font-size-badge);
+  font-size: 11px;
   font-weight: 900;
-  letter-spacing: .06em;
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 h2 {
   margin-top: 5px;
   color: var(--color-text);
   font-size: var(--font-size-page-title);
-  line-height: 1.15;
-  letter-spacing: -.035em;
+  line-height: 1.13;
+  letter-spacing: -.04em;
 }
-.description { max-width: 720px; margin-top: 8px; color: var(--color-muted); line-height: 1.6; }
+.description {
+  max-width: 760px;
+  margin-top: 8px;
+  color: var(--color-muted);
+  line-height: 1.58;
+}
 .actions {
   position: relative;
   z-index: 1;
@@ -79,12 +79,24 @@ h2 {
   gap: 10px;
 }
 
+:host-context(.admin-shell) .page-head {
+  border-color: rgba(19, 67, 75, .16);
+  color: #eef8f7;
+  background:
+    radial-gradient(circle at 92% 15%, rgba(82,193,181,.18), transparent 28%),
+    linear-gradient(125deg, #16363d 0%, #1d4a50 62%, #245961 100%);
+  box-shadow: 0 18px 42px rgba(19,55,61,.14);
+}
+:host-context(.admin-shell) .page-head::before { background: linear-gradient(180deg, #56b9ae, #f0a080); }
+:host-context(.admin-shell) .page-head::after { background: radial-gradient(circle, rgba(255,255,255,.08), transparent 68%); }
+:host-context(.admin-shell) h2 { color: #fff; }
+:host-context(.admin-shell) .eyebrow,
+:host-context(.admin-shell) a { color: #98d8d1; }
+:host-context(.admin-shell) .description { color: #c2d9d8; }
+:host-context(.admin-shell) a:hover { color: #fff; }
+
 @media (max-width: 767px) {
-  .page-head { flex-direction: column; align-items: stretch; gap: 18px; border-radius: var(--radius-lg); }
-  .page-head::after { opacity: .18; }
+  .page-head { flex-direction: column; align-items: stretch; gap: 18px; border-radius: 18px; }
   .actions { width: 100%; justify-content: flex-start; }
 }
-
-@media (max-width: 430px) {
-  .page-head { padding: 20px 18px; }
-}
+@media (max-width: 430px) { .page-head { padding: 20px 18px; } }

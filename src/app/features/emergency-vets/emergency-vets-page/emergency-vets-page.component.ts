@@ -4,6 +4,34 @@ import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmergencyVet } from '../../../core/models/customer-core.models';
 
+interface EmergencyVetWire extends EmergencyVet {
+  emergencyVetId?: string;
+  city?: string;
+  fullAddress?: string;
+  streetAddress?: string;
+  supportedSpeciesNames?: string[];
+  species?: string[] | string;
+}
+
+interface EmergencyVetCollection {
+  items?: EmergencyVetWire[];
+  results?: EmergencyVetWire[];
+  emergencyVets?: EmergencyVetWire[];
+}
+
+type EmergencyVetPayload = EmergencyVetWire[] | EmergencyVetCollection | null;
+type EmergencyVetResponse = ApiResponse<EmergencyVetPayload> | EmergencyVetPayload;
+type EmergencyVetDetailResponse = ApiResponse<EmergencyVetWire | null> | EmergencyVetWire | null;
+
+interface SpeciesCollection {
+  items?: Array<string | { name?: string }>;
+  results?: Array<string | { name?: string }>;
+  species?: Array<string | { name?: string }>;
+}
+
+type SpeciesPayload = string[] | SpeciesCollection | null;
+type SpeciesResponse = ApiResponse<SpeciesPayload> | SpeciesPayload;
+
 interface EmergencyVetView {
   id: string;
   clinicName: string;
@@ -62,6 +90,20 @@ export class EmergencyVetsPageComponent implements OnInit {
     return this.vets;
   }
 
+  get hasActiveFilters(): boolean {
+    return !!(
+      this.suburbFilter.trim() ||
+      this.cityFilter.trim() ||
+      this.stateFilter.trim() ||
+      this.postcodeFilter.trim() ||
+      this.speciesFilter.trim() ||
+      this.afterHoursOnly ||
+      this.twentyFourHoursOnly ||
+      this.latitude !== null ||
+      this.longitude !== null
+    );
+  }
+
   loadVets(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -76,12 +118,25 @@ export class EmergencyVetsPageComponent implements OnInit {
     if (this.latitude !== null && this.longitude !== null) {
       params.set('latitude', String(this.latitude));
       params.set('longitude', String(this.longitude));
-      if (this.radiusKm !== null && this.radiusKm > 0) params.set('radiusKm', String(this.radiusKm));
+      if (this.radiusKm !== null && this.radiusKm > 0) {
+        params.set('radiusKm', String(this.radiusKm));
+      }
     }
 
-    this.apiService.get<ApiResponse<EmergencyVet[]>>(`/emergency-vets?${params.toString()}`).subscribe({
+    const query = params.toString();
+    this.apiService.get<EmergencyVetResponse>(`/emergency-vets${query ? `?${query}` : ''}`).subscribe({
       next: (response) => {
-        this.vets = (response.data || []).map((vet) => this.toViewModel(vet));
+        const envelopeError = this.readEnvelopeError(response);
+        if (envelopeError) {
+          this.vets = [];
+          this.errorMessage = envelopeError;
+          this.isLoading = false;
+          return;
+        }
+
+        this.vets = this.extractVets(response)
+          .map((vet) => this.toViewModel(vet))
+          .filter((vet) => !!vet.id || !!vet.clinicName);
         this.selectedVet = null;
         this.isLoading = false;
       },
@@ -92,16 +147,24 @@ export class EmergencyVetsPageComponent implements OnInit {
     });
   }
 
-  private loadSpecies(): void {
-    this.apiService.get<ApiResponse<string[]>>('/pet-species').subscribe({
-      next: (response) => this.speciesOptions = response.data || [],
-      error: () => this.speciesOptions = []
-    });
+  clearFilters(): void {
+    this.suburbFilter = '';
+    this.cityFilter = '';
+    this.stateFilter = '';
+    this.postcodeFilter = '';
+    this.speciesFilter = '';
+    this.afterHoursOnly = false;
+    this.twentyFourHoursOnly = false;
+    this.latitude = null;
+    this.longitude = null;
+    this.radiusKm = 25;
+    this.loadVets();
   }
 
   clearLocation(): void {
     this.latitude = null;
     this.longitude = null;
+    this.radiusKm = 25;
     this.loadVets();
   }
 
@@ -111,6 +174,7 @@ export class EmergencyVetsPageComponent implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
     this.isLocating = true;
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -128,14 +192,22 @@ export class EmergencyVetsPageComponent implements OnInit {
   }
 
   selectVet(vet: EmergencyVetView): void {
-    this.apiService.get<ApiResponse<EmergencyVet>>(`/emergency-vets/${vet.id}`).subscribe({
+    this.selectedVet = vet;
+    this.isDetailOpen = true;
+
+    if (!vet.id) {
+      return;
+    }
+
+    this.apiService.get<EmergencyVetDetailResponse>(`/emergency-vets/${vet.id}`).subscribe({
       next: (response) => {
-        this.selectedVet = response.data ? this.toViewModel(response.data) : vet;
-        this.isDetailOpen = true;
+        const detail = this.unwrapPayload<EmergencyVetWire | null>(response);
+        if (detail) {
+          this.selectedVet = this.toViewModel(detail);
+        }
       },
       error: () => {
-        this.selectedVet = vet;
-        this.isDetailOpen = true;
+        // Keep the list-card data visible if the detail endpoint is temporarily unavailable.
       }
     });
   }
@@ -153,12 +225,74 @@ export class EmergencyVetsPageComponent implements OnInit {
     return vet.email ? `mailto:${vet.email}` : '';
   }
 
-  private toViewModel(vet: EmergencyVet): EmergencyVetView {
+  private loadSpecies(): void {
+    this.apiService.get<SpeciesResponse>('/pet-species').subscribe({
+      next: (response) => {
+        this.speciesOptions = this.extractSpecies(response);
+      },
+      error: () => this.speciesOptions = []
+    });
+  }
+
+  private extractVets(response: EmergencyVetResponse): EmergencyVetWire[] {
+    const payload = this.unwrapPayload<EmergencyVetPayload>(response);
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+    if (!payload) {
+      return [];
+    }
+    return payload.items || payload.results || payload.emergencyVets || [];
+  }
+
+  private extractSpecies(response: SpeciesResponse): string[] {
+    const payload = this.unwrapPayload<SpeciesPayload>(response);
+    const rawItems = Array.isArray(payload)
+      ? payload
+      : payload?.items || payload?.results || payload?.species || [];
+
+    return Array.from(new Set(rawItems
+      .map((item) => typeof item === 'string' ? item : item.name || '')
+      .map((item) => item.trim())
+      .filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  private unwrapPayload<T>(response: ApiResponse<T> | T): T {
+    if (this.isApiEnvelope<T>(response)) {
+      return response.data;
+    }
+    return response;
+  }
+
+  private readEnvelopeError(response: EmergencyVetResponse): string {
+    if (!this.isApiEnvelope<EmergencyVetPayload>(response) || response.success !== false) {
+      return '';
+    }
+    return response.errors?.[0] || response.message || 'emergency.loadError';
+  }
+
+  private isApiEnvelope<T>(value: ApiResponse<T> | T): value is ApiResponse<T> {
+    return typeof value === 'object' && value !== null && 'data' in value && 'success' in value;
+  }
+
+  private toViewModel(vet: EmergencyVetWire): EmergencyVetView {
+    const suburb = vet.suburb || vet.city || '';
+    const address = vet.fullAddress || [
+      vet.addressLine1 || vet.streetAddress || vet.address,
+      vet.addressLine2,
+      suburb,
+      vet.state,
+      vet.postcode
+    ].filter(Boolean).join(', ');
+    const supportedSpecies = this.normalizeSpecies(vet);
+    const googleMapsUrl = vet.googleMapsUrl || vet.mapsUrl || this.buildGoogleMapsUrl(vet, address);
+
     return {
-      id: vet.id,
-      clinicName: vet.clinicName || vet.vetClinicName || vet.businessName || vet.name || '',
-      address: [vet.addressLine1 || vet.address, vet.addressLine2, vet.suburb, vet.state, vet.postcode].filter(Boolean).join(', '),
-      suburb: vet.suburb || '',
+      id: vet.id || vet.emergencyVetId || '',
+      clinicName: vet.clinicName || vet.vetClinicName || vet.businessName || vet.name || 'Emergency vet clinic',
+      address,
+      suburb,
       state: vet.state || '',
       postcode: vet.postcode || '',
       phone: vet.phone || vet.phoneNumber || '',
@@ -167,14 +301,35 @@ export class EmergencyVetsPageComponent implements OnInit {
       isAfterHours: !!(vet.offersAfterHours || vet.isAfterHours || vet.afterHours),
       is24Hours: !!(vet.offers24HourService || vet.is24Hours || vet.is24h || vet.open24Hours),
       description: vet.emergencyInstructions || vet.description || vet.notes || vet.instructions || '',
-      supportedSpecies: vet.supportedSpecies || [],
+      supportedSpecies,
       isVerified: vet.isVerified === true,
       lastVerifiedAt: vet.lastVerifiedAt || null,
-      distanceKm: vet.distanceKm ?? null,
-      mapsUrl: vet.mapsUrl || '',
-      googleMapsUrl: vet.googleMapsUrl || vet.mapsUrl || '',
+      distanceKm: typeof vet.distanceKm === 'number' ? vet.distanceKm : null,
+      mapsUrl: vet.mapsUrl || googleMapsUrl,
+      googleMapsUrl,
       appleMapsUrl: vet.appleMapsUrl || '',
       openingHoursNotes: vet.openingHoursNotes || ''
     };
+  }
+
+  private normalizeSpecies(vet: EmergencyVetWire): string[] {
+    const source = vet.supportedSpecies?.length
+      ? vet.supportedSpecies
+      : vet.supportedSpeciesNames?.length
+        ? vet.supportedSpeciesNames
+        : Array.isArray(vet.species)
+          ? vet.species
+          : vet.species
+            ? vet.species.split(',')
+            : [];
+
+    return source.map((item) => item.trim()).filter(Boolean);
+  }
+
+  private buildGoogleMapsUrl(vet: EmergencyVetWire, address: string): string {
+    const query = vet.latitude != null && vet.longitude != null
+      ? `${vet.latitude},${vet.longitude}`
+      : address;
+    return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : '';
   }
 }

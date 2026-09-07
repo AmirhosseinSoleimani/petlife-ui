@@ -1,4 +1,4 @@
-<div class="shell" [class.drawer-open]="isDrawerOpen">
+<div class="shell" [class.drawer-open]="isDrawerOpen" [class.admin-shell]="isAdmin">
   <aside id="app-main-nav" class="sidebar" [attr.aria-label]="'Main navigation' | translate">
     <div class="brand-panel">
       <span class="brand-mark" aria-hidden="true">
@@ -11,6 +11,11 @@
         <strong>{{ 'app.name' | translate }}</strong>
         <small>{{ 'app.tagline' | translate }}</small>
       </div>
+    </div>
+
+    <div *ngIf="isAdmin" class="admin-workspace-label">
+      <span>Admin control</span>
+      <strong>Operations console</strong>
     </div>
 
     <nav class="nav">

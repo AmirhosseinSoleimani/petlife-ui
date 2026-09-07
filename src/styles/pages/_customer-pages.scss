@@ -248,3 +248,19 @@ app-create-service-request {
     .selection-price { width: 100%; padding-inline-start: 53px; }
   }
 }
+
+/* Filter sizing and actions normalized across directory/discovery pages. */
+.filter-toolbar {
+  padding: 15px 16px;
+  border-radius: 16px;
+}
+.filter-toolbar .filter-fields { flex-wrap: wrap; gap: 9px; }
+.filter-toolbar .filter-fields app-input { min-width: 170px; max-width: 260px; }
+.filter-toolbar .filter-fields app-button { flex: 0 0 auto; }
+app-reminders-page .center-toolbar .filters { align-items: end; }
+app-reminders-page .center-toolbar .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+app-provider-services-page .discovery-filters .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 720px) {
+  .filter-toolbar .filter-fields app-input { max-width: none; }
+  .filter-toolbar .filter-fields app-button { width: 100%; }
+}

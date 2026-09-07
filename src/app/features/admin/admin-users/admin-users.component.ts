@@ -12,6 +12,8 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 export class AdminUsersComponent implements OnInit {
   users: AdminUser[] = [];
   selectedUser: AdminUser | null = null;
+  suspendUser: AdminUser | null = null;
+  suspensionReason = '';
   search = '';
   role = '';
   status = '';
@@ -28,6 +30,10 @@ export class AdminUsersComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  get hasFilters(): boolean {
+    return !!(this.search.trim() || this.role || this.status);
   }
 
   load(resetPage = false): void {
@@ -58,6 +64,13 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
+  clearFilters(): void {
+    this.search = '';
+    this.role = '';
+    this.status = '';
+    this.load(true);
+  }
+
   viewUser(user: AdminUser): void {
     this.selectedUser = user;
     this.isDetailLoading = true;
@@ -80,28 +93,28 @@ export class AdminUsersComponent implements OnInit {
     this.isDetailLoading = false;
   }
 
-  setStatus(user: AdminUser, status: 'Active' | 'Suspended'): void {
-    const reason = status === 'Suspended' ? (window.prompt('Suspension reason') || '') : '';
-    if (status === 'Suspended' && !reason.trim()) {
+  requestSuspend(user: AdminUser): void {
+    this.suspendUser = user;
+    this.suspensionReason = '';
+  }
+
+  closeSuspendDialog(): void {
+    if (this.actionUserId) {
       return;
     }
+    this.suspendUser = null;
+    this.suspensionReason = '';
+  }
 
-    this.actionUserId = user.id;
-    this.apiService.put<ApiResponse<AdminUser>>(`/admin/users/${user.id}/status`, { status, reason }).subscribe({
-      next: (response) => {
-        if (response.data) {
-          Object.assign(user, response.data);
-          if (this.selectedUser?.id === user.id) {
-            this.selectedUser = { ...response.data };
-          }
-        }
-        this.actionUserId = null;
-      },
-      error: (error: { error?: { message?: string } }) => {
-        this.errorMessage = error.error?.message || 'Unable to update user status.';
-        this.actionUserId = null;
-      }
-    });
+  confirmSuspend(): void {
+    if (!this.suspendUser || !this.suspensionReason.trim()) {
+      return;
+    }
+    this.updateStatus(this.suspendUser, 'Suspended', this.suspensionReason.trim(), true);
+  }
+
+  activate(user: AdminUser): void {
+    this.updateStatus(user, 'Active', '');
   }
 
   previous(): void {
@@ -116,5 +129,29 @@ export class AdminUsersComponent implements OnInit {
       this.page += 1;
       this.load();
     }
+  }
+
+  private updateStatus(user: AdminUser, status: 'Active' | 'Suspended', reason: string, closeSuspendOnSuccess = false): void {
+    this.actionUserId = user.id;
+    this.errorMessage = '';
+    this.apiService.put<ApiResponse<AdminUser>>(`/admin/users/${user.id}/status`, { status, reason }).subscribe({
+      next: (response) => {
+        if (response.data) {
+          Object.assign(user, response.data);
+          if (this.selectedUser?.id === user.id) {
+            this.selectedUser = { ...response.data };
+          }
+        }
+        this.actionUserId = null;
+        if (closeSuspendOnSuccess) {
+          this.suspendUser = null;
+          this.suspensionReason = '';
+        }
+      },
+      error: (error: { error?: { message?: string } }) => {
+        this.errorMessage = error.error?.message || 'Unable to update user status.';
+        this.actionUserId = null;
+      }
+    });
   }
 }

@@ -4,6 +4,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { PetTaxonomy } from '../../../core/models/customer-core.models';
 import { RECURRENCE_TYPES, ReminderTemplate, ReminderTemplatePayload } from '../../../core/models/phase1-care.models';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 @Component({ selector: 'app-admin-reminder-templates', templateUrl: './admin-reminder-templates.component.html', styleUrls: ['./admin-reminder-templates.component.scss'] })
 export class AdminReminderTemplatesComponent implements OnInit {
@@ -18,7 +19,7 @@ export class AdminReminderTemplatesComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly i18nService: I18nService) {}
+  constructor(private readonly apiService: ApiService, private readonly i18nService: I18nService, private readonly dialogService: AppDialogService) {}
   ngOnInit(): void { this.load(); }
 
   load(): void {
@@ -47,8 +48,10 @@ export class AdminReminderTemplatesComponent implements OnInit {
   }
 
   remove(item: ReminderTemplate): void {
-    if (!window.confirm(this.i18nService.translate('reminderTemplates.deleteConfirm'))) return;
-    this.apiService.delete<ApiResponse<unknown>>(`/admin/reminder-templates/${item.id}`).subscribe({ next: () => { this.successMessage = 'reminderTemplates.deleted'; this.load(); }, error: () => this.errorMessage = 'reminderTemplates.deleteError' });
+    this.dialogService.confirm({ title: 'Delete reminder template?', message: 'reminderTemplates.deleteConfirm', confirmLabel: 'Delete template', tone: 'danger' }).then((confirmed) => {
+      if (!confirmed) return;
+      this.apiService.delete<ApiResponse<unknown>>(`/admin/reminder-templates/${item.id}`).subscribe({ next: () => { this.successMessage = 'reminderTemplates.deleted'; this.load(); }, error: () => this.errorMessage = 'reminderTemplates.deleteError' });
+    });
   }
 
   reset(): void { this.editingId = null; this.form = this.emptyForm(); this.isSaving = false; }

@@ -40,6 +40,7 @@ import { CreateServiceRequestComponent } from './features/requests/create-servic
 import { MyRequestsComponent } from './features/requests/my-requests/my-requests.component';
 import { RemindersPageComponent } from './features/reminders/reminders-page/reminders-page.component';
 import { ProviderServicesPageComponent } from './features/services/provider-services-page/provider-services-page.component';
+import { AppConfirmDialogComponent } from './shared/components/app-confirm-dialog/app-confirm-dialog.component';
 import { AppBadgeComponent } from './shared/components/app-badge/app-badge.component';
 import { AppButtonComponent } from './shared/components/app-button/app-button.component';
 import { AppCardComponent } from './shared/components/app-card/app-card.component';
@@ -57,7 +58,7 @@ import { WorkspacePreferencesComponent } from './shared/components/workspace-pre
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
-    AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppFileUploadComponent, AppBadgeComponent,
+    AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
     AppPageHeaderComponent, WorkspacePreferencesComponent, TranslatePipe
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],

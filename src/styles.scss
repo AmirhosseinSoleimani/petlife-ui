@@ -822,3 +822,118 @@ app-shell .shell .nav-label.nav-label {
     padding: 12px;
   }
 }
+
+/* Unified application chrome + feedback language */
+app-shell .shell .topbar.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  border-bottom: 1px solid rgba(25,52,58,.09);
+  background: rgba(248,247,243,.91);
+  backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: 0 8px 28px rgba(25,52,58,.04);
+}
+app-shell .shell .content.content {
+  width: 100%;
+  max-width: 1440px;
+  padding: clamp(18px, 2.5vw, 34px);
+}
+app-shell .shell.admin-shell .content.content { max-width: 1540px; }
+app-shell .shell.admin-shell .topbar-title h1 { color: #143940; }
+app-shell .shell.admin-shell .role-badge.role-badge {
+  color: #205f61;
+  background: #e3f3f0;
+}
+
+/* Alert and status surfaces used throughout legacy and newer feature pages. */
+.error,
+.success,
+.notice,
+.info-message,
+.form-message,
+.page-message {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 13px 15px 13px 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(25,52,58,.035);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.error::before,
+.success::before,
+.notice::before,
+.info-message::before,
+.form-message::before,
+.page-message::before {
+  position: absolute;
+  inset-inline-start: 14px;
+  inset-block-start: 13px;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+.error {
+  border-color: rgba(198,76,76,.2) !important;
+  color: #8d3838 !important;
+  background: linear-gradient(135deg, #fff9f8, var(--color-danger-soft)) !important;
+}
+.error::before { content: "!"; color: #fff; background: var(--color-danger); }
+.success {
+  border-color: rgba(47,137,103,.2) !important;
+  color: #276f56 !important;
+  background: linear-gradient(135deg, #fbfffc, var(--color-success-soft)) !important;
+}
+.success::before { content: "✓"; color: #fff; background: var(--color-success); }
+.notice,
+.info-message,
+.form-message,
+.page-message {
+  border-color: rgba(71,111,174,.18);
+  color: #365884;
+  background: linear-gradient(135deg, #fbfdff, var(--color-info-soft));
+}
+.notice::before,
+.info-message::before,
+.form-message::before,
+.page-message::before { content: "i"; color: #fff; background: var(--color-info); }
+
+@media (max-width: 560px) {
+  app-shell .shell .content.content { padding: 12px; }
+  .error, .success, .notice, .info-message, .form-message, .page-message { padding-inline-end: 12px; }
+}
+
+/* Preserve semantic tone when legacy pages combine a base notice class with a status class. */
+.notice.error::before,
+.page-message.error::before,
+.form-message.error::before,
+.form-message.error-message::before {
+  content: "!";
+  color: #fff;
+  background: var(--color-danger);
+}
+.notice.success::before,
+.page-message.success::before,
+.form-message.success::before,
+.form-message.success-message::before {
+  content: "✓";
+  color: #fff;
+  background: var(--color-success);
+}
+.form-message.error-message {
+  border-color: rgba(198,76,76,.2);
+  color: #8d3838;
+  background: linear-gradient(135deg, #fff9f8, var(--color-danger-soft));
+}
+.form-message.success-message {
+  border-color: rgba(47,137,103,.2);
+  color: #276f56;
+  background: linear-gradient(135deg, #fbfffc, var(--color-success-soft));
+}

@@ -1,4 +1,124 @@
-<section class="dashboard" [class.provider-dashboard]="isProvider">
+<section class="dashboard" [class.provider-dashboard]="isProvider" [class.admin-dashboard]="isAdmin">
+  <ng-container *ngIf="isAdmin; else roleDashboard">
+    <header class="admin-command-hero">
+      <div class="admin-command-copy">
+        <span class="admin-command-kicker">Administration · Live operations</span>
+        <h2>Command center</h2>
+        <p>Monitor marketplace health, review risk queues and jump directly into the administrative workflows that need attention.</p>
+        <div class="admin-hero-meta">
+          <span class="live-dot"><i aria-hidden="true"></i> Operational overview</span>
+          <span *ngIf="adminKpi?.from && adminKpi?.to">{{ adminKpi?.from | date:'mediumDate' }} — {{ adminKpi?.to | date:'mediumDate' }}</span>
+        </div>
+      </div>
+      <nav class="admin-hero-actions" aria-label="Admin primary actions">
+        <a routerLink="/admin/provider-verification">
+          <span class="admin-action-icon" aria-hidden="true">✓</span>
+          <span><strong>Review providers</strong><small>{{ adminPendingDocuments.length }} pending documents</small></span>
+        </a>
+        <a routerLink="/admin/operations">
+          <span class="admin-action-icon" aria-hidden="true">↗</span>
+          <span><strong>Operations console</strong><small>Requests, feedback & KPI</small></span>
+        </a>
+      </nav>
+    </header>
+
+    <div *ngIf="adminDashboardLoadFailed" class="admin-dashboard-notice" role="alert">
+      <span aria-hidden="true">!</span>
+      <div><strong>Some admin data is unavailable</strong><p>The dashboard is showing the information that could be loaded. Open the related module to retry that data source.</p></div>
+      <button type="button" (click)="loadAdminDashboard()">Retry dashboard</button>
+    </div>
+
+    <section class="admin-kpi-grid" aria-label="Administration KPIs">
+      <a class="admin-kpi-card" routerLink="/admin/users">
+        <span class="admin-kpi-icon users" aria-hidden="true">U</span>
+        <span class="admin-kpi-copy"><small>Active users</small><strong>{{ adminDashboardLoading && !adminKpi ? '…' : (adminKpi?.activeUsers ?? '—') }}</strong><em>{{ adminKpi?.newUsers ?? 0 }} new in period</em></span>
+      </a>
+      <a class="admin-kpi-card" routerLink="/admin/pets">
+        <span class="admin-kpi-icon pets" aria-hidden="true">P</span>
+        <span class="admin-kpi-copy"><small>New pets</small><strong>{{ adminDashboardLoading && !adminKpi ? '…' : (adminKpi?.newPets ?? '—') }}</strong><em>Registered in reporting period</em></span>
+      </a>
+      <a class="admin-kpi-card" routerLink="/admin/operations">
+        <span class="admin-kpi-icon requests" aria-hidden="true">R</span>
+        <span class="admin-kpi-copy"><small>Service requests</small><strong>{{ adminDashboardLoading && !adminKpi ? '…' : (adminKpi?.serviceRequests ?? '—') }}</strong><em>{{ adminKpi?.completedServiceRequests ?? 0 }} completed</em></span>
+      </a>
+      <a class="admin-kpi-card" routerLink="/admin/operations">
+        <span class="admin-kpi-icon completion" aria-hidden="true">%</span>
+        <span class="admin-kpi-copy"><small>Completion rate</small><strong>{{ adminKpi ? (adminKpi.completionRatePercent | number:'1.0-1') + '%' : (adminDashboardLoading ? '…' : '—') }}</strong><em>Completed service requests</em></span>
+      </a>
+      <a class="admin-kpi-card attention" routerLink="/admin/provider-verification">
+        <span class="admin-kpi-icon verification" aria-hidden="true">V</span>
+        <span class="admin-kpi-copy"><small>Verification queue</small><strong>{{ adminDashboardLoading ? '…' : adminPendingDocuments.length }}</strong><em>Pending provider documents</em></span>
+      </a>
+      <a class="admin-kpi-card attention" routerLink="/admin/operations">
+        <span class="admin-kpi-icon feedback" aria-hidden="true">!</span>
+        <span class="admin-kpi-copy"><small>Open feedback</small><strong>{{ adminKpi?.openFeedbackReports ?? (adminDashboardLoading ? '…' : adminOpenFeedback.length) }}</strong><em>Reports requiring triage</em></span>
+      </a>
+    </section>
+
+    <div class="admin-command-layout">
+      <div class="admin-command-main">
+        <app-card class="admin-dashboard-panel">
+          <div class="admin-panel-head">
+            <div><span class="admin-panel-kicker">Provider trust</span><h3>Verification queue</h3><p>Documents waiting for an administrative review.</p></div>
+            <a routerLink="/admin/provider-verification">Open full queue</a>
+          </div>
+          <div *ngIf="adminDashboardLoading && !adminPendingDocuments.length" class="admin-mini-state">Loading verification queue…</div>
+          <div *ngIf="!adminDashboardLoading && !adminPendingDocuments.length" class="admin-mini-state success-state"><span>✓</span><div><strong>Verification queue is clear</strong><small>No pending documents need review.</small></div></div>
+          <div class="admin-queue-list" *ngIf="adminPendingDocuments.length">
+            <a *ngFor="let document of adminPendingDocuments | slice:0:5" routerLink="/admin/provider-verification">
+              <span class="queue-avatar" aria-hidden="true">{{ (document.documentType || 'D').charAt(0) }}</span>
+              <span class="queue-copy"><strong>{{ document.documentType || 'Provider document' }}</strong><small>{{ document.originalFileName }} · {{ document.createdAt | date:'short' }}</small></span>
+              <app-badge tone="warning">{{ document.status || 'Pending' }}</app-badge>
+            </a>
+          </div>
+        </app-card>
+
+        <app-card class="admin-dashboard-panel">
+          <div class="admin-panel-head">
+            <div><span class="admin-panel-kicker">Marketplace</span><h3>Latest requested services</h3><p>Recent requests that are still at the top of the operational funnel.</p></div>
+            <a routerLink="/admin/operations">View oversight</a>
+          </div>
+          <div *ngIf="adminDashboardLoading && !adminLatestRequests.length" class="admin-mini-state">Loading request queue…</div>
+          <div *ngIf="!adminDashboardLoading && !adminLatestRequests.length" class="admin-mini-state">No requested services are waiting in this snapshot.</div>
+          <div class="admin-request-list" *ngIf="adminLatestRequests.length">
+            <a *ngFor="let request of adminLatestRequests" routerLink="/admin/operations">
+              <span class="request-main"><strong>{{ getProviderRequestService(request) || 'Service request' }}</strong><small>{{ request.customerName || request.customerUserId || 'Customer' }}<ng-container *ngIf="request.providerBusinessName"> · {{ request.providerBusinessName }}</ng-container></small></span>
+              <span class="request-time">{{ (request.requestedDate || request.createdAt) | date:'short' }}</span>
+              <app-badge [tone]="getRequestTone(request)">{{ request.status || 'Requested' }}</app-badge>
+            </a>
+          </div>
+        </app-card>
+      </div>
+
+      <aside class="admin-command-side">
+        <app-card class="admin-dashboard-panel priority-panel">
+          <div class="admin-panel-head compact"><div><span class="admin-panel-kicker">Support</span><h3>Priority feedback</h3></div><a routerLink="/admin/operations">Manage</a></div>
+          <div *ngIf="adminDashboardLoading && !adminPriorityFeedback.length" class="admin-mini-state">Loading feedback…</div>
+          <div *ngIf="!adminDashboardLoading && !adminPriorityFeedback.length" class="admin-mini-state success-state"><span>✓</span><div><strong>No open feedback</strong><small>The queue is currently clear.</small></div></div>
+          <div class="priority-list" *ngIf="adminPriorityFeedback.length">
+            <a *ngFor="let item of adminPriorityFeedback" routerLink="/admin/operations">
+              <span><strong>{{ item.subject }}</strong><small>{{ item.category }} · {{ item.createdAt | date:'shortDate' }}</small></span>
+              <app-badge [tone]="adminFeedbackTone(item.priority)">{{ item.priority }}</app-badge>
+            </a>
+          </div>
+        </app-card>
+
+        <app-card class="admin-dashboard-panel admin-shortcuts-panel">
+          <div class="admin-panel-head compact"><div><span class="admin-panel-kicker">Management</span><h3>Admin modules</h3></div></div>
+          <nav class="admin-shortcut-grid" aria-label="Admin modules">
+            <a routerLink="/admin/users"><span aria-hidden="true">01</span><strong>Users</strong><small>Accounts & access</small></a>
+            <a routerLink="/admin/pets"><span aria-hidden="true">02</span><strong>Pets</strong><small>Registry & details</small></a>
+            <a routerLink="/admin/taxonomy"><span aria-hidden="true">03</span><strong>Taxonomy</strong><small>Species & breeds</small></a>
+            <a routerLink="/admin/geography"><span aria-hidden="true">04</span><strong>Geography</strong><small>Areas & postcodes</small></a>
+            <a routerLink="/admin/service-catalog"><span aria-hidden="true">05</span><strong>Services</strong><small>Marketplace catalog</small></a>
+            <a routerLink="/admin/reminder-templates"><span aria-hidden="true">06</span><strong>Templates</strong><small>Reminder rules</small></a>
+          </nav>
+        </app-card>
+      </aside>
+    </div>
+  </ng-container>
+
+  <ng-template #roleDashboard>
   <ng-container *ngIf="isProvider; else customerDashboard">
     <header class="care-welcome provider-welcome">
       <div class="welcome-copy">
@@ -159,6 +279,7 @@
       </aside>
     </div>
   </ng-container>
+  </ng-template>
 
   <ng-template #customerDashboard>
   <header class="care-welcome">

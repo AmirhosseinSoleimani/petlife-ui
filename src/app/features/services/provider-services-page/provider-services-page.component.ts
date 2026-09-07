@@ -101,6 +101,32 @@ export class ProviderServicesPageComponent implements OnInit {
       }));
   }
 
+  get hasSearchFilters(): boolean {
+    return !!(
+      this.deliveryMode ||
+      this.suburbFilter.trim() ||
+      this.postcodeFilter.trim() ||
+      this.latitude !== null ||
+      this.longitude !== null ||
+      this.acceptingRequestsOnly ||
+      this.openNowOnly ||
+      this.afterHoursOnly
+    );
+  }
+
+  clearFilters(): void {
+    this.deliveryMode = '';
+    this.suburbFilter = '';
+    this.postcodeFilter = '';
+    this.radiusKm = 25;
+    this.latitude = null;
+    this.longitude = null;
+    this.acceptingRequestsOnly = false;
+    this.openNowOnly = false;
+    this.afterHoursOnly = false;
+    this.applyFilters();
+  }
+
   get visibleServices(): ProviderService[] {
     if (!this.providerId) {
       return this.services;

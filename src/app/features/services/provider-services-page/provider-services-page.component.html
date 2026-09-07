@@ -90,6 +90,7 @@
       <label class="filter-check"><input type="checkbox" [(ngModel)]="afterHoursOnly" [ngModelOptions]="{standalone:true}"> After-hours</label>
       <div class="filter-actions">
         <app-button type="button" variant="secondary" [loading]="isLocating" (buttonClick)="useMyLocation()">Use my location</app-button>
+        <app-button *ngIf="hasSearchFilters" type="button" variant="ghost" (buttonClick)="clearFilters()">Clear filters</app-button>
         <app-button type="button" (buttonClick)="applyFilters()">Apply filters</app-button>
       </div>
       <small *ngIf="latitude !== null && longitude !== null">Location enabled · {{ latitude | number:'1.2-2' }}, {{ longitude | number:'1.2-2' }}</small>
