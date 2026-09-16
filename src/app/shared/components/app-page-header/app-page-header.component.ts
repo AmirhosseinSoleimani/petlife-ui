@@ -11,4 +11,5 @@ export class AppPageHeaderComponent {
   @Input() description = '';
   @Input() backLink = '';
   @Input() backLabel = 'Back';
+  @Input() alignment: 'start' | 'center' = 'start';
 }

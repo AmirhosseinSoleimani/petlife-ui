@@ -1,0 +1,58 @@
+<section class="page transfer-page">
+  <app-page-header eyebrow="petTransfer.eyebrow" title="petTransfer.title" description="petTransfer.description"></app-page-header>
+
+  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
+  <app-loading-state *ngIf="isLoading" message="petTransfer.loading"></app-loading-state>
+
+  <div *ngIf="!isLoading" class="transfer-grid">
+    <app-card class="transfer-card">
+      <div class="card-heading">
+        <span class="step-badge">1</span>
+        <div><h2>{{ 'petTransfer.receiveTitle' | translate }}</h2><p>{{ 'petTransfer.receiveDescription' | translate }}</p></div>
+      </div>
+      <app-input name="expiryMinutes" label="petTransfer.expiryMinutes" helper="petTransfer.expiryHelp" type="number" min="5" max="1440" [(ngModel)]="expiryMinutes"></app-input>
+      <app-button type="button" [loading]="isCreating" [disabled]="!isExpiryValid" (buttonClick)="createToken()">{{ 'petTransfer.createCode' | translate }}</app-button>
+
+      <div *ngIf="createdToken" class="created-code">
+        <small>{{ 'petTransfer.oneTimeNotice' | translate }}</small>
+        <strong dir="ltr">{{ createdToken.transferCode }}</strong>
+        <div><span>{{ 'petTransfer.expires' | translate }} {{ createdToken.expiresAt | date:'short' }}</span><button type="button" (click)="copyCode()">{{ 'petTransfer.copy' | translate }}</button></div>
+      </div>
+
+      <div class="token-list" *ngIf="tokens.length">
+        <h3>{{ 'petTransfer.myCodes' | translate }}</h3>
+        <article *ngFor="let token of tokens">
+          <div><strong>{{ tokenStatusKey(token) | translate }}</strong><small>{{ token.createdAt | date:'short' }} · {{ 'petTransfer.expires' | translate }} {{ token.expiresAt | date:'short' }}</small></div>
+          <app-button *ngIf="!token.isUsed && !token.isRevoked && !token.isExpired" type="button" variant="ghost" (buttonClick)="revokeToken(token)">{{ 'petTransfer.revoke' | translate }}</app-button>
+        </article>
+      </div>
+    </app-card>
+
+    <app-card class="transfer-card">
+      <div class="card-heading">
+        <span class="step-badge">2</span>
+        <div><h2>{{ 'petTransfer.sendTitle' | translate }}</h2><p>{{ 'petTransfer.sendDescription' | translate }}</p></div>
+      </div>
+      <app-input name="petId" label="petTransfer.pet" type="select" placeholder="petTransfer.selectPet" [placeholderValue]="null" [options]="petOptions" [(ngModel)]="selectedPetId"></app-input>
+      <app-input name="transferCode" label="petTransfer.code" placeholder="petTransfer.codePlaceholder" [ngModel]="transferCode" (ngModelChange)="onCodeChanged($event)"></app-input>
+      <app-button type="button" variant="secondary" [loading]="isPreviewing" [disabled]="!transferCode.trim()" (buttonClick)="previewRecipient()">{{ 'petTransfer.previewRecipient' | translate }}</app-button>
+
+      <div *ngIf="preview" class="recipient-preview">
+        <span>✓</span>
+        <div><small>{{ 'petTransfer.recipient' | translate }}</small><strong>{{ preview.recipientDisplayName }}</strong><p>{{ 'petTransfer.codeValidUntil' | translate }} {{ preview.expiresAt | date:'short' }}</p></div>
+      </div>
+
+      <div class="transfer-warning" *ngIf="preview">
+        <strong>{{ 'petTransfer.warningTitle' | translate }}</strong>
+        <p>{{ 'petTransfer.warningText' | translate }}</p>
+      </div>
+      <app-button type="button" [loading]="isTransferring" [disabled]="!canTransfer" (buttonClick)="transferPet()">{{ 'petTransfer.confirmTransfer' | translate }}</app-button>
+
+      <div *ngIf="result" class="transfer-result">
+        <strong>{{ 'petTransfer.completed' | translate }}</strong>
+        <p>{{ result.petName }} → {{ result.toDisplayName }}</p>
+      </div>
+    </app-card>
+  </div>
+</section>

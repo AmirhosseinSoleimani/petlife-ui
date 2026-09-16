@@ -37,7 +37,7 @@ export class PetsPageComponent implements OnInit {
   readonly genderOptions = PET_GENDER_OPTIONS;
   readonly desexedOptions = ['Unknown', 'Not desexed', 'Desexed'];
   readonly reproductiveOptions = ['Unknown', 'Intact', 'Pregnant', 'Breeding', 'Not applicable'];
-  readonly profileImageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+  readonly profileImageExtensions = ['.jpg', '.jpeg', '.jfif', '.png', '.webp'];
   readonly profileImageContentTypes = ['image/jpeg', 'image/png', 'image/webp'];
   readonly profileImageMaxSize = 5 * 1024 * 1024;
 

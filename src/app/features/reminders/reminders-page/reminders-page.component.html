@@ -14,8 +14,8 @@
       <button type="button" *ngFor="let item of buckets" [class.active]="bucket === item" (click)="selectBucket(item)">{{ ('reminders.bucket.' + item) | translate }}</button>
     </div>
     <div class="filters">
-      <app-input name="petFilter" label="reminders.petLabel" type="select" [options]="filterPetOptions" [(ngModel)]="petFilter"></app-input>
-      <app-input name="typeFilter" label="reminders.typeLabel" type="select" [options]="typeFilterOptions" [(ngModel)]="typeFilter"></app-input>
+      <app-input class="filter-select" name="petFilter" label="reminders.petLabel" type="select" [options]="filterPetOptions" [(ngModel)]="petFilter"></app-input>
+      <app-input class="filter-select" name="typeFilter" label="reminders.typeLabel" type="select" [options]="typeFilterOptions" [(ngModel)]="typeFilter"></app-input>
       <app-button type="button" variant="secondary" (buttonClick)="loadReminders()">{{ 'common.apply' | translate }}</app-button>
     </div>
     <div class="bulk" *ngIf="hasSelection">
@@ -34,15 +34,22 @@
   </section>
 
   <div class="reminder-list" *ngIf="!isLoading && reminders.length">
-    <app-card class="reminder-card" *ngFor="let reminder of reminders">
+    <app-card
+      class="reminder-card"
+      *ngFor="let reminder of reminders"
+      [class.is-done]="(reminder.computedState || '').toLowerCase() === 'done'">
       <label class="selector" *ngIf="(reminder.computedState || '').toLowerCase() !== 'done'">
         <input type="checkbox" [checked]="isSelected(reminder.id)" (change)="toggleSelection(reminder.id, $any($event.target).checked)" [attr.aria-label]="'reminders.selectReminder' | translate" />
       </label>
       <div class="reminder-date"><strong>{{ (reminder.snoozeUntil || reminder.dueDate) | date:'d' }}</strong><small>{{ (reminder.snoozeUntil || reminder.dueDate) | date:'MMM' }}</small></div>
       <div class="reminder-copy">
         <div class="reminder-title">
-          <div><h3>{{ reminder.title }}</h3><p>{{ getPetName(reminder) || ('reminders.unknownPet' | translate) }} · {{ (reminder.reminderType || 'Other') | translate }}</p></div>
-          <app-badge [tone]="tone(reminder)">{{ ('reminders.bucket.' + (reminder.computedState || 'Upcoming').toLowerCase()) | translate }}</app-badge>
+          <div class="reminder-heading-copy">
+            <h3>{{ reminder.title }}</h3>
+            <p class="reminder-summary">{{ getPetName(reminder) || ('reminders.unknownPet' | translate) }} · {{ (reminder.reminderType || 'Other') | translate }}</p>
+          </div>
+          <span class="done-badge" *ngIf="(reminder.computedState || '').toLowerCase() === 'done'">{{ 'reminders.bucket.done' | translate }}</span>
+          <app-badge *ngIf="(reminder.computedState || '').toLowerCase() !== 'done'" [tone]="tone(reminder)">{{ ('reminders.bucket.' + (reminder.computedState || 'Upcoming').toLowerCase()) | translate }}</app-badge>
         </div>
         <p *ngIf="reminder.description" class="notes">{{ reminder.description }}</p>
         <div class="metadata">

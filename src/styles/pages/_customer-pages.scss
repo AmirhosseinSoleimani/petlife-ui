@@ -45,35 +45,6 @@ app-reminders-page {
   .drawer-actions { position: sticky; inset-block-end: -24px; z-index: 2; display: flex; justify-content: flex-end; gap: 10px; margin: 8px -24px -24px; padding: 16px 24px; border-top: 1px solid var(--color-border); background: rgba(255,255,255,.96); }
 }
 
-app-emergency-vets-page {
-  .emergency-page { display: grid; gap: 18px; }
-  .emergency-alert { display: flex; align-items: center; gap: 14px; padding: 17px 20px; border: 1px solid rgba(198,76,76,.22); border-radius: var(--radius-lg); color: #923d3d; background: var(--color-danger-soft); }
-  .alert-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; color: #fff; background: var(--color-danger); font-size: 22px; font-weight: 900; }
-  .emergency-alert p { margin: 2px 0 0; font-size: var(--font-size-caption); }
-  .clinic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .clinic-card { min-width: 0; display: flex; flex-direction: column; gap: 15px; }
-  .clinic-heading, .detail-identity { min-width: 0; display: flex; align-items: center; gap: 12px; }
-  .clinic-avatar, .provider-avatar { width: 48px; height: 48px; display: grid; place-items: center; flex: 0 0 auto; border-radius: var(--radius-md); color: var(--color-danger); background: var(--color-danger-soft); }
-  .clinic-avatar svg, .provider-avatar svg { width: 23px; fill: currentColor; }
-  .clinic-heading > div, .detail-identity > div { min-width: 0; }
-  .clinic-heading h3, .detail-identity h3 { margin: 0; overflow-wrap: anywhere; }
-  .clinic-heading p, .detail-identity p { margin: 3px 0 0; color: var(--color-muted); font-size: var(--font-size-caption); }
-  .clinic-badges, .provider-badges, .category-row { display: flex; flex-wrap: wrap; gap: 7px; }
-  .clinic-contact { display: grid; gap: 7px; }
-  .clinic-contact p { min-width: 0; display: grid; gap: 1px; margin: 0; }
-  .clinic-contact span { color: var(--color-muted); font-size: 11px; font-weight: 800; }
-  .clinic-contact strong { overflow-wrap: anywhere; font-size: var(--font-size-caption); }
-  .clinic-actions, .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--color-border); }
-  .clinic-actions a, .clinic-actions button, .detail-actions a { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-surface-soft); font: inherit; font-size: var(--font-size-caption); font-weight: 800; cursor: pointer; }
-  .clinic-actions .call-action, .detail-actions .call-action { border-color: var(--color-danger); color: #fff; background: var(--color-danger); }
-  .clinic-detail, .provider-detail { display: grid; gap: 20px; }
-  .detail-list { display: grid; gap: 0; margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
-  .detail-list > div { padding: 13px 15px; border-top: 1px solid var(--color-border); }
-  .detail-list > div:first-child { border-top: 0; }
-  .detail-list dt { color: var(--color-muted); font-size: 11px; font-weight: 800; }
-  .detail-list dd { margin: 3px 0 0; overflow-wrap: anywhere; }
-  .emergency-instruction { padding: 14px; border-radius: var(--radius-md); color: var(--color-warning); background: var(--color-warning-soft); line-height: 1.55; }
-}
 
 app-providers-page {
   .providers-page { display: grid; gap: 18px; }
@@ -247,4 +218,20 @@ app-create-service-request {
     .selection-confirmation { align-items: flex-start; flex-wrap: wrap; }
     .selection-price { width: 100%; padding-inline-start: 53px; }
   }
+}
+
+/* Filter sizing and actions normalized across directory/discovery pages. */
+.filter-toolbar {
+  padding: 15px 16px;
+  border-radius: 16px;
+}
+.filter-toolbar .filter-fields { flex-wrap: wrap; gap: 9px; }
+.filter-toolbar .filter-fields app-input { min-width: 170px; max-width: 260px; }
+.filter-toolbar .filter-fields app-button { flex: 0 0 auto; }
+app-reminders-page .center-toolbar .reminder-filters { align-items: flex-end; }
+app-reminders-page .center-toolbar .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+app-provider-services-page .discovery-filters .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 720px) {
+  .filter-toolbar .filter-fields app-input { max-width: none; }
+  .filter-toolbar .filter-fields app-button { width: 100%; }
 }

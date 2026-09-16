@@ -1,0 +1,91 @@
+.global-error-notice {
+  position: fixed;
+  z-index: 10070;
+  inset-inline-end: 24px;
+  inset-block-start: 24px;
+  width: min(430px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevated);
+  color: var(--color-text);
+}
+.global-error-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--color-danger) 14%, transparent); color: var(--color-danger); font-weight: 900; }
+.global-error-copy { min-width: 0; display: grid; gap: 3px; line-height: 1.45; }
+.global-error-copy strong { color: var(--color-danger); }
+.global-error-copy span { overflow-wrap: anywhere; }
+.global-error-copy small { color: var(--color-muted); direction: ltr; text-align: start; }
+.global-error-close { border: 0; background: transparent; color: var(--color-muted); font-size: 22px; line-height: 1; cursor: pointer; }
+
+.global-upload-progress {
+  position: fixed;
+  z-index: 10050;
+  inset-inline-end: 24px;
+  inset-block-end: 24px;
+  width: min(380px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevated);
+  color: var(--color-text);
+}
+
+.upload-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.upload-progress-copy > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.upload-progress-copy small {
+  color: var(--color-muted);
+  font-size: var(--font-size-caption);
+}
+
+.upload-progress-track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.upload-progress-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  transition: width 180ms ease;
+}
+
+.global-upload-progress.complete .upload-progress-track span {
+  background: var(--color-success);
+}
+
+.global-upload-progress.failed .upload-progress-track span {
+  background: var(--color-danger);
+}
+
+@media (max-width: 560px) {
+  .global-error-notice { inset-inline: 16px; inset-block-start: 16px; width: auto; }
+  .global-upload-progress {
+    inset-inline: 16px;
+    inset-block-end: 16px;
+    width: auto;
+  }
+}

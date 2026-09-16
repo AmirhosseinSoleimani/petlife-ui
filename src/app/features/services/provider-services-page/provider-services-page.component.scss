@@ -57,7 +57,7 @@
 }
 
 .pet-step {
-  align-items: end;
+  align-items: flex-end;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, .55fr);
 }
 
@@ -222,3 +222,6 @@
     min-height: 7.5rem;
   }
 }
+
+.managed-discovery-filters app-geography-selector { min-width: min(360px, 100%); }
+@media (max-width: 760px) { .managed-discovery-filters app-geography-selector { min-width: 0; width: 100%; } }

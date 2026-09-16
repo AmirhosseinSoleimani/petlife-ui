@@ -6,7 +6,7 @@
 .muted { opacity: .65; }
 .metric, .medication { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; align-items: baseline; padding-block: .5rem; border-top: 1px solid var(--border-color, #e6e8ec); }
 .metric small, .medication small { grid-column: 1 / -1; opacity: .6; }
-.filters { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.2fr auto; gap: .8rem; align-items: end; }
+.filters { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.2fr auto; gap: .8rem; align-items: flex-end; }
 .filter-actions { display: flex; gap: .5rem; padding-bottom: .1rem; }
 .timeline { position: relative; display: grid; gap: 1rem; padding-inline-start: 1.6rem; }
 .timeline::before { content: ''; position: absolute; inset-block: .6rem; inset-inline-start: .45rem; width: 2px; background: var(--border-color, #e2e5e9); }

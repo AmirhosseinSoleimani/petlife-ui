@@ -1,4 +1,4 @@
-<header class="page-head">
+<header class="page-head" [class.centered]="alignment === 'center'">
   <div>
     <a *ngIf="backLink" [routerLink]="backLink">{{ backLabel | translate }}</a>
     <p *ngIf="eyebrow" class="eyebrow">{{ eyebrow | translate }}</p>

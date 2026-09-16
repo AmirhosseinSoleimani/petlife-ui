@@ -1,16 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { GeographyArea, ServiceArea, ServiceAreaPayload } from '../../../core/models/marketplace.models';
-import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 
 const emptyAreaForm: ServiceAreaPayload = {
   geographyAreaId: null,
-  suburb: '',
-  state: '',
-  postcode: '',
-  radiusKm: 10,
   isActive: true
 };
 
@@ -21,8 +17,8 @@ const emptyAreaForm: ServiceAreaPayload = {
 })
 export class ProviderServiceAreasComponent implements OnInit {
   areas: ServiceArea[] = [];
-  geographies: GeographyArea[] = [];
   form: ServiceAreaPayload = { ...emptyAreaForm };
+  selectedGeography: GeographyArea | null = null;
   isEditorOpen = false;
   isLoading = false;
   isSaving = false;
@@ -32,31 +28,23 @@ export class ProviderServiceAreasComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
-    this.loadGeographies();
     this.loadAreas();
   }
 
-  get geographyOptions(): AppInputOption[] {
-    return this.geographies.map((area) => ({
-      label: `${area.suburb} — ${area.postcode} — ${area.city}`,
-      value: area.id
-    }));
+  get selectedGeographyIds(): string[] {
+    return this.areas
+      .map((area) => area.geographyAreaId)
+      .filter((id): id is string => !!id);
   }
 
-  loadGeographies(): void {
-    this.apiService.get<ApiResponse<GeographyArea[]>>('/geography').subscribe({
-      next: (response) => this.geographies = response.data || [],
-      error: () => this.geographies = []
-    });
+  get canAddArea(): boolean {
+    return !!this.form.geographyAreaId && !this.isSaving;
   }
 
-  selectGeography(areaId: string | null): void {
-    this.form.geographyAreaId = areaId || null;
-    const area = this.geographies.find((item) => item.id === areaId);
-    if (!area) return;
-    this.form.suburb = area.suburb;
-    this.form.state = area.state;
-    this.form.postcode = area.postcode;
+  onGeographySelected(area: GeographyArea | null): void {
+    this.selectedGeography = area;
+    this.form.geographyAreaId = area?.id || null;
+    this.errorMessage = '';
   }
 
   loadAreas(): void {
@@ -68,28 +56,38 @@ export class ProviderServiceAreasComponent implements OnInit {
         this.areas = response.data || [];
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'providerAreas.loadError';
+      error: (error) => {
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.loadError');
         this.isLoading = false;
       }
     });
   }
 
   addArea(): void {
+    if (!this.form.geographyAreaId) {
+      this.errorMessage = 'providerAreas.managedRequired';
+      return;
+    }
+
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.apiService.post<ApiResponse<ServiceArea>>('/service-areas', this.toPayload()).subscribe({
+    const payload: ServiceAreaPayload = {
+      geographyAreaId: this.form.geographyAreaId,
+      isActive: !!this.form.isActive
+    };
+
+    this.apiService.post<ApiResponse<ServiceArea>>('/service-areas', payload).subscribe({
       next: () => {
         this.successMessage = 'providerAreas.addSuccess';
-        this.form = { ...emptyAreaForm };
+        this.resetEditor();
         this.isEditorOpen = false;
-        this.loadGeographies();
-    this.loadAreas();
+        this.loadAreas();
       },
-      error: () => {
-        this.errorMessage = 'providerAreas.addError';
+      error: (error) => {
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.addError');
+        this.isSaving = false;
       },
       complete: () => {
         this.isSaving = false;
@@ -104,36 +102,36 @@ export class ProviderServiceAreasComponent implements OnInit {
     this.apiService.delete<ApiResponse<unknown>>(`/service-areas/${area.id}`).subscribe({
       next: () => {
         this.successMessage = 'providerAreas.removeSuccess';
-        this.loadGeographies();
-    this.loadAreas();
+        this.loadAreas();
       },
-      error: () => {
-        this.errorMessage = 'providerAreas.removeError';
+      error: (error) => {
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.removeError');
       }
     });
   }
 
   openEditor(): void {
-    this.form = { ...emptyAreaForm };
+    this.resetEditor();
     this.errorMessage = '';
     this.successMessage = '';
     this.isEditorOpen = true;
   }
 
   closeEditor(): void {
-    if (this.isSaving) {
-      return;
-    }
-
-    this.form = { ...emptyAreaForm };
+    if (this.isSaving) return;
+    this.resetEditor();
     this.isEditorOpen = false;
   }
 
-  private toPayload(): ServiceAreaPayload {
-    return {
-      ...this.form,
-      radiusKm: this.form.radiusKm === null ? 0 : Number(this.form.radiusKm),
-      isActive: !!this.form.isActive
-    };
+  areaDisplayName(area: ServiceArea): string {
+    return [area.suburb, area.city, area.state, area.country]
+      .filter(Boolean)
+      .join(', ') || 'Managed service area';
   }
+
+  private resetEditor(): void {
+    this.form = { ...emptyAreaForm };
+    this.selectedGeography = null;
+  }
+
 }

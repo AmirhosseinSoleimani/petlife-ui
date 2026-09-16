@@ -9,7 +9,16 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { AuthUser } from '../../core/models/auth.models';
 import { HealthRecord, Pet, Reminder } from '../../core/models/customer-core.models';
-import { Provider, ProviderService, ServiceArea, ServiceRequest } from '../../core/models/marketplace.models';
+import {
+  AdminKpi,
+  AdminRequestOversight,
+  FeedbackReport,
+  Provider,
+  ProviderDocument,
+  ProviderService,
+  ServiceArea,
+  ServiceRequest
+} from '../../core/models/marketplace.models';
 import {
   CUSTOMER_QUICK_ACTIONS,
   PROVIDER_QUICK_ACTIONS,
@@ -32,6 +41,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   providerServices: ProviderService[] = [];
   serviceAreas: ServiceArea[] = [];
   providerRequests: ServiceRequest[] = [];
+  adminKpi: AdminKpi | null = null;
+  adminPendingDocuments: ProviderDocument[] = [];
+  adminOpenFeedback: FeedbackReport[] = [];
+  adminRequests: ServiceRequest[] = [];
+  adminDashboardLoading = false;
+  adminDashboardLoadFailed = false;
   isLoadingPets = false;
   isLoadingReminders = false;
   isLoadingHealth = false;
@@ -60,6 +75,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (this.isAdmin) {
+      this.loadAdminDashboard();
+      return;
+    }
+
     this.preferencesSubscription = this.preferencesService.preferences$.subscribe((preferences) => {
       const definitions = this.isProvider ? PROVIDER_QUICK_ACTIONS : CUSTOMER_QUICK_ACTIONS;
       const selected = new Set(preferences.quickActions);
@@ -83,6 +103,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get isProvider(): boolean {
     return (this.currentUser?.role || '').toLowerCase().includes('provider');
+  }
+
+  get isAdmin(): boolean {
+    return (this.currentUser?.role || '').toLowerCase() === 'admin';
   }
 
   get displayName(): string {
@@ -138,6 +162,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
       || this.isLoadingProviderServices
       || this.isLoadingServiceAreas
       || this.isLoadingProviderRequests;
+  }
+
+  get adminPriorityFeedback(): FeedbackReport[] {
+    const priorityWeight: Record<string, number> = { critical: 4, high: 3, normal: 2, low: 1 };
+    return [...this.adminOpenFeedback]
+      .sort((a, b) => {
+        const priorityDifference = (priorityWeight[(b.priority || '').toLowerCase()] || 0) - (priorityWeight[(a.priority || '').toLowerCase()] || 0);
+        return priorityDifference || this.dateValue(b.createdAt) - this.dateValue(a.createdAt);
+      })
+      .slice(0, 4);
+  }
+
+  get adminLatestRequests(): ServiceRequest[] {
+    return [...this.adminRequests]
+      .sort((a, b) => this.dateValue(b.requestedDate || b.createdAt) - this.dateValue(a.requestedDate || a.createdAt))
+      .slice(0, 4);
+  }
+
+  adminFeedbackTone(priority: string): 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
+    switch ((priority || '').toLowerCase()) {
+      case 'critical': return 'danger';
+      case 'high': return 'warning';
+      case 'normal': return 'info';
+      default: return 'neutral';
+    }
   }
 
   get upcomingCare(): Reminder[] {
@@ -216,6 +265,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   profileImageSource(pet: Pet): string | null {
     return this.apiService.resolvePublicUrl(pet.profileImageUrl);
+  }
+
+  loadAdminDashboard(): void {
+    this.adminDashboardLoading = true;
+    this.adminDashboardLoadFailed = false;
+
+    const kpiRequest = this.apiService.get<ApiResponse<AdminKpi | null>>('/admin/kpi').pipe(
+      catchError(() => {
+        this.adminDashboardLoadFailed = true;
+        return of({ success: false, message: '', data: null } as ApiResponse<AdminKpi | null>);
+      })
+    );
+    const verificationRequest = this.apiService.get<ApiResponse<ProviderDocument[]>>('/admin/provider-verification/documents?status=Pending').pipe(
+      catchError(() => {
+        this.adminDashboardLoadFailed = true;
+        return of({ success: false, message: '', data: [] } as ApiResponse<ProviderDocument[]>);
+      })
+    );
+    const feedbackRequest = this.apiService.get<ApiResponse<FeedbackReport[]>>('/admin/feedback?status=Open').pipe(
+      catchError(() => {
+        this.adminDashboardLoadFailed = true;
+        return of({ success: false, message: '', data: [] } as ApiResponse<FeedbackReport[]>);
+      })
+    );
+    const requestQueue = this.apiService.get<ApiResponse<AdminRequestOversight>>('/admin/request-oversight?status=Requested').pipe(
+      catchError(() => {
+        this.adminDashboardLoadFailed = true;
+        return of({
+          success: false,
+          message: '',
+          data: { items: [], page: 1, pageSize: 0, totalCount: 0 }
+        } as ApiResponse<AdminRequestOversight>);
+      })
+    );
+
+    forkJoin({ kpi: kpiRequest, verification: verificationRequest, feedback: feedbackRequest, requests: requestQueue }).subscribe(({ kpi, verification, feedback, requests }) => {
+      this.adminKpi = kpi.data || null;
+      this.adminPendingDocuments = verification.data || [];
+      this.adminOpenFeedback = feedback.data || [];
+      this.adminRequests = requests.data?.items || [];
+      this.adminDashboardLoading = false;
+    });
   }
 
   private loadProviderDashboard(): void {

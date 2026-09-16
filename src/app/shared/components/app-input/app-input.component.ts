@@ -26,6 +26,7 @@ export class AppInputComponent implements ControlValueAccessor {
   @Input() placeholder = '';
   @Input() required: boolean | string = false;
   @Input() min: string | number | null = null;
+  @Input() max: string | number | null = null;
   @Input() step: string | number | null = null;
   @Input() placeholderValue: string | number | boolean | null = '';
   @Input() rows = 3;

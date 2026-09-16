@@ -1,30 +1,60 @@
-<section class="page admin-page">
+<section class="page admin-page admin-users-page">
   <app-page-header
+    alignment="center"
+    eyebrow="Administration"
     title="Admin · Users"
     description="Search users, review operational account metadata, and auditably suspend or activate accounts."
   ></app-page-header>
 
-  <div class="filters">
-    <input [(ngModel)]="search" (keyup.enter)="load(true)" [placeholder]="'Search name, email or mobile' | translate" />
-    <select [(ngModel)]="role">
+  <div class="filters users-filters" aria-label="User filters">
+    <div class="users-search-control">
+      <input
+        [(ngModel)]="search"
+        (keyup.enter)="load(true)"
+        [placeholder]="'Search name, email or mobile' | translate"
+        [attr.aria-label]="'Search name, email or mobile' | translate"
+      />
+      <button
+        *ngIf="hasFilters"
+        type="button"
+        class="clear-filter-icon"
+        [attr.aria-label]="'Clear filters' | translate"
+        [attr.title]="'Clear filters' | translate"
+        (click)="clearFilters()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <select [(ngModel)]="role" aria-label="Role">
       <option value="">{{ 'All roles' | translate }}</option>
-      <option value="Customer">{{ 'Customer' | translate }}</option><option value="Provider">{{ 'Provider' | translate }}</option><option value="Admin">{{ 'Admin' | translate }}</option>
+      <option value="Customer">{{ 'Customer' | translate }}</option>
+      <option value="Provider">{{ 'Provider' | translate }}</option>
+      <option value="Admin">{{ 'Admin' | translate }}</option>
     </select>
-    <select [(ngModel)]="status">
+
+    <select [(ngModel)]="status" aria-label="Status">
       <option value="">{{ 'All statuses' | translate }}</option>
-      <option value="Active">{{ 'Active' | translate }}</option><option value="Suspended">{{ 'Suspended' | translate }}</option><option value="Pending">{{ 'Pending' | translate }}</option>
+      <option value="Active">{{ 'Active' | translate }}</option>
+      <option value="Suspended">{{ 'Suspended' | translate }}</option>
+      <option value="Pending">{{ 'Pending' | translate }}</option>
     </select>
-    <app-button type="button" (buttonClick)="load(true)">{{ 'Apply filters' | translate }}</app-button>
+
+    <div class="filter-actions">
+      <app-button type="button" (buttonClick)="load(true)">{{ 'Apply filters' | translate }}</app-button>
+    </div>
   </div>
 
-  <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+  <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'Loading users...' | translate }}</div>
 
-  <div class="table-wrap" *ngIf="!isLoading">
+  <div class="table-wrap users-table-wrap" *ngIf="!isLoading">
     <table>
       <thead>
         <tr>
-          <th>{{ 'User' | translate }}</th><th>{{ 'Role' | translate }}</th><th>{{ 'Status' | translate }}</th>
+          <th>{{ 'User' | translate }}</th><th>{{ 'Role' | translate }}</th><th class="status-header">{{ 'Status' | translate }}</th>
           <th>{{ 'Verification' | translate }}</th><th>{{ 'Location' | translate }}</th><th>{{ 'Pets' | translate }}</th>
           <th>{{ 'Last activity' | translate }}</th><th>{{ 'Actions' | translate }}</th>
         </tr>
@@ -36,15 +66,21 @@
             <small>{{ user.email || user.mobileNumber || '—' }}</small>
           </td>
           <td>{{ user.role | translate }}</td>
-          <td><app-badge [tone]="user.status === 'Active' ? 'success' : 'warning'">{{ user.status | translate }}</app-badge></td>
+          <td class="status-cell">
+            <span
+              class="user-status-pill"
+              [class.active]="user.status === 'Active'"
+              [class.non-active]="user.status !== 'Active'"
+            >{{ user.status | translate }}</span>
+          </td>
           <td><span title="Email">E {{ user.isEmailVerified ? '✓' : '–' }}</span> · <span title="Mobile">M {{ user.isMobileVerified ? '✓' : '–' }}</span></td>
           <td>{{ user.city || user.state || '—' }}</td>
           <td>{{ user.petCount }}</td>
           <td>{{ user.lastLoginAt ? (user.lastLoginAt | date:'medium') : ('Never' | translate) }}</td>
           <td class="row-actions">
             <app-button type="button" variant="secondary" (buttonClick)="viewUser(user)">{{ 'Details' | translate }}</app-button>
-            <app-button *ngIf="user.status !== 'Suspended'" type="button" variant="danger" [loading]="actionUserId === user.id" (buttonClick)="setStatus(user, 'Suspended')">{{ 'Suspend' | translate }}</app-button>
-            <app-button *ngIf="user.status === 'Suspended'" type="button" [loading]="actionUserId === user.id" (buttonClick)="setStatus(user, 'Active')">{{ 'Activate' | translate }}</app-button>
+            <app-button *ngIf="user.status !== 'Suspended'" type="button" variant="danger" [loading]="actionUserId === user.id" (buttonClick)="requestSuspend(user)">{{ 'Suspend' | translate }}</app-button>
+            <app-button *ngIf="user.status === 'Suspended'" type="button" [loading]="actionUserId === user.id" (buttonClick)="activate(user)">{{ 'Activate' | translate }}</app-button>
           </td>
         </tr>
       </tbody>
@@ -52,7 +88,7 @@
   </div>
 
   <div class="pager">
-    <span>{{ totalCount }} {{ 'users' | translate }}</span>
+    <span><strong>{{ totalCount }}</strong> {{ 'users' | translate }}</span>
     <div>
       <button type="button" [disabled]="page <= 1" (click)="previous()">{{ 'Previous' | translate }}</button>
       <span>{{ 'Page' | translate }} {{ page }} / {{ totalPages || 1 }}</span>
@@ -60,12 +96,7 @@
     </div>
   </div>
 
-  <app-modal
-    [open]="!!selectedUser"
-    title="User details"
-    description="Operational account data only"
-    (closed)="closeDetail()"
-  >
+  <app-modal [open]="!!selectedUser" title="User details" description="Operational account data only" (closed)="closeDetail()">
     <div *ngIf="isDetailLoading" class="state">{{ 'Loading...' | translate }}</div>
     <dl *ngIf="selectedUser && !isDetailLoading" class="detail-grid">
       <div><dt>{{ 'Name' | translate }}</dt><dd>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</dd></div>
@@ -81,5 +112,33 @@
       <div><dt>{{ 'Last activity' | translate }}</dt><dd>{{ selectedUser.lastLoginAt ? (selectedUser.lastLoginAt | date:'medium') : ('Never' | translate) }}</dd></div>
       <div><dt>{{ 'Created' | translate }}</dt><dd>{{ selectedUser.createdAt | date:'medium' }}</dd></div>
     </dl>
+  </app-modal>
+
+  <app-modal
+    [open]="!!suspendUser"
+    title="Suspend user account"
+    description="This is an administrative access action. Add a clear reason so the decision remains auditable."
+    [closeOnBackdrop]="!actionUserId"
+    (closed)="closeSuspendDialog()"
+  >
+    <div class="suspend-dialog" *ngIf="suspendUser">
+      <div class="suspend-user-summary">
+        <span aria-hidden="true">{{ (suspendUser.firstName || 'U').charAt(0) }}</span>
+        <div><strong>{{ suspendUser.firstName }} {{ suspendUser.lastName }}</strong><small>{{ suspendUser.email || suspendUser.mobileNumber || suspendUser.id }}</small></div>
+      </div>
+      <app-input
+        name="suspensionReason"
+        type="textarea"
+        label="Suspension reason"
+        placeholder="Explain why this account is being suspended"
+        [rows]="4"
+        [(ngModel)]="suspensionReason"
+      ></app-input>
+      <p class="suspend-hint">{{ 'The action will not be submitted until a reason is provided.' | translate }}</p>
+      <div class="dialog-actions">
+        <app-button type="button" variant="ghost" [disabled]="!!actionUserId" (buttonClick)="closeSuspendDialog()">{{ 'Cancel' | translate }}</app-button>
+        <app-button type="button" variant="danger" [disabled]="!suspensionReason.trim()" [loading]="actionUserId === suspendUser.id" (buttonClick)="confirmSuspend()">{{ 'Suspend account' | translate }}</app-button>
+      </div>
+    </div>
   </app-modal>
 </section>

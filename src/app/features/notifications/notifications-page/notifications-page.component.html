@@ -1,0 +1,41 @@
+<section class="page notifications-page">
+  <app-page-header eyebrow="notifications.eyebrow" title="notifications.title" description="notifications.description">
+    <div class="header-actions">
+      <app-button type="button" variant="secondary" (buttonClick)="toggleUnreadOnly()">
+        {{ (unreadOnly ? 'notifications.showAll' : 'notifications.unreadOnly') | translate }}
+      </app-button>
+      <app-button type="button" [loading]="isUpdating" [disabled]="!unreadCount" (buttonClick)="markAllRead()">
+        {{ 'notifications.markAllRead' | translate }}
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <app-loading-state *ngIf="isLoading" message="notifications.loading"></app-loading-state>
+
+  <div *ngIf="!isLoading && !notifications.length" class="state">
+    <h3>{{ 'notifications.emptyTitle' | translate }}</h3>
+    <p>{{ 'notifications.emptyDescription' | translate }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && notifications.length" class="notification-list">
+    <article *ngFor="let item of notifications" class="notification-card" [class.unread]="!item.isRead">
+      <span class="notification-icon" aria-hidden="true">{{ notificationIcon(item.type) }}</span>
+      <div class="notification-copy">
+        <div class="notification-heading">
+          <div>
+            <span class="notification-type">{{ localizedType(item) }}</span>
+            <h3>{{ localizedTitle(item) }}</h3>
+          </div>
+          <app-badge [tone]="item.isRead ? 'neutral' : 'info'">{{ (item.isRead ? 'notifications.read' : 'notifications.unread') | translate }}</app-badge>
+        </div>
+        <p>{{ localizedMessage(item) }}</p>
+        <small>{{ item.createdAt | date:'medium' }}</small>
+        <div class="notification-actions">
+          <app-button *ngIf="!item.isRead" type="button" variant="secondary" (buttonClick)="markRead(item)">{{ 'notifications.markRead' | translate }}</app-button>
+          <app-button *ngIf="item.actionPath" type="button" (buttonClick)="markRead(item, true)">{{ 'notifications.open' | translate }}</app-button>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>

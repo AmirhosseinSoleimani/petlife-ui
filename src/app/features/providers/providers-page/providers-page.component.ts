@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { Provider, ProviderMedia, ProviderService, TrustBadge } from '../../../core/models/marketplace.models';
+import { GeographyArea, Provider, ProviderMedia, ProviderService, TrustBadge } from '../../../core/models/marketplace.models';
 
 @Component({
   selector: 'app-providers-page',
@@ -14,8 +14,8 @@ export class ProvidersPageComponent implements OnInit {
   services: ProviderService[] = [];
   providerGallery: ProviderMedia[] = [];
   selectedProvider: Provider | null = null;
-  suburbFilter = '';
-  stateFilter = '';
+  selectedGeographyId: string | null = null;
+  selectedGeography: GeographyArea | null = null;
   isLoading = false;
   errorMessage = '';
   isDetailOpen = false;
@@ -26,12 +26,27 @@ export class ProvidersPageComponent implements OnInit {
     this.loadProviders();
   }
 
+  get hasFilters(): boolean {
+    return !!this.selectedGeographyId;
+  }
+
   get filteredProviders(): Provider[] {
-    return this.providers.filter((provider) => {
-      const suburbMatch = !this.suburbFilter || (provider.suburb || '').toLowerCase().includes(this.suburbFilter.toLowerCase());
-      const stateMatch = !this.stateFilter || (provider.state || '').toLowerCase().includes(this.stateFilter.toLowerCase());
-      return suburbMatch && stateMatch;
-    });
+    return this.providers;
+  }
+
+  onGeographySelected(area: GeographyArea | null): void {
+    this.selectedGeography = area;
+    this.selectedGeographyId = area?.id || null;
+  }
+
+  applyFilters(): void {
+    this.loadProviders();
+  }
+
+  clearFilters(): void {
+    this.selectedGeographyId = null;
+    this.selectedGeography = null;
+    this.loadProviders();
   }
 
   getProviderName(provider: Provider): string {
@@ -77,8 +92,11 @@ export class ProvidersPageComponent implements OnInit {
   loadProviders(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    const params = new URLSearchParams();
+    if (this.selectedGeographyId) params.set('geographyAreaId', this.selectedGeographyId);
+    const query = params.toString();
 
-    this.apiService.get<ApiResponse<Provider[]>>('/providers').subscribe({
+    this.apiService.get<ApiResponse<Provider[]>>(query ? `/providers?${query}` : '/providers').subscribe({
       next: (response) => {
         this.providers = response.data || [];
         this.loadProviderServices();
@@ -118,7 +136,10 @@ export class ProvidersPageComponent implements OnInit {
   }
 
   private loadProviderServices(): void {
-    this.apiService.get<ApiResponse<ProviderService[]>>('/provider-services').subscribe({
+    const params = new URLSearchParams();
+    if (this.selectedGeographyId) params.set('geographyAreaId', this.selectedGeographyId);
+    const query = params.toString();
+    this.apiService.get<ApiResponse<ProviderService[]>>(query ? `/provider-services?${query}` : '/provider-services').subscribe({
       next: (response) => this.services = response.data || [],
       error: () => this.services = []
     });

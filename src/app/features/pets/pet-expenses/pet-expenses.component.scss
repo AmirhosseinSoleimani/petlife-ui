@@ -1,6 +1,6 @@
 .expense-page { display: grid; gap: 1rem; }
 .report-panel { display: grid; gap: 1rem; }
-.report-controls { display: grid; grid-template-columns: repeat(3, minmax(130px, .5fr)) auto; gap: .75rem; align-items: end; }
+.report-controls { display: grid; grid-template-columns: repeat(3, minmax(130px, .5fr)) auto; gap: .75rem; align-items: flex-end; }
 .currency-totals { display: flex; gap: .75rem; flex-wrap: wrap; }
 .currency-totals div { display: grid; gap: .2rem; min-width: 9rem; padding: .8rem 1rem; border-radius: .75rem; background: rgba(64, 113, 244, .07); }
 .currency-note { margin: 0; opacity: .65; font-size: .9rem; }

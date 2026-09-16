@@ -1,2 +1,58 @@
-.admin-master-page { display: grid; gap: 1rem; }.split { display: grid; grid-template-columns: minmax(300px,.9fr) minmax(0,1.2fr); gap: 1rem; align-items:start; }.editor,.list { display:grid; gap:.8rem; }.editor { padding:1rem; border:1px solid #e5e7eb; border-radius:1rem; }.editor h3 { margin:0; }.two { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; } fieldset { display:grid; gap:.4rem; border:1px solid #e5e7eb; border-radius:.75rem; } fieldset p { margin:0; opacity:.65; font-size:.9rem; }.list app-card { display:grid; gap:.6rem; }.heading { display:flex; justify-content:space-between; gap:1rem; }.heading>div { display:grid; }.actions { display:flex; gap:.5rem; flex-wrap:wrap; }.error{color:#b42318}.success{color:#157347}@media(max-width:800px){.split,.two{grid-template-columns:1fr}}
-.search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.7rem;align-items:end}
+:host {
+  display: block;
+}
+
+:host .geography-search {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px;
+}
+
+:host .geography-search > app-input {
+  width: 100%;
+  min-width: 0;
+  grid-column: 1 / 2;
+}
+
+:host .geography-search > app-button {
+  grid-column: 2 / 3;
+  align-self: end;
+}
+
+.editor-hint {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-caption);
+  line-height: 1.55;
+}
+
+.geography-list app-card {
+  display: grid;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  :host .geography-search {
+    grid-template-columns: 1fr;
+  }
+
+  :host .geography-search > app-input,
+  :host .geography-search > app-button {
+    grid-column: 1;
+    width: 100%;
+  }
+}
+
+.lookup-state { margin: -2px 0 2px; color: var(--color-muted); font-size: 12px; }
+.postcode-matches { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+.postcode-matches > p { margin: 0 0 2px; color: var(--color-muted); font-size: 12px; }
+.postcode-matches button { display: flex; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-surface); color: var(--color-text); text-align: start; cursor: pointer; }
+.postcode-matches button:hover { border-color: var(--color-primary); }
+.postcode-matches small { color: var(--color-muted); }
