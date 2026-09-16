@@ -1,37 +1,84 @@
-# PetLifeAU Frontend Final Fix Pack
+# PetLifeAU Frontend — Backend Alignment 2026-09-16
 
-Baseline: `petlife-ui-enterprise-refactored.zip`
+## Backend baseline
 
-## UI fixes
-- Reminders toolbar no longer inherits the generic `.filters` surface. It now uses a dedicated `reminder-filters` container with 16px padding and stable responsive layout.
-- Added scoped `app-loading-state` with a subtle staggered paw-trail animation. It is used only in selected loading states and does not override global `.state` behavior.
-- Provider badges use larger readable text, stable line-height, nowrap, and consistent spacing.
-- Customer request detail/timeline is responsive on narrow widths and status words no longer split awkwardly.
-- Page message/error icon and text use flex layout with a real 10px gap instead of overlapping absolute positioning.
-- App bar proportions were rebalanced: compact inline title/badge, 42px language/settings controls, consistent user card sizing, and responsive layout.
+- Repository: `AmirhosseinSoleimani/petlifeau`
+- Branch: `backup-before-pkges`
+- HEAD reviewed: `18f6d24364b4797f926fc02771996729ca70fa41`
+- Includes parent business change: `f95696098dcf597880ff89b2d729599728d6349d`
 
-## Managed Geography business changes
-- Provider Service Areas no longer accept suburb/state/postcode/latitude/longitude/radius inputs.
-- Provider Service Areas use `GET /service-areas/options?search=...` via the shared managed geography selector.
-- `POST /service-areas` now sends only `geographyAreaId` and `isActive`.
-- Existing provider service areas display managed location snapshots as read-only information and do not render radius as meaningful coverage.
-- Previously selected geography IDs are removed from the provider add-area selector.
-- Customer provider search sends `geographyAreaId` to `/providers` instead of filtering the downloaded list locally.
-- Customer provider-service search sends `geographyAreaId` to `/provider-services` and recommendations.
-- Customer-location/Hybrid service requests collect AddressLine1 + managed geography and send `serviceGeographyAreaId`; manual suburb/state/postcode fields were removed from that flow.
-- Backend coverage validation messages are surfaced as business/form errors.
-- Provider Profile business address fields were intentionally left unchanged.
+## Backend contract/business alignment
 
-## Consent and pricing
-- Health summary consent automatically enables Pet Profile consent.
-- Turning Pet Profile consent off also turns Health Summary consent off.
-- Provider request detail hides contact/pet detail when consent was not granted.
-- Fixed and From pricing require a base price > 0 in UI and save validation.
-- Quote pricing sends no misleading numeric base price and displays Request Quote semantics.
+### Validation and error handling
+- `ApiResponse<T>` supports backend `fieldErrors`.
+- Validation errors are preserved per field and normalized centrally by the HTTP interceptor.
+- Dynamic Persian formatting translates known field names and common backend validation messages while keeping the exact offending field visible.
+- Existing consumers that still read `errors[]` continue to work.
 
-## Build/validation notes
-- TypeScript syntax/transpile diagnostics checked for all 73 TS source files.
-- All SCSS files passed brace-balance validation.
-- All Angular HTML templates passed structural tag-balance validation.
-- All i18n JSON files parse successfully.
-- A full Angular production build could not be executed in this environment because `npm ci` could not complete before the environment transport timeout. No successful build is claimed.
+### Sydney managed geography
+- Customer profile supports bidirectional Sydney lookup:
+  - `GET /geography/by-postcode/{postcode}`
+  - `GET /geography/by-suburb/{suburb}`
+- Single lookup matches auto-fill suburb/postcode/city/state/country; multiple matches are selectable.
+- Provider Service Areas use `GET /service-areas/options` and create only with `geographyAreaId + isActive`.
+- Provider discovery and provider-service discovery use managed `geographyAreaId` filters.
+- At-customer/Hybrid requests collect `serviceGeographyAreaId` instead of relying on manually entered suburb/state/postcode for coverage authorization.
+- Admin Geography follows the current City/Suburb/State/Postcode/Country contract and 4-digit postcode validation.
+
+### Pet ownership transfer
+New customer workflow added for:
+- create short-lived transfer code,
+- list current/used/revoked/expired transfer codes,
+- revoke active code,
+- preview recipient,
+- transfer a selected pet using `POST /pets/{petId}/transfer`.
+
+### In-app notifications
+New notification center added for:
+- list all/unread notifications,
+- unread count in the application header,
+- mark one notification read,
+- mark all read,
+- follow notification action paths.
+
+Pet-transfer notifications are presented with localized Persian copy when Persian is active.
+
+### Provider/customer marketplace changes
+- Provider request detail shows both email and mobile when contact consent allows them.
+- Health consent depends on Pet Profile consent in the request UI.
+- `Fixed` and `From` pricing require a positive base price before save.
+- Provider/service discovery UI no longer exposes obsolete manual radius/location controls where managed Geography is authoritative.
+
+### Upload alignment
+- JFIF added to supported image formats where backend accepts JPEG images.
+- Frontend size validation aligned with backend business limits:
+  - Pet profile image: 5 MB
+  - Provider gallery: 8 MB
+  - Health attachment: 10 MB
+  - Expense receipt: 10 MB
+  - Provider document: 12 MB
+
+## Localization and direction
+- Active languages intentionally limited to English (`en`) and Persian (`fa`).
+- `html[dir]` and `lang` switch with the selected language.
+- Persian renders RTL and English LTR.
+- Direction-sensitive input types such as email, tel, URL, numbers and dates remain readable.
+- All statically referenced translation keys are present in both `en.json` and `fa.json`.
+- Previously hard-coded Admin UI copy was moved into the translation layer.
+- Generated/fallback Persian strings were polished so ordinary UI copy does not remain mixed Persian/English; brand names and file-format acronyms are intentionally preserved.
+
+## Responsive UI
+- Shared responsive guards cover grids, forms, split layouts, filter bars, tables and action rows.
+- New Notifications and Pet Transfer screens collapse cleanly to one column on smaller screens.
+- Managed geography selectors and request/provider filtering layouts are mobile-safe.
+
+## Validation performed
+- TypeScript syntax/transpile validation: 76 source files, 0 syntax errors.
+- Angular HTML structural tag validation: 0 structural issues.
+- SCSS/CSS brace validation: 0 issues.
+- i18n JSON parsing: successful.
+- Static translation-key coverage: no missing EN/FA keys for detected template/component references.
+- Full `ng build` was attempted, but dependency installation (`npm ci`) could not finish within the execution environment transport limit; therefore no successful Angular production build is claimed.
+
+## Packaging
+The delivered ZIP is source-only. Partial `node_modules` and stale pre-existing `dist` output are excluded so the package cannot be mistaken for a verified production build.

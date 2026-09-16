@@ -134,10 +134,10 @@
         [rows]="4"
         [(ngModel)]="suspensionReason"
       ></app-input>
-      <p class="suspend-hint">The action will not be submitted until a reason is provided.</p>
+      <p class="suspend-hint">{{ 'The action will not be submitted until a reason is provided.' | translate }}</p>
       <div class="dialog-actions">
-        <app-button type="button" variant="ghost" [disabled]="!!actionUserId" (buttonClick)="closeSuspendDialog()">Cancel</app-button>
-        <app-button type="button" variant="danger" [disabled]="!suspensionReason.trim()" [loading]="actionUserId === suspendUser.id" (buttonClick)="confirmSuspend()">Suspend account</app-button>
+        <app-button type="button" variant="ghost" [disabled]="!!actionUserId" (buttonClick)="closeSuspendDialog()">{{ 'Cancel' | translate }}</app-button>
+        <app-button type="button" variant="danger" [disabled]="!suspensionReason.trim()" [loading]="actionUserId === suspendUser.id" (buttonClick)="confirmSuspend()">{{ 'Suspend account' | translate }}</app-button>
       </div>
     </div>
   </app-modal>

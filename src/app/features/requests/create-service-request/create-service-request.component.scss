@@ -88,3 +88,6 @@ address {
 .managed-location-preview div { min-width: 0; display: grid; gap: 2px; }
 .managed-location-preview strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .managed-location-preview small { color: var(--color-muted); }
+
+.managed-location-summary { display:grid; gap:4px; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-primary-soft); }
+.managed-location-summary strong { color:var(--color-primary-dark); }.managed-location-summary small { color:var(--color-muted); }

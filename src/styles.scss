@@ -968,3 +968,60 @@ app-shell .shell.admin-shell .role-badge.role-badge {
 }
 
 @import 'styles/enterprise';
+
+/* Locale direction and responsive safeguards. */
+html[dir='ltr'] body { direction: ltr; text-align: left; }
+html[dir='rtl'] body { direction: rtl; text-align: right; }
+html[dir='rtl'] input[type='email'],
+html[dir='rtl'] input[type='tel'],
+html[dir='rtl'] input[type='url'],
+html[dir='rtl'] input[type='number'],
+html[dir='rtl'] input[type='date'],
+html[dir='rtl'] input[type='time'] { direction: ltr; text-align: right; }
+html[dir='rtl'] code,
+html[dir='rtl'] pre,
+html[dir='rtl'] [dir='ltr'] { direction: ltr; text-align: left; }
+
+@media (max-width: 760px) {
+  .two,
+  .three,
+  .grid,
+  .form-grid,
+  .provider-form-grid,
+  .location-grid,
+  .summary-grid,
+  .filters,
+  .split {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-head,
+  .hero,
+  .topbar,
+  .actions,
+  .card-actions,
+  .provider-card-actions,
+  .header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .page,
+  .market-page,
+  .request-page,
+  .requests-page,
+  .provider-workspace,
+  .dashboard {
+    width: 100%;
+    overflow: hidden;
+  }
+}

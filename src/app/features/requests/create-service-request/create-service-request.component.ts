@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
@@ -201,8 +202,8 @@ export class CreateServiceRequestComponent implements OnInit {
 
     this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({
       next: () => this.router.navigate(['/service-requests/my']),
-      error: (error: { error?: { message?: string; errors?: string[] } }) => {
-        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'requestForm.compatibilityError';
+      error: (error) => {
+        this.errorMessage = apiErrorMessage(error, 'requestForm.compatibilityError');
         this.isSubmitting = false;
       }
     });

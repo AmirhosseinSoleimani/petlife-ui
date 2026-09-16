@@ -238,6 +238,18 @@ export class ProviderProfileComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const allowedExtensions = ['.jpg', '.jpeg', '.jfif', '.png', '.webp'];
+    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase() : '';
+    if (!allowedExtensions.includes(extension)) {
+      this.errorMessage = 'providerProfile.galleryTypeError';
+      input.value = '';
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.errorMessage = 'providerProfile.gallerySizeError';
+      input.value = '';
+      return;
+    }
     this.isUploadingMedia = true;
     this.errorMessage = '';
     this.apiService.uploadProviderGalleryImage<ApiResponse<ProviderMedia>>(file, this.galleryCaption, this.gallery.length).subscribe({

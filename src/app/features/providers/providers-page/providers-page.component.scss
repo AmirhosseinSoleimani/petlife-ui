@@ -39,3 +39,7 @@
 .provider-badges { gap: 8px; }
 @media (max-width: 760px) { .managed-provider-filter { width: 100%; grid-template-columns: 1fr; } .managed-filter-actions { justify-content: flex-end; } }
 @media (max-width: 480px) { .managed-filter-actions { display: grid; grid-template-columns: 1fr 1fr; } }
+
+.managed-provider-filter { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:10px; align-items:end; }
+.filter-actions { display:flex; gap:8px; align-items:center; }
+@media (max-width:720px) { .managed-provider-filter { grid-template-columns:1fr; } .filter-actions { width:100%; flex-wrap:wrap; } }

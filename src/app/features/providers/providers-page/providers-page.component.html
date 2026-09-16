@@ -3,7 +3,21 @@
 
   <section class="filter-toolbar provider-filters">
     <div class="filter-copy"><strong>{{ 'providers.findCare' | translate }}</strong><span>{{ filteredProviders.length }} {{ 'providers.results' | translate }}</span></div>
-    <div class="filter-fields"><app-input label="providers.suburbLabel" placeholder="providers.searchSuburb" [(ngModel)]="suburbFilter"></app-input><app-input label="providers.stateLabel" placeholder="providers.searchState" [(ngModel)]="stateFilter"></app-input></div>
+    <div class="filter-fields managed-provider-filter">
+      <app-geography-selector
+        endpoint="/geography"
+        label="providers.managedGeography"
+        placeholder="providers.searchManagedGeography"
+        helper="providers.managedGeographyHelp"
+        [selectedId]="selectedGeographyId"
+        (selectedIdChange)="selectedGeographyId = $event"
+        (selectedAreaChange)="onGeographySelected($event)"
+      ></app-geography-selector>
+      <div class="filter-actions">
+        <app-button type="button" (buttonClick)="applyFilters()">{{ 'common.apply' | translate }}</app-button>
+        <app-button *ngIf="hasFilters" type="button" variant="secondary" (buttonClick)="clearFilters()">{{ 'common.clear' | translate }}</app-button>
+      </div>
+    </div>
   </section>
 
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>

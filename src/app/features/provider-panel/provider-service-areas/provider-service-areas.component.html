@@ -28,9 +28,8 @@
     <app-card class="coverage-card" *ngFor="let area of areas">
       <div class="coverage-card-head"><div class="area-pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8.5A2.5 2.5 0 1 0 12 7a2.5 2.5 0 0 0 0 5.5Z"/></svg></div><app-badge [tone]="area.isActive === false ? 'neutral' : 'success'">{{ (area.isActive === false ? 'providerAreas.inactiveStatus' : 'providerAreas.activeStatus') | translate }}</app-badge></div>
       <div><p>{{ 'providerAreas.serviceArea' | translate }}</p><h3>{{ area.suburb || ('providerAreas.areaFallback' | translate) }}</h3><small *ngIf="area.city">{{ area.city }}</small></div>
-      <div class="area-tags"><span *ngIf="area.state">{{ area.state }}</span><span *ngIf="area.postcode">{{ area.postcode }}</span></div>
-      <div class="radius-row"><span>{{ 'providerAreas.radius' | translate }}</span><strong>{{ area.radiusKm || 0 }} {{ 'providerAreas.km' | translate }}</strong></div>
-      <div class="radius-visual" aria-hidden="true"><span></span></div>
+      <div class="area-tags"><span *ngIf="area.state">{{ area.state }}</span><span *ngIf="area.city">{{ area.city }}</span></div>
+      <div class="managed-row"><span>{{ 'providerAreas.managedCoverage' | translate }}</span><strong>{{ 'providerAreas.exactGeography' | translate }}</strong></div>
       <div class="provider-card-actions"><app-button type="button" variant="ghost" (buttonClick)="deleteArea(area)">{{ 'providerAreas.remove' | translate }}</app-button></div>
     </app-card>
   </div>
@@ -40,13 +39,24 @@
       <p *ngIf="errorMessage" class="provider-notice error">{{ errorMessage | translate }}</p>
       <div class="form-section">
         <div class="form-section-heading"><span>01</span><div><h3>{{ 'providerAreas.locationTitle' | translate }}</h3><p>{{ 'providerAreas.locationHelp' | translate }}</p></div></div>
-        <app-input name="geographyAreaId" label="providerAreas.managedGeography" helper="providerAreas.managedGeographyHelp" type="select" placeholder="providerAreas.manualArea" [placeholderValue]="null" [options]="geographyOptions" [ngModel]="form.geographyAreaId" (ngModelChange)="selectGeography($event)"></app-input>
-        <app-input name="suburb" label="providerAreas.suburb" required [(ngModel)]="form.suburb"></app-input>
-        <div class="provider-form-grid two"><app-input name="state" label="providerAreas.state" required [(ngModel)]="form.state"></app-input><app-input name="postcode" label="providerAreas.postcode" [(ngModel)]="form.postcode"></app-input></div>
-        <app-input name="radiusKm" label="providerAreas.radiusKm" helper="providerAreas.radiusHelp" type="number" min="1" required [(ngModel)]="form.radiusKm"></app-input>
+        <app-geography-selector
+          endpoint="/service-areas/options"
+          label="providerAreas.managedGeography"
+          placeholder="providerAreas.searchManagedGeography"
+          helper="providerAreas.managedGeographyHelp"
+          [selectedId]="form.geographyAreaId"
+          [disabledIds]="selectedGeographyIds"
+          [required]="true"
+          (selectedIdChange)="form.geographyAreaId = $event"
+          (selectedAreaChange)="onGeographySelected($event)"
+        ></app-geography-selector>
+        <div *ngIf="selectedGeography" class="selected-geography-summary">
+          <strong>{{ selectedGeography.displayName || (selectedGeography.suburb + ', ' + selectedGeography.state) }}</strong>
+          <small>{{ 'providerAreas.serverManagedHelp' | translate }}</small>
+        </div>
         <app-input name="isActive" label="providerAreas.areaActive" type="checkbox" [(ngModel)]="form.isActive"></app-input>
       </div>
-      <div class="provider-form-actions"><app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button><app-button type="submit" [loading]="isSaving" [disabled]="areaForm.invalid">{{ (isSaving ? 'providerAreas.adding' : 'providerAreas.addArea') | translate }}</app-button></div>
+      <div class="provider-form-actions"><app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button><app-button type="submit" [loading]="isSaving" [disabled]="areaForm.invalid || !canAddArea">{{ (isSaving ? 'providerAreas.adding' : 'providerAreas.addArea') | translate }}</app-button></div>
     </form>
   </app-modal>
 </section>

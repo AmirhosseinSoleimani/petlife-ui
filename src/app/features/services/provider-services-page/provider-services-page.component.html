@@ -35,16 +35,24 @@
   <section *ngIf="selectedCategoryId" class="discovery-step results-step">
     <div><p class="step-kicker">{{ 'services.stepThree' | translate }}</p><h2>{{ 'services.compatibleServicesTitle' | translate }}</h2><p>{{ 'services.compatibleServicesHelp' | translate }}</p></div>
 
-    <div class="discovery-filters">
+    <div class="discovery-filters managed-discovery-filters">
       <app-input name="deliveryModeFilter" label="services.deliveryMode" type="select" [options]="deliveryModeOptions" [(ngModel)]="deliveryMode"></app-input>
-      <app-input name="suburbFilter" label="services.suburb" [(ngModel)]="suburbFilter"></app-input>
-      <app-input name="postcodeFilter" label="services.postcode" [(ngModel)]="postcodeFilter"></app-input>
-      <app-input name="radiusKm" label="services.radiusKm" type="number" min="1" [(ngModel)]="radiusKm"></app-input>
+      <app-geography-selector
+        endpoint="/geography"
+        label="services.managedGeography"
+        placeholder="services.searchManagedGeography"
+        helper="services.managedGeographyHelp"
+        [selectedId]="selectedGeographyId"
+        (selectedIdChange)="selectedGeographyId = $event"
+        (selectedAreaChange)="onGeographySelected($event)"
+      ></app-geography-selector>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="acceptingRequestsOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.acceptingRequests' | translate }}</label>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="openNowOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.openNow' | translate }}</label>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="afterHoursOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.afterHours' | translate }}</label>
-      <div class="filter-actions"><app-button type="button" variant="secondary" [loading]="isLocating" (buttonClick)="useMyLocation()">{{ 'services.useMyLocation' | translate }}</app-button><app-button type="button" (buttonClick)="applyFilters()">{{ 'common.applyFilters' | translate }}</app-button></div>
-      <small *ngIf="latitude !== null && longitude !== null">{{ 'services.locationEnabled' | translate }} · {{ latitude | number:'1.2-2' }}, {{ longitude | number:'1.2-2' }}</small>
+      <div class="filter-actions">
+        <app-button type="button" variant="secondary" *ngIf="hasSearchFilters" (buttonClick)="clearFilters()">{{ 'common.clearFilters' | translate }}</app-button>
+        <app-button type="button" (buttonClick)="applyFilters()">{{ 'common.applyFilters' | translate }}</app-button>
+      </div>
     </div>
 
     <section class="recommendation-panel" *ngIf="!providerId && !isLoadingServices && recommendationDefinitionOptions.length">

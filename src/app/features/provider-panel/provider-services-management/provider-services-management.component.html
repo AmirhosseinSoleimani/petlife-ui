@@ -86,7 +86,7 @@
         <div class="form-section-heading"><span>02</span><div><h3>{{ 'providerServices.pricingTitle' | translate }}</h3><p>{{ 'providerServices.pricingHelp' | translate }}</p></div></div>
         <app-input name="pricingType" label="providerServices.pricingModel" type="select" [options]="pricingTypeOptions" [(ngModel)]="form.pricingType"></app-input>
         <div class="provider-form-grid three">
-          <app-input name="price" label="providerServices.basePrice" type="number" min="0" step="0.01" [required]="form.pricingType !== 'Quote'" [(ngModel)]="form.price"></app-input>
+          <app-input name="price" label="providerServices.basePrice" type="number" min="0.01" step="0.01" [required]="form.pricingType !== 'Quote'" [(ngModel)]="form.price"></app-input>
           <app-input name="priceMax" label="providerServices.maximumPrice" type="number" min="0" step="0.01" [(ngModel)]="form.priceMax"></app-input>
           <app-input name="currency" label="providerServices.currency" required [(ngModel)]="form.currency"></app-input>
         </div>
@@ -112,7 +112,7 @@
       </div>
       <div class="provider-form-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeEditor()">{{ 'common.cancel' | translate }}</app-button>
-        <app-button type="submit" [loading]="isSaving" [disabled]="serviceForm.invalid">{{ (isSaving ? 'providerServices.saving' : editingId ? 'providerServices.save' : 'providerServices.create') | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="serviceForm.invalid || !isPricingValid">{{ (isSaving ? 'providerServices.saving' : editingId ? 'providerServices.save' : 'providerServices.create') | translate }}</app-button>
       </div>
     </form>
   </app-modal>

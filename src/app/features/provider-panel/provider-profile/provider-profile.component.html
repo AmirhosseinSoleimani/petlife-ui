@@ -183,7 +183,7 @@
         <app-input name="galleryCaption" label="providerProfile.imageCaption" [(ngModel)]="galleryCaption"></app-input>
         <label class="gallery-upload">
           <span>{{ (isUploadingMedia ? 'providerProfile.uploadingImage' : 'providerProfile.chooseImage') | translate }}</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="isUploadingMedia" (change)="uploadGalleryImage($event)">
+          <input type="file" accept=".jpg,.jpeg,.jfif,.png,.webp,image/jpeg,image/png,image/webp" [disabled]="isUploadingMedia" (change)="uploadGalleryImage($event)">
         </label>
       </div>
       <div class="provider-gallery" *ngIf="gallery.length; else emptyGallery">

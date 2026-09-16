@@ -1,24 +1,106 @@
 import { Component, OnInit } from '@angular/core';
+
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { GeographyArea } from '../../../core/models/marketplace.models';
 
 interface GeographyForm {
-  city: string; suburb: string; state: string; postcode: string; country: string;
-  latitude: number | null; longitude: number | null; sortOrder: number; isActive: boolean;
+  city: string;
+  suburb: string;
+  state: string;
+  postcode: string;
+  country: string;
+  sortOrder: number;
+  isActive: boolean;
 }
 
-@Component({selector:'app-admin-geography',templateUrl:'./admin-geography.component.html',styleUrls:['./admin-geography.component.scss']})
+@Component({
+  selector: 'app-admin-geography',
+  templateUrl: './admin-geography.component.html',
+  styleUrls: ['./admin-geography.component.scss']
+})
 export class AdminGeographyComponent implements OnInit {
-  areas: GeographyArea[]=[]; form=this.emptyForm(); editingId:string|null=null; search='';
-  isLoading=false; isSaving=false; errorMessage=''; successMessage='';
-  constructor(private readonly api:ApiService, private readonly i18n:I18nService){}
-  ngOnInit():void{this.load();}
-  load():void{this.isLoading=true;this.errorMessage='';const q=this.search.trim()?`?search=${encodeURIComponent(this.search.trim())}`:'';this.api.get<ApiResponse<GeographyArea[]>>(`/admin/geography${q}`).subscribe({next:r=>{this.areas=r.data||[];this.isLoading=false;},error:()=>{this.errorMessage='adminGeography.loadError';this.isLoading=false;}});}
-  save():void{this.isSaving=true;this.errorMessage='';this.successMessage='';const payload={...this.form,sortOrder:Number(this.form.sortOrder)||0,latitude:this.form.latitude===null?null:Number(this.form.latitude),longitude:this.form.longitude===null?null:Number(this.form.longitude)};const req=this.editingId?this.api.put<ApiResponse<GeographyArea>>(`/admin/geography/${this.editingId}`,payload):this.api.post<ApiResponse<GeographyArea>>('/admin/geography',payload);req.subscribe({next:()=>{this.successMessage=this.editingId?'adminGeography.updated':'adminGeography.created';this.reset();this.load();},error:()=>{this.errorMessage='adminGeography.saveError';this.isSaving=false;}});}
-  edit(item:GeographyArea):void{this.editingId=item.id;this.form={city:item.city,suburb:item.suburb,state:item.state,postcode:item.postcode,country:item.country||'Australia',latitude:item.latitude??null,longitude:item.longitude??null,sortOrder:item.sortOrder||0,isActive:item.isActive!==false};}
-  remove(item:GeographyArea):void{if(!window.confirm(`${this.i18n.translate('adminGeography.removeConfirm')} ${item.suburb} ${item.postcode}?`))return;this.api.delete<ApiResponse<unknown>>(`/admin/geography/${item.id}`).subscribe({next:()=>{this.successMessage='adminGeography.removed';this.load();},error:()=>this.errorMessage='adminGeography.removeError'});}
-  reset():void{this.editingId=null;this.form=this.emptyForm();this.isSaving=false;}
-  private emptyForm():GeographyForm{return{city:'Sydney',suburb:'',state:'NSW',postcode:'',country:'Australia',latitude:null,longitude:null,sortOrder:0,isActive:true};}
+  areas: GeographyArea[] = [];
+  form = this.emptyForm();
+  editingId: string | null = null;
+  search = '';
+  isLoading = false;
+  isSaving = false;
+  errorMessage = '';
+  successMessage = '';
+
+  constructor(private readonly api: ApiService, private readonly i18n: I18nService) {}
+
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    const q = this.search.trim() ? `?search=${encodeURIComponent(this.search.trim())}` : '';
+    this.api.get<ApiResponse<GeographyArea[]>>(`/admin/geography${q}`).subscribe({
+      next: (response) => { this.areas = response.data || []; this.isLoading = false; },
+      error: (error) => { this.errorMessage = apiErrorMessage(error, 'adminGeography.loadError'); this.isLoading = false; }
+    });
+  }
+
+  save(): void {
+    const postcode = this.form.postcode.trim();
+    if (!/^\d{4}$/.test(postcode)) {
+      this.errorMessage = 'adminGeography.postcodeValidation';
+      return;
+    }
+
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    const payload: GeographyForm = {
+      city: this.form.city.trim(),
+      suburb: this.form.suburb.trim(),
+      state: this.form.state.trim().toUpperCase(),
+      postcode,
+      country: this.form.country.trim() || 'Australia',
+      sortOrder: Number(this.form.sortOrder) || 0,
+      isActive: !!this.form.isActive
+    };
+    const request = this.editingId
+      ? this.api.put<ApiResponse<GeographyArea>>(`/admin/geography/${this.editingId}`, payload)
+      : this.api.post<ApiResponse<GeographyArea>>('/admin/geography', payload);
+    request.subscribe({
+      next: () => { this.successMessage = this.editingId ? 'adminGeography.updated' : 'adminGeography.created'; this.reset(); this.load(); },
+      error: (error) => { this.errorMessage = apiErrorMessage(error, 'adminGeography.saveError'); this.isSaving = false; }
+    });
+  }
+
+  edit(item: GeographyArea): void {
+    this.editingId = item.id;
+    this.form = {
+      city: item.city,
+      suburb: item.suburb,
+      state: item.state,
+      postcode: item.postcode,
+      country: item.country || 'Australia',
+      sortOrder: item.sortOrder || 0,
+      isActive: item.isActive !== false
+    };
+  }
+
+  remove(item: GeographyArea): void {
+    if (!window.confirm(`${this.i18n.translate('adminGeography.removeConfirm')} ${item.suburb} ${item.postcode}?`)) return;
+    this.api.delete<ApiResponse<unknown>>(`/admin/geography/${item.id}`).subscribe({
+      next: () => { this.successMessage = 'adminGeography.removed'; this.load(); },
+      error: (error) => this.errorMessage = apiErrorMessage(error, 'adminGeography.removeError')
+    });
+  }
+
+  reset(): void {
+    this.editingId = null;
+    this.form = this.emptyForm();
+    this.isSaving = false;
+  }
+
+  private emptyForm(): GeographyForm {
+    return { city: 'Sydney', suburb: '', state: 'NSW', postcode: '', country: 'Australia', sortOrder: 0, isActive: true };
+  }
 }

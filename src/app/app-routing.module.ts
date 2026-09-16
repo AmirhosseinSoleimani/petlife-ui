@@ -17,6 +17,7 @@ import { ContactVerificationComponent } from './features/auth/contact-verificati
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { NotificationsPageComponent } from './features/notifications/notifications-page/notifications-page.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
 import { FeedbackPageComponent } from './features/feedback/feedback-page/feedback-page.component';
 import { PetExpensesComponent } from './features/pets/pet-expenses/pet-expenses.component';
@@ -25,6 +26,7 @@ import { PetHealthTimelineComponent } from './features/pets/pet-health-timeline/
 import { PetSharingComponent } from './features/pets/pet-sharing/pet-sharing.component';
 import { PublicPetShareComponent } from './features/sharing/public-pet-share/public-pet-share.component';
 import { PetsPageComponent } from './features/pets/pets-page/pets-page.component';
+import { PetTransferComponent } from './features/pets/pet-transfer/pet-transfer.component';
 import { CustomerProfileComponent } from './features/profile/customer-profile/customer-profile.component';
 import { ProviderProfileComponent } from './features/provider-panel/provider-profile/provider-profile.component';
 import { ProviderDocumentsComponent } from './features/provider-panel/provider-documents/provider-documents.component';
@@ -49,6 +51,8 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'profile', component: CustomerProfileComponent },
       { path: 'pets', component: PetsPageComponent },
+      { path: 'pet-transfer', component: PetTransferComponent },
+      { path: 'notifications', component: NotificationsPageComponent },
       { path: 'pets/:petId/health-records', component: PetHealthRecordsComponent },
       { path: 'pets/:petId/health-timeline', component: PetHealthTimelineComponent },
       { path: 'pets/:petId/share', component: PetSharingComponent },

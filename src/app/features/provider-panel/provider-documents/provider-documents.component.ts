@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ProviderDocument } from '../../../core/models/marketplace.models';
@@ -38,7 +39,15 @@ export class ProviderDocumentsComponent implements OnInit {
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files && input.files.length ? input.files[0] : null;
+    const file = input.files && input.files.length ? input.files[0] : null;
+    if (file && file.size > 12 * 1024 * 1024) {
+      this.selectedFile = null;
+      input.value = '';
+      this.errorMessage = 'providerDocuments.fileTooLarge';
+      return;
+    }
+    this.errorMessage = '';
+    this.selectedFile = file;
   }
 
   beginRenew(document: ProviderDocument): void {
@@ -75,7 +84,7 @@ export class ProviderDocumentsComponent implements OnInit {
         this.resetForm();
         this.load();
       },
-      error: err => { this.errorMessage = this.apiMessage(err, 'providerDocuments.saveError'); this.isSaving = false; },
+      error: err => { this.errorMessage = apiErrorMessage(err, 'providerDocuments.saveError'); this.isSaving = false; },
       complete: () => this.isSaving = false
     });
   }
@@ -84,7 +93,7 @@ export class ProviderDocumentsComponent implements OnInit {
     if (document.status === 'Approved' || !window.confirm(this.i18nService.translate('providerDocuments.deleteConfirm'))) return;
     this.api.delete<ApiResponse<unknown>>(`/provider-documents/${document.id}`).subscribe({
       next: () => { this.message = 'providerDocuments.deletedSuccess'; this.load(); },
-      error: err => this.errorMessage = this.apiMessage(err, 'providerDocuments.deleteError')
+      error: err => this.errorMessage = apiErrorMessage(err, 'providerDocuments.deleteError')
     });
   }
 
@@ -119,7 +128,4 @@ export class ProviderDocumentsComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  private apiMessage(error: any, fallback: string): string {
-    return error?.error?.errors?.join(' ') || error?.error?.message || fallback;
-  }
 }

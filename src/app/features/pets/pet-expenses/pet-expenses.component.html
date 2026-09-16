@@ -46,7 +46,7 @@
 
       <div class="receipt-picker">
         <label>{{ 'expenses.receipt' | translate }}</label>
-        <app-file-upload accept="image/jpeg,image/png,image/webp,application/pdf" [allowedExtensions]="['.jpg','.jpeg','.png','.webp','.pdf']" [allowedContentTypes]="['image/jpeg','image/png','image/webp','application/pdf']" allowedTypesLabelKey="expenses.receiptTypes" [maxSizeBytes]="10485760" (filesChange)="onReceiptFiles($event)"></app-file-upload>
+        <app-file-upload accept="image/jpeg,image/png,image/webp,application/pdf" [allowedExtensions]="['.jpg','.jpeg','.jfif','.png','.webp','.pdf']" [allowedContentTypes]="['image/jpeg','image/png','image/webp','application/pdf']" allowedTypesLabelKey="expenses.receiptTypes" [maxSizeBytes]="10485760" (filesChange)="onReceiptFiles($event)"></app-file-upload>
         <small *ngIf="editingId">{{ 'expenses.receiptReplaceHelp' | translate }}</small>
       </div>
 

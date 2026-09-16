@@ -27,13 +27,34 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(authRequest).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        const normalizedError = this.normalizeValidationError(error);
+        if (normalizedError.status === 401) {
           localStorage.removeItem(AUTH_TOKEN_KEY);
           this.router.navigate(['/login']);
         }
 
-        return throwError(() => error);
+        return throwError(() => normalizedError);
       })
     );
+  }
+
+  private normalizeValidationError(error: HttpErrorResponse): HttpErrorResponse {
+    const body = error.error;
+    if (!body || typeof body !== 'object' || !body.fieldErrors || typeof body.fieldErrors !== 'object') {
+      return error;
+    }
+
+    const fieldErrors = Object.entries(body.fieldErrors as Record<string, string[]>)
+      .flatMap(([field, messages]) => (messages || []).filter(Boolean).map((message) => `${field}: ${message}`));
+
+    if (!fieldErrors.length) return error;
+
+    return new HttpErrorResponse({
+      error: { ...body, errors: [fieldErrors.join(' | ')] },
+      headers: error.headers,
+      status: error.status,
+      statusText: error.statusText,
+      url: error.url || undefined
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { GeographyArea, ServiceArea, ServiceAreaPayload } from '../../../core/models/marketplace.models';
 
@@ -56,7 +57,7 @@ export class ProviderServiceAreasComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorMessage = this.readError(error, 'providerAreas.loadError');
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.loadError');
         this.isLoading = false;
       }
     });
@@ -85,7 +86,7 @@ export class ProviderServiceAreasComponent implements OnInit {
         this.loadAreas();
       },
       error: (error) => {
-        this.errorMessage = this.readError(error, 'providerAreas.addError');
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.addError');
         this.isSaving = false;
       },
       complete: () => {
@@ -104,7 +105,7 @@ export class ProviderServiceAreasComponent implements OnInit {
         this.loadAreas();
       },
       error: (error) => {
-        this.errorMessage = this.readError(error, 'providerAreas.removeError');
+        this.errorMessage = apiErrorMessage(error, 'providerAreas.removeError');
       }
     });
   }
@@ -123,7 +124,7 @@ export class ProviderServiceAreasComponent implements OnInit {
   }
 
   areaDisplayName(area: ServiceArea): string {
-    return [area.suburb, area.city, area.state, area.postcode]
+    return [area.suburb, area.city, area.state, area.country]
       .filter(Boolean)
       .join(', ') || 'Managed service area';
   }
@@ -133,7 +134,4 @@ export class ProviderServiceAreasComponent implements OnInit {
     this.selectedGeography = null;
   }
 
-  private readError(error: { error?: { message?: string; errors?: string[] } } | null | undefined, fallback: string): string {
-    return error?.error?.errors?.filter(Boolean).join(' ') || error?.error?.message || fallback;
-  }
 }

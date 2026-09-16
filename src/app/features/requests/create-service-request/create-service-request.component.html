@@ -29,7 +29,24 @@
 
       <section class="request-step" *ngIf="needsCustomerLocation">
         <span class="step-number">2</span>
-        <div class="step-content"><div class="step-heading"><h3>{{ 'requestForm.serviceLocation' | translate }}</h3><p>{{ 'requestForm.serviceLocationHelp' | translate }}</p></div><app-input name="serviceAddressLine1" label="requestForm.addressLine1" required [(ngModel)]="form.serviceAddressLine1"></app-input><div class="location-grid"><app-input name="serviceSuburb" label="requestForm.suburb" required [(ngModel)]="form.serviceSuburb"></app-input><app-input name="serviceState" label="requestForm.state" required [(ngModel)]="form.serviceState"></app-input><app-input name="servicePostcode" label="requestForm.postcode" required [(ngModel)]="form.servicePostcode"></app-input></div></div>
+        <div class="step-content">
+          <div class="step-heading"><h3>{{ 'requestForm.serviceLocation' | translate }}</h3><p>{{ 'requestForm.serviceLocationHelp' | translate }}</p></div>
+          <app-input name="serviceAddressLine1" label="requestForm.addressLine1" required [(ngModel)]="form.serviceAddressLine1"></app-input>
+          <app-geography-selector
+            endpoint="/geography"
+            label="requestForm.managedGeography"
+            placeholder="requestForm.searchManagedGeography"
+            helper="requestForm.managedGeographyHelp"
+            [selectedId]="form.serviceGeographyAreaId || null"
+            [required]="true"
+            (selectedIdChange)="form.serviceGeographyAreaId = $event"
+            (selectedAreaChange)="onServiceGeographySelected($event)"
+          ></app-geography-selector>
+          <div *ngIf="selectedServiceGeography" class="managed-location-summary">
+            <strong>{{ selectedServiceGeography.displayName || (selectedServiceGeography.suburb + ', ' + selectedServiceGeography.state) }}</strong>
+            <small>{{ 'requestForm.coverageValidationHelp' | translate }}</small>
+          </div>
+        </div>
       </section>
 
       <section class="request-step" *ngIf="!needsCustomerLocation && selectedService.deliveryMode === 'AtProviderLocation'">
@@ -46,7 +63,7 @@
         <span class="step-number">4</span>
         <div class="step-content">
           <div class="step-heading"><h3>{{ 'requestForm.consentTitle' | translate }}</h3><p>{{ 'requestForm.consentDescription' | translate }}</p></div>
-          <label class="consent-option"><input type="checkbox" name="consentSharePetProfile" [(ngModel)]="form.consentSharePetProfile"><span><strong>{{ 'requestForm.sharePetProfile' | translate }}</strong><small>{{ 'requestForm.sharePetProfileHelp' | translate }}</small></span></label>
+          <label class="consent-option"><input type="checkbox" name="consentSharePetProfile" [(ngModel)]="form.consentSharePetProfile" (change)="onPetProfileConsentChanged()"><span><strong>{{ 'requestForm.sharePetProfile' | translate }}</strong><small>{{ 'requestForm.sharePetProfileHelp' | translate }}</small></span></label>
           <label class="consent-option"><input type="checkbox" name="consentShareHealthSummary" [(ngModel)]="form.consentShareHealthSummary" (change)="onHealthConsentChanged()"><span><strong>{{ 'requestForm.shareHealthSummary' | translate }}</strong><small>{{ 'requestForm.shareHealthSummaryHelp' | translate }}</small></span></label>
           <label class="consent-option"><input type="checkbox" name="consentShareContactDetails" [(ngModel)]="form.consentShareContactDetails"><span><strong>{{ 'requestForm.shareContactDetails' | translate }}</strong><small>{{ 'requestForm.shareContactDetailsHelp' | translate }}</small></span></label>
         </div>
@@ -64,7 +81,7 @@
         <div><dt>{{ 'requestForm.consentScope' | translate }}</dt><dd>{{ (form.consentSharePetProfile ? 'requestForm.petProfileShared' : 'requestForm.noPetProfile') | translate }} · {{ (form.consentShareHealthSummary ? 'requestForm.healthShared' : 'requestForm.healthPrivate') | translate }} · {{ (form.consentShareContactDetails ? 'requestForm.contactShared' : 'requestForm.contactPrivate') | translate }}</dd></div>
       </dl>
       <p *ngIf="errorMessage" class="error form-message">{{ errorMessage | translate }}</p>
-      <app-button type="submit" [loading]="isSubmitting" [disabled]="requestForm.invalid || !isSelectedPetCompatible || !isConsentValid">{{ (isSubmitting ? 'requestForm.submitting' : 'requestForm.submit') | translate }}</app-button>
+      <app-button type="submit" [loading]="isSubmitting" [disabled]="requestForm.invalid || !isSelectedPetCompatible || !isConsentValid || !isLocationValid">{{ (isSubmitting ? 'requestForm.submitting' : 'requestForm.submit') | translate }}</app-button>
       <small>{{ 'requestForm.submitNote' | translate }}</small>
     </aside>
   </form>

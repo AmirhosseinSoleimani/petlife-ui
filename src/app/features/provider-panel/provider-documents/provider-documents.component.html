@@ -9,7 +9,7 @@
       <label>{{ 'providerDocuments.documentType' | translate }}<select name="documentType" [(ngModel)]="documentType" [disabled]="!!renewingDocument"><option *ngFor="let type of documentTypes" [value]="type">{{ type | translate }}</option></select></label>
       <label>{{ 'providerDocuments.expiryDate' | translate }} <small *ngIf="documentType === 'Insurance'">{{ 'providerDocuments.insuranceRequired' | translate }}</small><input name="expiryDate" type="date" [(ngModel)]="expiryDate"></label>
       <label class="wide">{{ 'providerDocuments.providerNote' | translate }}<textarea name="providerNote" rows="3" maxlength="1000" [(ngModel)]="providerNote"></textarea></label>
-      <label class="wide">{{ 'providerDocuments.file' | translate }}<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" (change)="onFileSelected($event)"><small>{{ 'providerDocuments.fileHelp' | translate }}</small></label>
+      <label class="wide">{{ 'providerDocuments.file' | translate }}<input type="file" accept=".pdf,.jpg,.jpeg,.jfif,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" (change)="onFileSelected($event)"><small>{{ 'providerDocuments.fileHelp' | translate }}</small></label>
       <div class="wide actions"><app-button type="submit" [loading]="isSaving">{{ (renewingDocument ? 'providerDocuments.submitRenewal' : 'providerDocuments.uploadForReview') | translate }}</app-button></div>
     </form>
   </app-card>

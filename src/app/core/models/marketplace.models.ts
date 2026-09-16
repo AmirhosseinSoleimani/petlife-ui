@@ -230,8 +230,7 @@ export interface ServiceArea {
   city?: string;
   suburb?: string;
   state?: string;
-  postcode?: string;
-  radiusKm?: number;
+  country?: string;
   isActive?: boolean;
   createdAt?: string;
 }
@@ -287,6 +286,7 @@ export interface ServiceRequest {
   providerUserId?: string;
   customerName?: string;
   customerEmail?: string;
+  customerMobileNumber?: string;
   petSpecies?: string;
   petBreed?: string;
   petMedicalNotes?: string | null;
@@ -423,4 +423,56 @@ export interface FeedbackReport {
   adminNotes?: string | null;
   resolvedAt?: string | null;
   createdAt: string;
+}
+
+
+export interface InAppNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  dataJson?: string | null;
+  actionPath?: string | null;
+  isRead: boolean;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface UnreadNotificationCount {
+  count: number;
+}
+
+export interface PetTransferToken {
+  id: string;
+  transferCode: string;
+  expiresAt: string;
+}
+
+export interface PetTransferTokenSummary {
+  id: string;
+  expiresAt: string;
+  isUsed: boolean;
+  usedAt?: string | null;
+  isRevoked: boolean;
+  revokedAt?: string | null;
+  isExpired: boolean;
+  transferredPetId?: string | null;
+  createdAt: string;
+}
+
+export interface PetTransferPreview {
+  recipientUserId: string;
+  recipientDisplayName: string;
+  expiresAt: string;
+}
+
+export interface PetTransferResult {
+  transferId: string;
+  petId: string;
+  petName: string;
+  fromUserId: string;
+  fromDisplayName: string;
+  toUserId: string;
+  toDisplayName: string;
+  transferredAt: string;
 }

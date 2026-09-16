@@ -28,7 +28,7 @@ export class PetHealthRecordsComponent implements OnInit {
   readonly routeOptions = ['Oral', 'Topical', 'Injection', 'Ophthalmic', 'Otic', 'Other'];
   readonly measurementTypeOptions = ['Weight', 'Temperature', 'Heart rate', 'Respiratory rate', 'Body condition score', 'Other'];
   readonly measurementUnitOptions = ['kg', 'g', '°C', '°F', 'bpm', 'breaths/min', 'score', 'cm', 'other'];
-  readonly attachmentExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
+  readonly attachmentExtensions = ['.jpg', '.jpeg', '.jfif', '.png', '.webp', '.pdf'];
   readonly attachmentContentTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
   readonly attachmentMaxSize = 10 * 1024 * 1024;
 
