@@ -4,17 +4,36 @@
 .buckets { display: flex; gap: .35rem; flex-wrap: wrap; border-bottom: 1px solid var(--border-color, #e5e7eb); padding-bottom: .75rem; }
 .buckets button { border: 0; background: transparent; padding: .55rem .8rem; border-radius: .65rem; cursor: pointer; font: inherit; }
 .buckets button.active { background: rgba(64, 113, 244, .1); font-weight: 700; }
-.filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: .75rem; align-items: end; }
+.filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: .75rem; align-items: end; padding: 16px; }
 .bulk { padding: .75rem; border-radius: .75rem; background: rgba(64, 113, 244, .07); }
 .reminder-list { display: grid; gap: .8rem; }
 .reminder-card { display: grid; grid-template-columns: auto 4rem minmax(0, 1fr); gap: 1rem; align-items: start; }
+.reminder-card.is-done { grid-template-columns: 4rem minmax(0, 1fr); }
 .selector { padding-top: .6rem; }
 .reminder-date { display: grid; justify-items: center; padding: .6rem; border-radius: .75rem; background: rgba(64, 113, 244, .07); }
 .reminder-date strong { font-size: 1.45rem; }
 .reminder-copy { min-width: 0; display: grid; gap: .65rem; }
-.reminder-title { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.reminder-heading-copy { min-width: 0; }
+.reminder-title { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; min-width: 0; }
 .reminder-title h3, .reminder-title p, .notes { margin: 0; }
 .reminder-title p, .metadata { opacity: .68; font-size: .9rem; }
+.reminder-summary { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.done-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 58px;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid rgba(47, 137, 103, .14);
+  border-radius: var(--radius-pill);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  font-size: var(--font-size-badge);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
 .metadata { display: flex; gap: .8rem; flex-wrap: wrap; }
 .reminder-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
 .full-field, .form-error, .privacy-hint, .drawer-actions { grid-column: 1 / -1; }
@@ -22,5 +41,35 @@
 .form-error, .error { color: var(--danger-color, #b42318); } .success { color: #157347; }
 .privacy-hint { margin: 0; opacity: .68; font-size: .9rem; }
 .state, .care-empty { padding: 2rem; text-align: center; }
-@media (max-width: 720px) { .filters, .reminder-editor { grid-template-columns: 1fr; } .full-field, .form-error, .privacy-hint, .drawer-actions { grid-column: auto; } .reminder-card { grid-template-columns: auto 3.5rem minmax(0, 1fr); } .reminder-title { flex-direction: column; } }
-@media (max-width: 500px) { .reminder-card { grid-template-columns: auto minmax(0, 1fr); } .selector { grid-row: 1 / span 2; } .reminder-date { grid-column: 2; width: fit-content; } .reminder-copy { grid-column: 2; } }
+
+:host ::ng-deep .filter-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+  background-size: 16px 16px;
+}
+:host-context([dir='rtl']) ::ng-deep .filter-select select {
+  padding-inline-start: 2.5rem;
+  padding-inline-end: 13px;
+  background-position: left .85rem center;
+}
+
+@media (max-width: 720px) {
+  .filters, .reminder-editor { grid-template-columns: 1fr; }
+  .full-field, .form-error, .privacy-hint, .drawer-actions { grid-column: auto; }
+  .reminder-card { grid-template-columns: auto 3.5rem minmax(0, 1fr); }
+  .reminder-card.is-done { grid-template-columns: 3.5rem minmax(0, 1fr); }
+  .reminder-title { flex-direction: column; }
+}
+@media (max-width: 500px) {
+  .reminder-card { grid-template-columns: auto minmax(0, 1fr); }
+  .selector { grid-row: 1 / span 2; }
+  .reminder-date { grid-column: 2; width: fit-content; }
+  .reminder-copy { grid-column: 2; }
+  .reminder-card.is-done { grid-template-columns: 3.5rem minmax(0, 1fr); }
+  .reminder-card.is-done .reminder-date { grid-column: 1; }
+  .reminder-card.is-done .reminder-copy { grid-column: 2; }
+}

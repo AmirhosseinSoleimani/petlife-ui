@@ -11,14 +11,25 @@
     </section>
 
     <h3>{{ 'Location' | translate }}</h3>
+    <p class="geography-help">{{ 'profile.geographyHelp' | translate }}</p>
     <app-input name="address" label="Address" [(ngModel)]="form.address"></app-input>
     <div class="grid">
-      <app-input name="country" label="Country" required [(ngModel)]="form.country"></app-input>
-      <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
+      <app-input name="postcode" label="Postcode" helper="geographySelector.postcodeHint" [ngModel]="form.postcode" (ngModelChange)="onPostcodeChange($event)"></app-input>
+      <app-input name="suburb" label="Suburb" [ngModel]="form.suburb" (ngModelChange)="onSuburbChange($event)"></app-input>
       <app-input name="city" label="City" [(ngModel)]="form.city"></app-input>
-      <app-input name="suburb" label="Suburb" [(ngModel)]="form.suburb"></app-input>
-      <app-input name="postcode" label="Postcode" [(ngModel)]="form.postcode"></app-input>
+      <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
+      <app-input name="country" label="Country" required [(ngModel)]="form.country"></app-input>
       <app-input name="preferredContactMethod" label="Preferred contact" type="select" [options]="contactOptions" [(ngModel)]="form.preferredContactMethod"></app-input>
+    </div>
+
+    <div *ngIf="isLookingUpGeography" class="lookup-status">{{ 'profile.lookingUpGeography' | translate }}</div>
+    <div *ngIf="!isLookingUpGeography && geographyMatches.length > 1" class="geography-matches">
+      <strong>{{ 'profile.selectGeographyMatch' | translate }}</strong>
+      <div>
+        <button type="button" *ngFor="let area of geographyMatches" (click)="applyGeography(area)">
+          {{ area.displayName || (area.suburb + ' · ' + area.postcode + ' · ' + area.state) }}
+        </button>
+      </div>
     </div>
 
     <h3>{{ 'Preferences' | translate }}</h3>

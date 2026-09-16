@@ -1,0 +1,429 @@
+/* Enterprise UI foundation. Keep this file global so shared density and responsive rules
+   are emitted once instead of being duplicated in component bundles. */
+
+body {
+  background: var(--color-bg);
+}
+
+.page,
+.market-page,
+.request-page,
+.requests-page,
+.provider-page,
+.dashboard {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.page::before,
+.market-page::before,
+.request-page::before,
+.requests-page::before,
+.dashboard::before,
+.page-head::after,
+.hero::after {
+  display: none !important;
+}
+
+.page-head,
+.hero,
+.panel,
+.pet-card,
+.record,
+.expense,
+.reminder,
+.provider-card,
+.service-card,
+.request-card,
+.detail,
+.state,
+.filters,
+.summary article,
+.alert {
+  backdrop-filter: none;
+}
+
+h1, h2, h3, h4 {
+  color: var(--color-text);
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+p {
+  line-height: 1.55;
+}
+
+/* Legacy feature controls that do not use app-input yet. */
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+  min-height: 40px;
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+input:not([type='checkbox']):not([type='radio']):hover,
+select:hover,
+textarea:hover {
+  border-color: #aebdc3;
+}
+
+input:not([type='checkbox']):not([type='radio']):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: 0;
+}
+
+.panel,
+.filters,
+.alert {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.state {
+  min-height: 144px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.state::before {
+  width: 36px;
+  height: 36px;
+}
+
+.error,
+.success,
+.notice,
+.info-message,
+.form-message,
+.page-message {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  font-size: 13px;
+}
+
+/* Consistent compact action bars across legacy screens. */
+.actions,
+.card-actions,
+.detail-actions,
+.row-actions,
+.filter-actions {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Common business data tables outside the admin module. */
+.table-wrap,
+.table-container {
+  min-width: 0;
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.table-wrap table,
+.table-container table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-wrap th,
+.table-container th {
+  color: #52666f;
+  background: #f7f9fa;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .page,
+  .market-page,
+  .request-page,
+  .requests-page,
+  .provider-page,
+  .dashboard {
+    gap: 16px;
+  }
+
+  .two,
+  .three,
+  .summary-grid,
+  .catalog-columns,
+  .split,
+  .verification-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions,
+  .card-actions,
+  .detail-actions,
+  .filter-actions {
+    align-items: stretch;
+  }
+
+  .actions > *,
+  .card-actions > *,
+  .detail-actions > *,
+  .filter-actions > * {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* Application chrome wins over the legacy high-specificity compatibility rules. */
+app-shell .shell .topbar.topbar {
+  min-height: 64px;
+  gap: 18px;
+  padding: 10px 28px;
+  border-bottom-color: var(--color-border);
+  background: rgba(255,255,255,.96);
+  box-shadow: none;
+}
+app-shell .shell .topbar-title h1 { font-size: 18px; }
+app-shell .shell .user-actions.user-actions { width: auto; margin-inline-start: auto; gap: 8px; flex-wrap: nowrap; }
+app-shell .shell .language-switcher.language-switcher {
+  min-width: 112px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+app-shell .shell .language-switcher.language-switcher:hover { border: 0; box-shadow: none; transform: none; }
+app-shell .shell .language-switcher.language-switcher select {
+  min-height: 30px;
+  padding-block: 3px;
+  padding-inline: 8px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background-color: #fff;
+  font-size: 12px;
+}
+app-shell .shell .user-card.user-card {
+  min-width: 190px;
+  max-width: 250px;
+  min-height: 42px;
+  padding: 4px 8px 4px 5px;
+  border-color: var(--color-border);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: none;
+  transform: none;
+}
+app-shell .shell .user-card.user-card:hover { border-color: #b7c8cc; box-shadow: none; transform: none; }
+app-shell .shell .user-card .avatar.avatar { width: 32px; height: 32px; border-radius: 8px; box-shadow: none; }
+app-shell .shell .user-card .role-badge.role-badge { padding: 3px 7px; font-size: 10px; }
+app-shell .shell .user-card small { margin-top: 1px; font-size: 10px; }
+app-shell .shell .content.content { max-width: 1440px; padding: 28px; }
+app-shell .shell.admin-shell .content.content { max-width: 1520px; }
+
+.card-actions a,
+.filters a,
+.detail a { background: var(--color-primary); }
+
+@media (max-width: 1023.98px) {
+  app-shell .shell .topbar.topbar { min-height: 60px; padding: 9px 18px; flex-wrap: nowrap; }
+  app-shell .shell .user-actions.user-actions { width: auto; margin-inline-start: auto; }
+  app-shell .shell .content.content { padding: 22px 18px; }
+}
+
+@media (max-width: 720px) {
+  app-shell .shell .topbar.topbar { flex-wrap: wrap; gap: 9px; padding: 9px 12px; }
+  app-shell .shell .topbar-title h1 { font-size: 16px; }
+  app-shell .shell .user-actions.user-actions { width: 100%; flex-wrap: wrap; margin-inline-start: 0; }
+  app-shell .shell .language-switcher.language-switcher { flex: 1 1 118px; min-width: 0; }
+  app-shell .shell .user-card.user-card { flex: 1 1 170px; min-width: 0; max-width: none; }
+  app-shell .shell .content.content { padding: 16px 12px 22px; }
+}
+
+/* Provider workspace: reduce visual decoration and use business-density surfaces. */
+.provider-workspace { gap: 20px; animation: none; }
+.provider-workspace app-page-header .page-head { background: var(--color-surface); }
+.provider-workspace .provider-state,
+.provider-workspace .provider-empty {
+  min-height: 200px;
+  padding: 30px;
+  border-radius: var(--radius-lg);
+  background: #fbfcfc;
+}
+.provider-workspace .provider-empty-featured { min-height: 300px; box-shadow: none; }
+.provider-workspace .provider-state-icon,
+.provider-workspace .provider-empty-icon { width: 46px; height: 46px; border-radius: 10px; }
+.provider-workspace .profile-identity,
+.provider-workspace .profile-completeness { background: var(--color-surface); }
+.provider-workspace .profile-mark { width: 46px; height: 46px; border-radius: 10px; }
+.provider-workspace .profile-facts > div { min-height: 68px; padding: 12px 14px; }
+.provider-workspace .customer-preview { padding: 12px; border-radius: var(--radius-md); }
+
+/* Directory and form toolbars share one responsive density model. */
+.filter-toolbar { gap: 14px; padding: 14px 16px; border-radius: var(--radius-lg); }
+.filter-toolbar .filter-fields { gap: 10px; }
+.filter-toolbar .filter-fields app-input { min-width: 160px; max-width: 240px; }
+
+@media (max-width: 900px) {
+  .filter-toolbar { align-items: stretch; flex-direction: column; }
+  .filter-toolbar .filter-fields { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .filter-toolbar .filter-fields app-input { min-width: 0; max-width: none; }
+}
+@media (max-width: 560px) {
+  .filter-toolbar .filter-fields { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 1024px) {
+  app-shell .shell.shell { --sidebar-width: 248px; grid-template-columns: var(--sidebar-width) minmax(0,1fr); }
+}
+
+/* Flat semantic feedback surfaces: predictable in dense business workflows. */
+.error,
+.form-message.error-message {
+  border-color: #edc9c7 !important;
+  color: #873b3b !important;
+  background: #fff7f6 !important;
+}
+.success,
+.form-message.success-message {
+  border-color: #cce5d7 !important;
+  color: #276b53 !important;
+  background: #f3fbf6 !important;
+}
+.notice,
+.info-message,
+.page-message {
+  border-color: #cddbea;
+  color: #3e5f83;
+  background: #f6f9fd;
+}
+
+/* Targeted feedback layout: icon and message remain separated without affecting other surfaces. */
+.page-message {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px !important;
+}
+.page-message::before {
+  position: static !important;
+  inset: auto !important;
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+}
+
+/* Balanced enterprise application bar. Keep hierarchy compact without tiny controls. */
+app-shell .shell .topbar.topbar {
+  min-height: 72px;
+  padding: 10px 24px;
+  gap: 18px;
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 10px rgba(25,52,58,.035);
+}
+app-shell .shell .topbar-title.topbar-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+app-shell .shell .topbar-title h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+app-shell .shell .service-badge.service-badge {
+  min-height: 26px;
+  padding: 4px 9px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+app-shell .shell .user-actions.user-actions {
+  width: auto;
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+app-shell .shell .language-switcher.language-switcher {
+  min-width: 132px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+}
+app-shell .shell .language-switcher.language-switcher:hover { border-color: #b5c5c7; }
+app-shell .shell .language-label.language-label { display: inline-flex; align-items: center; flex: 0 0 auto; }
+app-shell .shell .language-label.language-label > span { display: none; }
+app-shell .shell .language-icon.language-icon { width: 16px; height: 16px; }
+app-shell .shell .language-switcher.language-switcher select {
+  min-width: 0;
+  min-height: 40px;
+  flex: 1 1 auto;
+  padding-block: 0;
+  padding-inline: 2px 22px;
+  border: 0;
+  background-color: transparent;
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: none;
+}
+app-shell .shell .preferences-trigger.preferences-trigger {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+app-shell .shell .user-card.user-card {
+  min-width: 205px;
+  max-width: 275px;
+  min-height: 46px;
+  gap: 9px;
+  padding: 5px 9px 5px 6px;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: none;
+}
+app-shell .shell .user-card .avatar.avatar { width: 34px; height: 34px; border-radius: 9px; box-shadow: none; }
+app-shell .shell .user-card-heading.user-card-heading { gap: 6px; }
+app-shell .shell .user-card-heading strong { font-size: 12px; }
+app-shell .shell .user-card .role-badge.role-badge { padding: 3px 7px; font-size: 9px; }
+app-shell .shell .user-card small { margin-top: 1px; font-size: 10px; }
+app-shell .shell .user-actions > app-button .app-button.ghost { min-height: 40px; padding-inline: 10px; border-radius: 9px; }
+
+@media (max-width: 1100px) {
+  app-shell .shell .topbar.topbar { padding-inline: 18px; }
+  app-shell .shell .service-badge.service-badge { display: none; }
+  app-shell .shell .user-card.user-card { min-width: 180px; max-width: 225px; }
+}
+@media (max-width: 760px) {
+  app-shell .shell .topbar.topbar { min-height: 62px; padding: 9px 12px; gap: 10px; flex-wrap: wrap; }
+  app-shell .shell .topbar-title.topbar-title { flex: 1 1 180px; }
+  app-shell .shell .topbar-title h1 { font-size: 16px; }
+  app-shell .shell .user-actions.user-actions { width: 100%; margin-inline-start: 0; display: grid; grid-template-columns: minmax(0,1fr) 42px minmax(160px,1.3fr) auto; gap: 8px; }
+  app-shell .shell .language-switcher.language-switcher { min-width: 0; width: 100%; }
+  app-shell .shell .user-card.user-card { min-width: 0; max-width: none; width: 100%; }
+}
+@media (max-width: 520px) {
+  app-shell .shell .user-actions.user-actions { grid-template-columns: minmax(0,1fr) 42px; }
+  app-shell .shell .user-card.user-card { grid-column: 1 / -1; }
+  app-shell .shell .user-actions > app-button { grid-column: 1 / -1; }
+}

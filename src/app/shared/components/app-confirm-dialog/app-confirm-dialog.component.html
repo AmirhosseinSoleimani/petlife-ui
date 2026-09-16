@@ -1,0 +1,19 @@
+<app-modal
+  [open]="!!request"
+  [title]="request?.title || ''"
+  [description]="''"
+  (closed)="resolve(false)"
+>
+  <section class="confirm-dialog" *ngIf="request">
+    <span class="confirm-icon" [class.danger]="request.tone === 'danger'" aria-hidden="true">
+      {{ request.tone === 'danger' ? '!' : '?' }}
+    </span>
+    <div class="confirm-copy">
+      <p>{{ request.message | translate }}</p>
+    </div>
+    <div class="confirm-actions">
+      <app-button type="button" variant="ghost" (buttonClick)="resolve(false)">{{ (request.cancelLabel || 'Cancel') | translate }}</app-button>
+      <app-button type="button" [variant]="request.tone === 'danger' ? 'danger' : 'primary'" (buttonClick)="resolve(true)">{{ (request.confirmLabel || 'Confirm') | translate }}</app-button>
+    </div>
+  </section>
+</app-modal>

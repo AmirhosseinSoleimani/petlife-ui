@@ -1,18 +1,20 @@
 @import 'styles/pages/dashboard';
 @import 'styles/pages/pets';
 @import 'styles/pages/customer-pages';
+@import 'styles/pages/emergency-vets';
 @import 'styles/pages/provider-workspace';
 @import 'styles/preferences';
 @import 'styles/component-budget-overflow';
+@import 'styles/admin-panel';
 
 :root {
   color-scheme: light;
   --font-family-base: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-size-page-title: clamp(1.75rem, 2.6vw, 2.5rem);
-  --font-size-section-title: clamp(1.25rem, 1.8vw, 1.5rem);
-  --font-size-card-title: 1rem;
+  --font-size-page-title: clamp(1.5rem, 2vw, 2rem);
+  --font-size-section-title: clamp(1.125rem, 1.5vw, 1.375rem);
+  --font-size-card-title: 0.9375rem;
   --font-size-body: 0.9375rem;
-  --font-size-caption: 0.8125rem;
+  --font-size-caption: 0.75rem;
   --font-size-badge: 0.75rem;
   --line-height-body: 1.6;
 
@@ -20,27 +22,27 @@
   --space-sm: 8px;
   --space-md: 12px;
   --space-lg: 16px;
-  --space-xl: 24px;
-  --space-2xl: 32px;
-  --space-3xl: 48px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
 
-  --app-bg: #f6f3ed;
+  --app-bg: #f4f7f8;
   --app-surface: #ffffff;
-  --app-surface-soft: #fbfaf7;
-  --app-text: #19343a;
-  --app-muted: #68797b;
-  --app-border: #dfe2dc;
+  --app-surface-soft: #f8fafb;
+  --app-text: #17323a;
+  --app-muted: #64767d;
+  --app-border: #d9e2e6;
   --color-bg: var(--app-bg);
   --color-surface: var(--app-surface);
   --color-surface-soft: var(--app-surface-soft);
   --color-border: var(--app-border);
-  --color-border-strong: #cbd2cc;
+  --color-border-strong: #c3cfd4;
   --color-text: var(--app-text);
   --color-muted: var(--app-muted);
-  --color-primary: #0b8078;
-  --color-primary-dark: #075f5a;
-  --color-primary-hover: #075f5a;
-  --color-primary-soft: #e5f4f1;
+  --color-primary: #0f766e;
+  --color-primary-dark: #0b5f59;
+  --color-primary-hover: #0b665f;
+  --color-primary-soft: #e8f4f2;
   --color-accent: #e8755e;
   --color-accent-soft: #fff0eb;
   --color-success: #2f8967;
@@ -51,8 +53,8 @@
   --color-danger-soft: #fff0ef;
   --color-info: #476fae;
   --color-info-soft: #edf3fd;
-  --color-nav: #17373d;
-  --focus-ring: rgba(11, 128, 120, 0.24);
+  --color-nav: #14363f;
+  --focus-ring: rgba(15, 118, 110, 0.18);
   --active-nav-border: var(--color-primary);
 
   --accent: var(--color-primary);
@@ -63,8 +65,8 @@
   --accent-contrast: #ffffff;
   --accent-ring: var(--focus-ring);
 
-  --sidebar-bg: #17373d;
-  --sidebar-bg-soft: #21484d;
+  --sidebar-bg: #102f38;
+  --sidebar-bg-soft: #173f49;
   --sidebar-text: #e5f0ee;
   --sidebar-muted: #bdd0ce;
   --sidebar-active-bg: rgba(255, 255, 255, .11);
@@ -72,7 +74,7 @@
   --sidebar-icon-bg: rgba(255, 255, 255, .07);
   --sidebar-icon-active-bg: var(--accent);
 
-  --button-primary-bg: var(--gradient-brand);
+  --button-primary-bg: var(--color-primary);
   --button-primary-hover: var(--accent-hover);
   --button-primary-text: var(--accent-contrast);
 
@@ -82,21 +84,21 @@
   --color-amber: var(--color-warning);
   --color-navy: var(--color-nav);
   --color-lavender: #7469a8;
-  --gradient-brand: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  --gradient-brand: var(--color-primary);
   --gradient-warm: linear-gradient(135deg, var(--color-surface) 0%, var(--color-primary-soft) 100%);
 
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-pill: 999px;
 
-  --shadow-soft: 0 1px 2px rgba(25, 52, 58, 0.04), 0 8px 24px rgba(25, 52, 58, 0.06);
-  --shadow-medium: 0 12px 32px rgba(25, 52, 58, 0.1);
-  --shadow-elevated: 0 22px 60px rgba(25, 52, 58, 0.14);
+  --shadow-soft: 0 1px 2px rgba(16, 48, 58, 0.04), 0 4px 12px rgba(16, 48, 58, 0.05);
+  --shadow-medium: 0 8px 24px rgba(16, 48, 58, 0.09);
+  --shadow-elevated: 0 18px 48px rgba(16, 48, 58, 0.14);
   --shadow-sm: var(--shadow-soft);
   --shadow-md: var(--shadow-medium);
-  --shadow-glow: 0 14px 34px rgba(11, 128, 120, 0.18);
+  --shadow-glow: 0 6px 16px rgba(15, 118, 110, 0.16);
   --shadow-premium: var(--shadow-elevated);
   --glass-surface: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.82);
@@ -111,6 +113,10 @@ body {
   min-height: 100%;
   max-width: 100%;
   overflow-x: clip;
+}
+
+html {
+  background: var(--color-bg);
 }
 
 app-root,
@@ -177,6 +183,19 @@ body.app-drawer-open {
 
 body.app-modal-open {
   overflow: hidden;
+}
+
+/* A fixed modal must be positioned against the viewport, not an animated page.
+   Page entry animations use transform, which creates a containing block for fixed
+   descendants. Neutralize only those transforms while a modal is open. */
+body.app-modal-open .page,
+body.app-modal-open .market-page,
+body.app-modal-open .request-page,
+body.app-modal-open .requests-page,
+body.app-modal-open .provider-workspace,
+body.app-modal-open .dashboard {
+  animation: none !important;
+  transform: none !important;
 }
 
 button,
@@ -414,7 +433,7 @@ button {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -820,5 +839,189 @@ app-shell .shell .nav-label.nav-label {
 
   app-shell .shell .content.content {
     padding: 12px;
+  }
+}
+
+/* Unified application chrome + feedback language */
+app-shell .shell .topbar.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  border-bottom: 1px solid rgba(25,52,58,.09);
+  background: rgba(248,247,243,.91);
+  backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: 0 8px 28px rgba(25,52,58,.04);
+}
+app-shell .shell .content.content {
+  width: 100%;
+  max-width: 1440px;
+  padding: clamp(18px, 2.5vw, 34px);
+}
+app-shell .shell.admin-shell .content.content { max-width: 1540px; }
+app-shell .shell.admin-shell .topbar-title h1 { color: #143940; }
+app-shell .shell.admin-shell .role-badge.role-badge {
+  color: #205f61;
+  background: #e3f3f0;
+}
+
+/* Alert and status surfaces used throughout legacy and newer feature pages.
+   Keep the icon out of the text flow, but reserve logical inline space with an
+   important longhand so component-level padding shorthands cannot overlap it. */
+.error,
+.success,
+.notice,
+.info-message,
+.form-message,
+.page-message {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding-block: 13px;
+  padding-inline-end: 15px;
+  padding-inline-start: 46px !important;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(25,52,58,.035);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.error::before,
+.success::before,
+.notice::before,
+.info-message::before,
+.form-message::before,
+.page-message::before {
+  position: absolute;
+  inset-inline-start: 14px;
+  inset-block-start: 13px;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+.error {
+  border-color: rgba(198,76,76,.2) !important;
+  color: #8d3838 !important;
+  background: linear-gradient(135deg, #fff9f8, var(--color-danger-soft)) !important;
+}
+.error::before { content: "!"; color: #fff; background: var(--color-danger); }
+.success {
+  border-color: rgba(47,137,103,.2) !important;
+  color: #276f56 !important;
+  background: linear-gradient(135deg, #fbfffc, var(--color-success-soft)) !important;
+}
+.success::before { content: "✓"; color: #fff; background: var(--color-success); }
+.notice,
+.info-message,
+.form-message,
+.page-message {
+  border-color: rgba(71,111,174,.18);
+  color: #365884;
+  background: linear-gradient(135deg, #fbfdff, var(--color-info-soft));
+}
+.notice::before,
+.info-message::before,
+.form-message::before,
+.page-message::before { content: "i"; color: #fff; background: var(--color-info); }
+
+@media (max-width: 560px) {
+  app-shell .shell .content.content { padding: 12px; }
+  .error, .success, .notice, .info-message, .form-message, .page-message {
+    padding-block: 12px;
+    padding-inline-end: 13px;
+  }
+  .error::before, .success::before, .notice::before, .info-message::before, .form-message::before, .page-message::before {
+    inset-block-start: 12px;
+  }
+}
+
+/* Preserve semantic tone when legacy pages combine a base notice class with a status class. */
+.notice.error::before,
+.page-message.error::before,
+.form-message.error::before,
+.form-message.error-message::before {
+  content: "!";
+  color: #fff;
+  background: var(--color-danger);
+}
+.notice.success::before,
+.page-message.success::before,
+.form-message.success::before,
+.form-message.success-message::before {
+  content: "✓";
+  color: #fff;
+  background: var(--color-success);
+}
+.form-message.error-message {
+  border-color: rgba(198,76,76,.2);
+  color: #8d3838;
+  background: linear-gradient(135deg, #fff9f8, var(--color-danger-soft));
+}
+.form-message.success-message {
+  border-color: rgba(47,137,103,.2);
+  color: #276f56;
+  background: linear-gradient(135deg, #fbfffc, var(--color-success-soft));
+}
+
+@import 'styles/enterprise';
+
+/* Locale direction and responsive safeguards. */
+html[dir='ltr'] body { direction: ltr; text-align: left; }
+html[dir='rtl'] body { direction: rtl; text-align: right; }
+html[dir='rtl'] input[type='email'],
+html[dir='rtl'] input[type='tel'],
+html[dir='rtl'] input[type='url'],
+html[dir='rtl'] input[type='number'],
+html[dir='rtl'] input[type='date'],
+html[dir='rtl'] input[type='time'] { direction: ltr; text-align: right; }
+html[dir='rtl'] code,
+html[dir='rtl'] pre,
+html[dir='rtl'] [dir='ltr'] { direction: ltr; text-align: left; }
+
+@media (max-width: 760px) {
+  .two,
+  .three,
+  .grid,
+  .form-grid,
+  .provider-form-grid,
+  .location-grid,
+  .summary-grid,
+  .filters,
+  .split {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-head,
+  .hero,
+  .topbar,
+  .actions,
+  .card-actions,
+  .provider-card-actions,
+  .header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .page,
+  .market-page,
+  .request-page,
+  .requests-page,
+  .provider-workspace,
+  .dashboard {
+    width: 100%;
+    overflow: hidden;
   }
 }

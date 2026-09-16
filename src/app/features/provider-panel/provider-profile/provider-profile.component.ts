@@ -213,8 +213,14 @@ export class ProviderProfileComponent implements OnInit {
 
   selectPrimaryGeography(areaId: string | null): void {
     this.form.primaryGeographyAreaId = areaId || null;
+    if (!areaId) return;
     const area = this.geographies.find((item) => item.id === areaId);
+    if (area) this.applyPrimaryGeography(area);
+  }
+
+  applyPrimaryGeography(area: GeographyArea | null): void {
     if (!area) return;
+    this.form.primaryGeographyAreaId = area.id;
     this.form.suburb = area.suburb;
     this.form.state = area.state;
     this.form.postcode = area.postcode;
@@ -238,6 +244,18 @@ export class ProviderProfileComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const allowedExtensions = ['.jpg', '.jpeg', '.jfif', '.png', '.webp'];
+    const extension = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase() : '';
+    if (!allowedExtensions.includes(extension)) {
+      this.errorMessage = 'providerProfile.galleryTypeError';
+      input.value = '';
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.errorMessage = 'providerProfile.gallerySizeError';
+      input.value = '';
+      return;
+    }
     this.isUploadingMedia = true;
     this.errorMessage = '';
     this.apiService.uploadProviderGalleryImage<ApiResponse<ProviderMedia>>(file, this.galleryCaption, this.gallery.length).subscribe({

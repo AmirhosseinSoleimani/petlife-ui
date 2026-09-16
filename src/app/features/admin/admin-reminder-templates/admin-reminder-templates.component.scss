@@ -1,1 +1,167 @@
-.admin-master-page { display: grid; gap: 1rem; }.split { display: grid; grid-template-columns: minmax(300px,.9fr) minmax(0,1.2fr); gap: 1rem; align-items:start; }.editor,.list { display:grid; gap:.8rem; }.editor { padding:1rem; border:1px solid #e5e7eb; border-radius:1rem; }.editor h3 { margin:0; }.two { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; } fieldset { display:grid; gap:.4rem; border:1px solid #e5e7eb; border-radius:.75rem; } fieldset p { margin:0; opacity:.65; font-size:.9rem; }.list app-card { display:grid; gap:.6rem; }.heading { display:flex; justify-content:space-between; gap:1rem; }.heading>div { display:grid; }.actions { display:flex; gap:.5rem; flex-wrap:wrap; }.error{color:#b42318}.success{color:#157347}@media(max-width:800px){.split,.two{grid-template-columns:1fr}}
+.admin-master-page {
+  display: grid;
+  gap: 1rem;
+}
+
+:host ::ng-deep app-page-header.reminder-templates-header .page-head {
+  justify-content: center;
+  text-align: center;
+}
+
+:host ::ng-deep app-page-header.reminder-templates-header .page-head > div:first-child {
+  width: 100%;
+}
+
+:host ::ng-deep app-page-header.reminder-templates-header .description {
+  margin-inline: auto;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(300px, .9fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.editor,
+.list {
+  display: grid;
+  gap: .8rem;
+}
+
+.editor {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+}
+
+.editor h3 {
+  margin: 0;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .7rem;
+}
+
+.species-fieldset {
+  display: grid;
+  gap: .4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: .75rem;
+}
+
+.species-fieldset p {
+  margin: 0;
+  opacity: .65;
+  font-size: .9rem;
+}
+
+.species-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.species-option input[type='checkbox'] {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.species-option span {
+  line-height: 1.35;
+}
+
+.list app-card {
+  display: grid;
+  gap: .6rem;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.heading > div {
+  display: grid;
+}
+
+.template-status-badge {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-badge);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.template-status-badge > span {
+  display: block;
+  width: 100%;
+  line-height: 1;
+  text-align: center;
+}
+
+.template-status-badge.is-active {
+  border-color: rgba(47, 137, 103, .14);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.template-status-badge.is-inactive {
+  border-color: rgba(175, 116, 33, .14);
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.error {
+  color: #b42318;
+}
+
+.success {
+  color: #157347;
+}
+
+@media (max-width: 800px) {
+  .split,
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Make the Type and Recurrence controls visually explicit as dropdowns. */
+:host ::ng-deep app-input[name='type'] select,
+:host ::ng-deep app-input[name='recurrence'] select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+}
+
+:host-context([dir='rtl']) ::ng-deep app-input[name='type'] select,
+:host-context([dir='rtl']) ::ng-deep app-input[name='recurrence'] select {
+  padding-right: 13px;
+  padding-left: 38px;
+  background-position: left 12px center;
+}

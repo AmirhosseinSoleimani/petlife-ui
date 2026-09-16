@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
 import { LoginRequest } from '../../../core/models/auth.models';
@@ -33,8 +34,8 @@ export class LoginComponent {
       next: () => {
         this.router.navigate(['/dashboard']);
       },
-      error: () => {
-        this.errorMessage = 'Unable to sign in with the provided credentials.';
+      error: (error) => {
+        this.errorMessage = apiErrorMessage(error, 'auth.loginError');
         this.isSubmitting = false;
       }
     });

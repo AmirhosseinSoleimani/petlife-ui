@@ -7,6 +7,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
 import {
   DeliveryMode,
+  GeographyArea,
   Provider,
   ProviderExpertise,
   ProviderRecommendation,
@@ -38,15 +39,11 @@ export class ProviderServicesPageComponent implements OnInit {
   isLoadingServices = false;
   errorMessage = '';
   deliveryMode: DeliveryMode | '' = '';
-  suburbFilter = '';
-  postcodeFilter = '';
-  radiusKm: number | null = 25;
-  latitude: number | null = null;
-  longitude: number | null = null;
+  selectedGeographyId: string | null = null;
+  selectedGeography: GeographyArea | null = null;
   acceptingRequestsOnly = true;
   openNowOnly = false;
   afterHoursOnly = false;
-  isLocating = false;
 
   constructor(
     private readonly apiService: ApiService,
@@ -99,6 +96,26 @@ export class ProviderServicesPageComponent implements OnInit {
         label: this.getServiceName(service),
         value: service.serviceDefinitionId!
       }));
+  }
+
+  get hasSearchFilters(): boolean {
+    return !!(
+      this.deliveryMode ||
+      this.selectedGeographyId ||
+      this.acceptingRequestsOnly ||
+      this.openNowOnly ||
+      this.afterHoursOnly
+    );
+  }
+
+  clearFilters(): void {
+    this.deliveryMode = '';
+    this.selectedGeographyId = null;
+    this.selectedGeography = null;
+    this.acceptingRequestsOnly = false;
+    this.openNowOnly = false;
+    this.afterHoursOnly = false;
+    this.applyFilters();
   }
 
   get visibleServices(): ProviderService[] {
@@ -181,30 +198,9 @@ export class ProviderServicesPageComponent implements OnInit {
     if (this.selectedCategoryId) this.loadServices();
   }
 
-  useMyLocation(): void {
-    if (!navigator.geolocation) {
-      this.errorMessage = 'Location is not available in this browser.';
-      return;
-    }
-    this.isLocating = true;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.latitude = position.coords.latitude;
-        this.longitude = position.coords.longitude;
-        this.isLocating = false;
-        this.applyFilters();
-      },
-      () => {
-        this.errorMessage = 'Unable to read your current location.';
-        this.isLocating = false;
-      },
-      { enableHighAccuracy: false, timeout: 10000 }
-    );
-  }
-
-  clearLocation(): void {
-    this.latitude = null;
-    this.longitude = null;
+  onGeographySelected(area: GeographyArea | null): void {
+    this.selectedGeography = area;
+    this.selectedGeographyId = area?.id || null;
   }
 
   private loadServices(): void {
@@ -263,16 +259,10 @@ export class ProviderServicesPageComponent implements OnInit {
     if (this.selectedPetId) params.set('petId', this.selectedPetId);
     if (this.selectedCategoryId) params.set('categoryId', this.selectedCategoryId);
     if (this.deliveryMode) params.set('deliveryMode', this.deliveryMode);
-    if (this.suburbFilter.trim()) params.set('suburb', this.suburbFilter.trim());
-    if (this.postcodeFilter.trim()) params.set('postcode', this.postcodeFilter.trim());
+    if (this.selectedGeographyId) params.set('geographyAreaId', this.selectedGeographyId);
     if (this.acceptingRequestsOnly) params.set('acceptingRequests', 'true');
     if (this.openNowOnly) params.set('openNow', 'true');
     if (this.afterHoursOnly) params.set('afterHours', 'true');
-    if (this.latitude !== null && this.longitude !== null) {
-      params.set('latitude', String(this.latitude));
-      params.set('longitude', String(this.longitude));
-      if (this.radiusKm !== null) params.set('radiusKm', String(this.radiusKm));
-    }
     return params;
   }
 

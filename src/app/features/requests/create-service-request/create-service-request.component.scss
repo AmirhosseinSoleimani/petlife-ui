@@ -82,3 +82,12 @@ address {
 }
 
 .consent-option{display:flex;gap:.75rem;align-items:flex-start;padding:.8rem;border:1px solid #e4e7ec;border-radius:.7rem}.consent-option input{margin-top:.25rem}.consent-option span{display:grid;gap:.2rem}.consent-option small{color:#667085;font-weight:400}
+
+.managed-location-preview { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #d7e7e3; border-radius: var(--radius-md); background: #f5faf8; }
+.managed-location-preview > span { color: var(--color-primary); font-weight: 900; }
+.managed-location-preview div { min-width: 0; display: grid; gap: 2px; }
+.managed-location-preview strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.managed-location-preview small { color: var(--color-muted); }
+
+.managed-location-summary { display:grid; gap:4px; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-primary-soft); }
+.managed-location-summary strong { color:var(--color-primary-dark); }.managed-location-summary small { color:var(--color-muted); }

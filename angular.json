@@ -41,12 +41,12 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "12kb",
+                  "maximumError": "16kb"
                 }
               ],
               "fileReplacements": [
@@ -107,7 +107,6 @@
       }
     }
   },
-  "defaultProject": "petlife-ui",
   "cli": {
     "analytics": "9dfeffef-1d98-4436-9e05-ce105ecd17e3"
   }

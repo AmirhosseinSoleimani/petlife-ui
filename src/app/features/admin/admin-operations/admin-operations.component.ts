@@ -25,6 +25,8 @@ export class AdminOperationsComponent implements OnInit {
   ngOnInit(): void { this.loadAll(); }
 
   loadAll(): void { this.loadKpi(); this.loadRequests(); this.loadFeedback(); }
+  clearRequestFilter(): void { this.requestStatus = ''; this.loadRequests(); }
+  clearFeedbackFilters(): void { this.feedbackStatus = ''; this.feedbackPriority = ''; this.loadFeedback(); }
   loadKpi(): void {
     this.api.get<ApiResponse<AdminKpi>>('/admin/kpi').subscribe({ next: r => this.kpi = r.data || null, error: () => this.errorMessage = 'Unable to load admin KPI data.' });
   }

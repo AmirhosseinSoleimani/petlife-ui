@@ -85,6 +85,12 @@ export class ProviderServicesManagementComponent implements OnInit {
     return this.services.filter((service) => service.isActive !== false).length;
   }
 
+  get isPricingValid(): boolean {
+    if (this.form.pricingType === 'Quote') return true;
+    const value = this.form.price == null ? 0 : Number(this.form.price);
+    return Number.isFinite(value) && value > 0;
+  }
+
   loadServices(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -112,10 +118,15 @@ export class ProviderServicesManagementComponent implements OnInit {
   }
 
   saveService(): void {
-    this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
+    if (!this.isPricingValid) {
+      this.errorMessage = 'providerServices.positivePriceRequired';
+      return;
+    }
+
+    this.isSaving = true;
     const payload = this.toPayload();
     const request = this.editingId
       ? this.apiService.put<ApiResponse<ProviderService>>(`/provider-services/${this.editingId}`, payload)
@@ -246,7 +257,7 @@ export class ProviderServicesManagementComponent implements OnInit {
     return {
       ...this.form,
       category: this.selectedDefinition?.categoryName || '',
-      price: this.form.pricingType === 'Quote' ? 0 : (this.form.price === null ? 0 : Number(this.form.price)),
+      price: this.form.pricingType === 'Quote' ? null : (this.form.price === null ? null : Number(this.form.price)),
       priceMax: this.form.priceMax === null || this.form.priceMax === undefined ? null : Number(this.form.priceMax),
       pricingType: this.form.pricingType || 'Fixed',
       pricingNotes: this.form.pricingNotes?.trim() || '',

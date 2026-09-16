@@ -7,6 +7,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { Expense, ExpensePayload, Pet } from '../../../core/models/customer-core.models';
 import { ExpenseCategory, ExpenseReport } from '../../../core/models/phase1-care.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 interface AllocationRow { petId: string; petName: string; selected: boolean; amount: number | null; }
 
@@ -39,7 +40,7 @@ export class PetExpensesComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService, private readonly dialogService: AppDialogService) {
     this.petId = this.route.snapshot.paramMap.get('petId') || '';
   }
 
@@ -156,10 +157,12 @@ export class PetExpensesComponent implements OnInit {
   }
 
   deleteExpense(expense: Expense): void {
-    if (!window.confirm(this.i18nService.translate('expenses.deleteConfirm'))) return;
-    this.apiService.delete<ApiResponse<unknown>>(`/expenses/${expense.id}`).subscribe({
-      next: () => { this.successMessage = 'expenses.deleteSuccess'; this.loadPage(); this.loadReport(); },
-      error: () => this.errorMessage = 'expenses.deleteError'
+    this.dialogService.confirm({ title: 'Delete expense?', message: 'expenses.deleteConfirm', confirmLabel: 'Delete expense', tone: 'danger' }).then((confirmed) => {
+      if (!confirmed) return;
+      this.apiService.delete<ApiResponse<unknown>>(`/expenses/${expense.id}`).subscribe({
+        next: () => { this.successMessage = 'expenses.deleteSuccess'; this.loadPage(); this.loadReport(); },
+        error: () => this.errorMessage = 'expenses.deleteError'
+      });
     });
   }
 
@@ -176,10 +179,12 @@ export class PetExpensesComponent implements OnInit {
   }
 
   deleteReceipt(expense: Expense): void {
-    if (!window.confirm(this.i18nService.translate('expenses.receiptDeleteConfirm'))) return;
-    this.apiService.deleteExpenseReceipt<ApiResponse<unknown>>(expense.id).subscribe({
-      next: () => { this.successMessage = 'expenses.receiptDeleted'; this.loadPage(); },
-      error: () => this.errorMessage = 'expenses.receiptDeleteError'
+    this.dialogService.confirm({ title: 'Delete receipt?', message: 'expenses.receiptDeleteConfirm', confirmLabel: 'Delete receipt', tone: 'danger' }).then((confirmed) => {
+      if (!confirmed) return;
+      this.apiService.deleteExpenseReceipt<ApiResponse<unknown>>(expense.id).subscribe({
+        next: () => { this.successMessage = 'expenses.receiptDeleted'; this.loadPage(); },
+        error: () => this.errorMessage = 'expenses.receiptDeleteError'
+      });
     });
   }
 

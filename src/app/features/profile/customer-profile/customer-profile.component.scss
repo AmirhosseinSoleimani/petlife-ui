@@ -5,3 +5,8 @@
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .checks { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 1rem; } .error { color: #b42318; } .success { color: #067647; }
 @media (max-width: 720px) { .identity, .grid { grid-template-columns: 1fr; } }
+
+.geography-help { margin:-4px 0 4px; color:var(--color-muted); font-size:12px; }
+.lookup-status { padding:10px 12px; border-radius:var(--radius-md); background:var(--color-primary-soft); color:var(--color-primary-dark); font-size:12px; font-weight:700; }
+.geography-matches { display:grid; gap:8px; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface-soft); }
+.geography-matches > div { display:flex; flex-wrap:wrap; gap:7px; }.geography-matches button { min-height:36px; padding:7px 10px; border:1px solid var(--color-border-strong); border-radius:9px; background:var(--color-surface); color:var(--color-text); cursor:pointer; text-align:start; }.geography-matches button:hover { border-color:var(--color-primary); background:var(--color-primary-soft); }

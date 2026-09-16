@@ -1,8 +1,11 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 
+import { ApiService } from '../../../core/api/api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
 import { AuthUser } from '../../../core/models/auth.models';
+import { ApiResponse } from '../../../core/models/api-response.model';
+import { UnreadNotificationCount } from '../../../core/models/marketplace.models';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 interface NavItem {
@@ -20,40 +23,43 @@ interface NavItem {
 export class AppShellComponent implements OnInit, OnDestroy {
   isDrawerOpen = false;
   isPreferencesOpen = false;
+  unreadNotificationCount = 0;
 
   private readonly customerNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
-    { labelKey: 'Profile', path: '/profile', icon: 'providers', enabled: true },
+    { labelKey: 'nav.profile', path: '/profile', icon: 'providers', enabled: true },
     { labelKey: 'nav.pets', path: '/pets', icon: 'pets', enabled: true },
+    { labelKey: 'nav.petTransfer', path: '/pet-transfer', icon: 'requests', enabled: true },
+    { labelKey: 'nav.notifications', path: '/notifications', icon: 'reminders', enabled: true },
     { labelKey: 'nav.reminders', path: '/reminders', icon: 'reminders', enabled: true },
     { labelKey: 'nav.providers', path: '/providers', icon: 'providers', enabled: true },
     { labelKey: 'nav.services', path: '/services', icon: 'services', enabled: true },
     { labelKey: 'nav.myRequests', path: '/service-requests/my', icon: 'requests', enabled: true },
     { labelKey: 'nav.emergencyVets', path: '/emergency-vets', icon: 'emergency', enabled: true },
     { labelKey: 'nav.aiAssistant', path: '/ai', icon: 'ai', enabled: true },
-    { labelKey: 'Feedback', path: '/feedback', icon: 'requests', enabled: true }
+    { labelKey: 'nav.feedback', path: '/feedback', icon: 'requests', enabled: true }
   ];
 
   private readonly providerNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
     { labelKey: 'nav.providerProfile', path: '/provider/profile', icon: 'providers', enabled: true },
-    { labelKey: 'Documents & trust', path: '/provider/documents', icon: 'requests', enabled: true },
+    { labelKey: 'nav.providerDocuments', path: '/provider/documents', icon: 'requests', enabled: true },
     { labelKey: 'nav.providerServices', path: '/provider/services', icon: 'services', enabled: true },
     { labelKey: 'nav.serviceAreas', path: '/provider/service-areas', icon: 'emergency', enabled: true },
     { labelKey: 'nav.incomingRequests', path: '/provider/requests', icon: 'requests', enabled: true },
     { labelKey: 'nav.aiAssistant', path: '/ai', icon: 'ai', enabled: true },
-    { labelKey: 'Feedback', path: '/feedback', icon: 'requests', enabled: true }
+    { labelKey: 'nav.feedback', path: '/feedback', icon: 'requests', enabled: true }
   ];
 
   private readonly adminNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
-    { labelKey: 'Admin users', path: '/admin/users', icon: 'providers', enabled: true },
-    { labelKey: 'Provider verification', path: '/admin/provider-verification', icon: 'providers', enabled: true },
-    { labelKey: 'Marketplace operations', path: '/admin/operations', icon: 'requests', enabled: true },
-    { labelKey: 'Admin pets', path: '/admin/pets', icon: 'pets', enabled: true },
-    { labelKey: 'Pet taxonomy', path: '/admin/taxonomy', icon: 'services', enabled: true },
-    { labelKey: 'Geography', path: '/admin/geography', icon: 'emergency', enabled: true },
-    { labelKey: 'Service catalog', path: '/admin/service-catalog', icon: 'services', enabled: true },
+    { labelKey: 'nav.adminUsers', path: '/admin/users', icon: 'providers', enabled: true },
+    { labelKey: 'nav.providerVerification', path: '/admin/provider-verification', icon: 'providers', enabled: true },
+    { labelKey: 'nav.marketplaceOperations', path: '/admin/operations', icon: 'requests', enabled: true },
+    { labelKey: 'nav.adminPets', path: '/admin/pets', icon: 'pets', enabled: true },
+    { labelKey: 'nav.petTaxonomy', path: '/admin/taxonomy', icon: 'services', enabled: true },
+    { labelKey: 'nav.geography', path: '/admin/geography', icon: 'emergency', enabled: true },
+    { labelKey: 'nav.serviceCatalog', path: '/admin/service-catalog', icon: 'services', enabled: true },
     { labelKey: 'nav.reminderTemplates', path: '/admin/reminder-templates', icon: 'reminders', enabled: true },
     { labelKey: 'nav.expenseCategories', path: '/admin/expense-categories', icon: 'expenses', enabled: true }
   ];
@@ -63,6 +69,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly authService: AuthService,
+    private readonly apiService: ApiService,
     readonly i18nService: I18nService,
     private readonly preferencesService: UserPreferencesService
   ) {
@@ -71,10 +78,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.preferencesService.load(true).subscribe();
+    this.loadUnreadNotifications();
   }
 
   get displayName(): string {
-    return this.currentUser?.name || 'PetLife User';
+    return this.currentUser?.name || this.i18nService.translate('shell.defaultUser');
   }
 
   get displayRole(): string {
@@ -95,13 +103,21 @@ export class AppShellComponent implements OnInit, OnDestroy {
   }
 
   get hubTitleKey(): string {
-    if (this.isAdmin) return 'Admin workspace';
+    if (this.isAdmin) return 'dashboard.adminHub';
     return this.isProvider ? 'dashboard.providerHub' : 'dashboard.customerHub';
   }
 
   get workspaceBadgeKey(): string {
     if (this.isAdmin) return 'Admin';
     return this.isProvider ? 'dashboard.providerWorkspace' : 'shell.workspaceBadge';
+  }
+
+
+  loadUnreadNotifications(): void {
+    this.apiService.get<ApiResponse<UnreadNotificationCount>>('/notifications/unread-count').subscribe({
+      next: (response) => this.unreadNotificationCount = response.data?.count || 0,
+      error: () => this.unreadNotificationCount = 0
+    });
   }
 
   logout(): void {
@@ -126,6 +142,12 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     document.body.classList.remove('app-drawer-open');
+  }
+
+
+  @HostListener('window:petlife:notifications-changed')
+  onNotificationsChanged(): void {
+    this.loadUnreadNotifications();
   }
 
   @HostListener('document:keydown.escape')

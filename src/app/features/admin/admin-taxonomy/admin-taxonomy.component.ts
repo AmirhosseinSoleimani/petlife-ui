@@ -3,7 +3,6 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { ApiService } from '../../../core/api/api.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
   PetBreed,
@@ -13,6 +12,7 @@ import {
   PetTaxonomy
 } from '../../../core/models/customer-core.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 type TaxonomySection = 'species' | 'subgroups' | 'breeds' | 'fields';
 type TaxonomyEntity = 'species' | 'subgroup' | 'breed' | 'field';
@@ -91,7 +91,7 @@ export class AdminTaxonomyComponent implements OnInit {
 
   constructor(
     private readonly apiService: ApiService,
-    private readonly i18nService: I18nService
+    private readonly dialogService: AppDialogService
   ) {}
 
   ngOnInit(): void {
@@ -308,23 +308,24 @@ export class AdminTaxonomyComponent implements OnInit {
   }
 
   remove(entityType: TaxonomyEntity, id: string): void {
-    const confirmed = window.confirm(
-      this.i18nService.translate(
-        'Delete this taxonomy item? Existing references are protected by the backend.'
-      )
-    );
-    if (!confirmed) return;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.apiService.delete<ApiResponse<unknown>>(`/admin/pet-taxonomy/${entityType}/${id}`).subscribe({
-      next: () => {
-        this.successMessage = 'Taxonomy item deleted.';
-        this.load();
-      },
-      error: (error: { error?: { message?: string } }) => {
-        this.errorMessage = error.error?.message || 'Unable to delete taxonomy item.';
-      }
+    this.dialogService.confirm({
+      title: 'Delete taxonomy item?',
+      message: 'Delete this taxonomy item? Existing references are protected by the backend.',
+      confirmLabel: 'Delete item',
+      tone: 'danger'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.errorMessage = '';
+      this.successMessage = '';
+      this.apiService.delete<ApiResponse<unknown>>(`/admin/pet-taxonomy/${entityType}/${id}`).subscribe({
+        next: () => {
+          this.successMessage = 'Taxonomy item deleted.';
+          this.load();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.errorMessage = error.error?.message || 'Unable to delete taxonomy item.';
+        }
+      });
     });
   }
 

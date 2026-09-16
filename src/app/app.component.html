@@ -1,1 +1,44 @@
+<aside *ngIf="errorNotice" class="global-error-notice" role="alert" aria-live="assertive">
+  <div class="global-error-icon" aria-hidden="true">!</div>
+  <div class="global-error-copy">
+    <strong>{{ 'errors.requestFailed' | translate }}</strong>
+    <span>{{ errorNotice.message | translate }}</span>
+    <small *ngIf="errorNotice.traceId">{{ 'errors.traceId' | translate }}: {{ errorNotice.traceId }}</small>
+  </div>
+  <button type="button" class="global-error-close" [attr.aria-label]="'common.close' | translate" (click)="dismissError()">×</button>
+</aside>
+
+<ng-container *ngIf="uploadProgress$ | async as upload">
+  <aside
+    *ngIf="upload.active || upload.completed || upload.failed"
+    class="global-upload-progress"
+    [class.complete]="upload.completed"
+    [class.failed]="upload.failed"
+    aria-live="polite"
+  >
+    <div class="upload-progress-copy">
+      <div>
+        <strong>
+          {{ (upload.failed ? 'files.uploadFailed' : upload.completed ? 'files.uploadComplete' : 'files.uploading') | translate }}
+        </strong>
+        <small *ngIf="upload.active && upload.estimatedSecondsRemaining !== null">
+          {{ 'files.estimatedTimeRemaining' | translate }}:
+          {{ upload.estimatedSecondsRemaining }} {{ 'files.seconds' | translate }}
+        </small>
+      </div>
+      <strong>{{ upload.progress }}%</strong>
+    </div>
+    <div
+      class="upload-progress-track"
+      role="progressbar"
+      [attr.aria-label]="'files.uploadProgress' | translate"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="upload.progress"
+    >
+      <span [style.width.%]="upload.progress"></span>
+    </div>
+  </aside>
+</ng-container>
+
 <router-outlet></router-outlet>

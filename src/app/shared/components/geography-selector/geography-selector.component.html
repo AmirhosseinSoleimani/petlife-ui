@@ -1,0 +1,73 @@
+<div class="geography-field" [class.disabled]="disabled">
+  <label class="field-label">
+    <span>{{ label | translate }}<strong *ngIf="required" aria-hidden="true">*</strong></span>
+    <small *ngIf="helper">{{ helper | translate }}</small>
+  </label>
+
+  <div class="selector-shell" [class.open]="isOpen" [class.has-selection]="!!selectedId">
+    <button
+      *ngIf="selectedId && selectedLabel"
+      type="button"
+      class="selected-value"
+      [disabled]="disabled"
+      (click)="open()"
+    >
+      <span class="pin" aria-hidden="true">⌖</span>
+      <span class="selected-copy">
+        <strong>{{ selectedArea?.postcode }}</strong>
+        <span>{{ selectedArea?.suburb }}<ng-container *ngIf="selectedArea?.city"> · {{ selectedArea?.city }}</ng-container><ng-container *ngIf="selectedArea?.state"> · {{ selectedArea?.state }}</ng-container></span>
+        <small>{{ 'geographySelector.managedArea' | translate }}</small>
+      </span>
+      <span class="replace">{{ 'geographySelector.change' | translate }}</span>
+    </button>
+
+    <div class="search-row" *ngIf="!selectedId || isOpen">
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m20 20-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/></svg>
+      </span>
+      <label class="search-copy">
+        <small>{{ 'geographySelector.postcode' | translate }}</small>
+        <input
+          type="search"
+          inputmode="numeric"
+          [value]="searchTerm"
+          [placeholder]="placeholder | translate"
+          [disabled]="disabled"
+          autocomplete="postal-code"
+          (focus)="open()"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </label>
+      <button *ngIf="selectedId" type="button" class="clear-button" [disabled]="disabled" (click)="clear($event)">
+        {{ 'common.clear' | translate }}
+      </button>
+    </div>
+
+    <div *ngIf="lookupMessage && isOpen" class="postcode-note">{{ lookupMessage | translate }}</div>
+
+    <div class="option-panel" *ngIf="isOpen" role="listbox">
+      <div *ngIf="isLoading" class="option-state">{{ 'geographySelector.loading' | translate }}</div>
+      <div *ngIf="!isLoading && loadFailed" class="option-state error-copy">{{ 'geographySelector.loadError' | translate }}</div>
+      <button
+        *ngFor="let area of availableOptions"
+        type="button"
+        role="option"
+        [attr.aria-selected]="area.id === selectedId"
+        class="area-option"
+        [class.selected]="area.id === selectedId"
+        (click)="select(area)"
+      >
+        <span class="option-pin" aria-hidden="true">⌖</span>
+        <span>
+          <strong>{{ area.postcode || '—' }}</strong>
+          <span class="suburb-name">{{ area.suburb }}</span>
+          <small>{{ area.city }}<ng-container *ngIf="area.state"> · {{ area.state }}</ng-container></small>
+        </span>
+        <span *ngIf="area.id === selectedId" class="selected-mark">✓</span>
+      </button>
+      <div *ngIf="!isLoading && !loadFailed && !availableOptions.length" class="option-state">
+        {{ 'geographySelector.noResults' | translate }}
+      </div>
+    </div>
+  </div>
+</div>

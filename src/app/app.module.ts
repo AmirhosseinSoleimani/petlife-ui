@@ -21,6 +21,7 @@ import { ContactVerificationComponent } from './features/auth/contact-verificati
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { NotificationsPageComponent } from './features/notifications/notifications-page/notifications-page.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
 import { FeedbackPageComponent } from './features/feedback/feedback-page/feedback-page.component';
 import { PetExpensesComponent } from './features/pets/pet-expenses/pet-expenses.component';
@@ -29,6 +30,7 @@ import { PetHealthTimelineComponent } from './features/pets/pet-health-timeline/
 import { PetSharingComponent } from './features/pets/pet-sharing/pet-sharing.component';
 import { PublicPetShareComponent } from './features/sharing/public-pet-share/public-pet-share.component';
 import { PetsPageComponent } from './features/pets/pets-page/pets-page.component';
+import { PetTransferComponent } from './features/pets/pet-transfer/pet-transfer.component';
 import { CustomerProfileComponent } from './features/profile/customer-profile/customer-profile.component';
 import { ProviderProfileComponent } from './features/provider-panel/provider-profile/provider-profile.component';
 import { ProviderDocumentsComponent } from './features/provider-panel/provider-documents/provider-documents.component';
@@ -40,6 +42,7 @@ import { CreateServiceRequestComponent } from './features/requests/create-servic
 import { MyRequestsComponent } from './features/requests/my-requests/my-requests.component';
 import { RemindersPageComponent } from './features/reminders/reminders-page/reminders-page.component';
 import { ProviderServicesPageComponent } from './features/services/provider-services-page/provider-services-page.component';
+import { AppConfirmDialogComponent } from './shared/components/app-confirm-dialog/app-confirm-dialog.component';
 import { AppBadgeComponent } from './shared/components/app-badge/app-badge.component';
 import { AppButtonComponent } from './shared/components/app-button/app-button.component';
 import { AppCardComponent } from './shared/components/app-card/app-card.component';
@@ -49,16 +52,18 @@ import { AppFileUploadComponent } from './shared/components/app-file-upload/app-
 import { AppPageHeaderComponent } from './shared/components/app-page-header/app-page-header.component';
 import { AppShellComponent } from './shared/layout/app-shell/app-shell.component';
 import { WorkspacePreferencesComponent } from './shared/components/workspace-preferences/workspace-preferences.component';
+import { GeographySelectorComponent } from './shared/components/geography-selector/geography-selector.component';
+import { AppLoadingStateComponent } from './shared/components/app-loading-state/app-loading-state.component';
 
 @NgModule({
   declarations: [
     AppComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
-    DashboardComponent, CustomerProfileComponent, PetsPageComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
+    DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
-    AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppFileUploadComponent, AppBadgeComponent,
-    AppPageHeaderComponent, WorkspacePreferencesComponent, TranslatePipe
+    AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
+    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, TranslatePipe
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],

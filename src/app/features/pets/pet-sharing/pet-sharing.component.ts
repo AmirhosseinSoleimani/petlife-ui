@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { CreatePetSharePayload, PET_SHARE_SCOPES, PetShareAudit, PetShareGrant, ScopedPetShare } from '../../../core/models/phase1-care.models';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-pet-sharing',
@@ -26,7 +26,7 @@ export class PetSharingComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService) {
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly dialogService: AppDialogService) {
     this.petId = this.route.snapshot.paramMap.get('petId') || '';
   }
 
@@ -99,10 +99,18 @@ export class PetSharingComponent implements OnInit {
   }
 
   revoke(grant: PetShareGrant): void {
-    if (!grant.isActive || !window.confirm(this.i18nService.translate('sharing.revokeConfirm'))) return;
-    this.apiService.post<ApiResponse<unknown>>(`/pet-shares/${grant.id}/revoke`, {}).subscribe({
-      next: () => { this.successMessage = 'sharing.revoked'; this.preview = null; this.load(); },
-      error: () => this.errorMessage = 'sharing.revokeError'
+    if (!grant.isActive) return;
+    this.dialogService.confirm({
+      title: 'Revoke shared access?',
+      message: 'sharing.revokeConfirm',
+      confirmLabel: 'Revoke access',
+      tone: 'danger'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.apiService.post<ApiResponse<unknown>>(`/pet-shares/${grant.id}/revoke`, {}).subscribe({
+        next: () => { this.successMessage = 'sharing.revoked'; this.preview = null; this.load(); },
+        error: () => this.errorMessage = 'sharing.revokeError'
+      });
     });
   }
 

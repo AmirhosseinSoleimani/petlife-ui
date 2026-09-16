@@ -1,4 +1,4 @@
-<div class="shell" [class.drawer-open]="isDrawerOpen">
+<div class="shell" [class.drawer-open]="isDrawerOpen" [class.admin-shell]="isAdmin">
   <aside id="app-main-nav" class="sidebar" [attr.aria-label]="'Main navigation' | translate">
     <div class="brand-panel">
       <span class="brand-mark" aria-hidden="true">
@@ -11,6 +11,11 @@
         <strong>{{ 'app.name' | translate }}</strong>
         <small>{{ 'app.tagline' | translate }}</small>
       </div>
+    </div>
+
+    <div *ngIf="isAdmin" class="admin-workspace-label">
+      <span>{{ 'shell.adminControl' | translate }}</span>
+      <strong>{{ 'shell.operationsConsole' | translate }}</strong>
     </div>
 
     <nav class="nav">
@@ -79,6 +84,16 @@
             <option *ngFor="let option of languageOptions" [ngValue]="option.code">{{ option.labelKey | translate }}</option>
           </select>
         </label>
+        <a
+          routerLink="/notifications"
+          class="notification-trigger"
+          [attr.aria-label]="'notifications.title' | translate"
+          [attr.title]="'notifications.title' | translate"
+          (click)="loadUnreadNotifications()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.6 2.6 0 0 0 2.4-1.6H9.6A2.6 2.6 0 0 0 12 22Zm7-5-1.7-2V10a5.3 5.3 0 0 0-4.1-5.2V3.6a1.2 1.2 0 0 0-2.4 0v1.2A5.3 5.3 0 0 0 6.7 10v5L5 17v1h14v-1Z"/></svg>
+          <span *ngIf="unreadNotificationCount" class="notification-count">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
+        </a>
         <button
           type="button"
           class="preferences-trigger"
