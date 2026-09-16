@@ -49,7 +49,9 @@ export class I18nService {
       return direct;
     }
 
-    return this.currentLanguage === 'fa' ? this.translateDynamicApiText(key) : key;
+    const dynamic = this.currentLanguage === 'fa' ? this.translateDynamicApiText(key) : key;
+    if (dynamic !== key) return dynamic;
+    return this.humanizeMissingKey(key);
   }
 
   private translateDynamicApiText(value: string): string {
@@ -67,6 +69,15 @@ export class I18nService {
       const fieldLabel = this.translations[`validation.field.${fieldKey}`] || field;
       return `${fieldLabel}: ${this.translateBackendMessage(message)}`;
     }).join(' • ');
+  }
+
+  private humanizeMissingKey(key: string): string {
+    if (!/^[a-zA-Z][\w-]*(?:\.[\w-]+)+$/.test(key)) return key;
+    const segment = key.split('.').pop() || key;
+    return segment
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[_-]+/g, ' ')
+      .replace(/^./, (value) => value.toUpperCase());
   }
 
   private translateBackendMessage(message: string): string {

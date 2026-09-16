@@ -76,7 +76,8 @@ export class CustomerProfileComponent implements OnInit, OnDestroy {
   }
 
   onPostcodeChange(value: string | number | boolean | null): void {
-    this.form.postcode = typeof value === 'string' ? value : '';
+    const raw = typeof value === 'string' ? value : '';
+    this.form.postcode = raw.replace(/\D/g, '').slice(0, 4);
     if (this.applyingGeographyLookup) return;
     this.geographyMatches = [];
     const postcode = this.form.postcode.trim();

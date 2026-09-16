@@ -49,3 +49,10 @@
     width: 100%;
   }
 }
+
+.lookup-state { margin: -2px 0 2px; color: var(--color-muted); font-size: 12px; }
+.postcode-matches { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+.postcode-matches > p { margin: 0 0 2px; color: var(--color-muted); font-size: 12px; }
+.postcode-matches button { display: flex; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-surface); color: var(--color-text); text-align: start; cursor: pointer; }
+.postcode-matches button:hover { border-color: var(--color-primary); }
+.postcode-matches small { color: var(--color-muted); }

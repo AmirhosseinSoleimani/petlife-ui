@@ -353,22 +353,24 @@
           <app-input name="preferredLeadChannel" label="providerProfile.preferredLeadChannel" type="select" [options]="['Email', 'Phone', 'SMS']" [(ngModel)]="form.preferredLeadChannel"></app-input>
           <app-input name="contactVisibility" label="providerProfile.contactVisibility" type="select" [options]="['Always', 'AfterRequestAccepted', 'Never']" [(ngModel)]="form.contactVisibility"></app-input>
         </div>
-        <div class="provider-form-grid two">
-          <label class="provider-native-field">
-            <span>{{ 'providerProfile.primaryServiceLocation' | translate }}</span>
-            <select [ngModel]="form.primaryGeographyAreaId" (ngModelChange)="selectPrimaryGeography($event)" name="primaryGeographyAreaId">
-              <option [ngValue]="null">{{ 'providerProfile.manualAddress' | translate }}</option>
-              <option *ngFor="let area of geographies" [ngValue]="area.id">{{ area.suburb }} — {{ area.postcode }} — {{ area.city }}</option>
-            </select>
-          </label>
+        <div class="provider-form-grid two geography-first-row">
+          <app-geography-selector
+            label="providerProfile.primaryServiceLocation"
+            placeholder="geographySelector.postcodeFirst"
+            helper="geographySelector.postcodeHint"
+            state="NSW"
+            [selectedId]="form.primaryGeographyAreaId ?? null"
+            (selectedIdChange)="selectPrimaryGeography($event)"
+            (selectedAreaChange)="applyPrimaryGeography($event)"
+          ></app-geography-selector>
           <app-input name="timeZone" label="providerProfile.timezone" [(ngModel)]="form.timeZone"></app-input>
         </div>
         <app-input name="addressLine1" label="providerProfile.address" [(ngModel)]="form.addressLine1"></app-input>
         <app-input name="addressLine2" label="providerProfile.addressLine2" [(ngModel)]="form.addressLine2"></app-input>
         <div class="provider-form-grid three">
+          <app-input name="postcode" label="providerProfile.postcode" helper="geographySelector.postcodeHint" [(ngModel)]="form.postcode"></app-input>
           <app-input name="suburb" label="providerProfile.suburb" [(ngModel)]="form.suburb"></app-input>
           <app-input name="state" label="providerProfile.state" [(ngModel)]="form.state"></app-input>
-          <app-input name="postcode" label="providerProfile.postcode" [(ngModel)]="form.postcode"></app-input>
         </div>
         <app-input name="country" label="providerProfile.country" [(ngModel)]="form.country"></app-input>
         <div class="provider-form-grid two">

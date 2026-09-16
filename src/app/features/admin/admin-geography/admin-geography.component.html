@@ -5,9 +5,16 @@
   <div class="split">
     <form class="editor" (ngSubmit)="save()" #editor="ngForm">
       <h3>{{ (editingId ? 'adminGeography.edit' : 'adminGeography.new') | translate }}</h3>
-      <div class="two"><app-input name="city" label="adminGeography.city" required [(ngModel)]="form.city"></app-input><app-input name="suburb" label="adminGeography.suburb" required [(ngModel)]="form.suburb"></app-input></div>
-      <div class="two"><app-input name="state" label="adminGeography.state" required [(ngModel)]="form.state"></app-input><app-input name="postcode" label="adminGeography.postcode" required [(ngModel)]="form.postcode"></app-input></div>
-      <app-input name="country" label="adminGeography.country" required [(ngModel)]="form.country"></app-input>
+      <app-input name="postcode" label="adminGeography.postcode" helper="adminGeography.lookupHint" required [ngModel]="form.postcode" (ngModelChange)="onPostcodeChange($event)"></app-input>
+      <p class="lookup-state" *ngIf="isPostcodeLookupLoading">{{ 'adminGeography.lookupLoading' | translate }}</p>
+      <div class="postcode-matches" *ngIf="postcodeMatches.length > 1">
+        <p>{{ 'adminGeography.multipleMatches' | translate }}</p>
+        <button type="button" *ngFor="let match of postcodeMatches" (click)="applyPostcodeMatch(match)">
+          <strong>{{ match.suburb }}</strong><small>{{ match.postcode }} · {{ match.city }} · {{ match.state }}</small>
+        </button>
+      </div>
+      <div class="two"><app-input name="suburb" label="adminGeography.suburb" required [(ngModel)]="form.suburb"></app-input><app-input name="city" label="adminGeography.city" required [(ngModel)]="form.city"></app-input></div>
+      <div class="two"><app-input name="state" label="adminGeography.state" required [(ngModel)]="form.state"></app-input><app-input name="country" label="adminGeography.country" required [(ngModel)]="form.country"></app-input></div>
       <div class="two"><app-input name="sortOrder" label="adminGeography.sortOrder" type="number" [(ngModel)]="form.sortOrder"></app-input><app-input name="active" label="common.active" type="checkbox" [(ngModel)]="form.isActive"></app-input></div>
       <div class="actions"><app-button type="submit" [loading]="isSaving" [disabled]="editor.invalid">{{ 'common.save' | translate }}</app-button><app-button *ngIf="editingId" type="button" variant="secondary" (buttonClick)="reset()">{{ 'common.cancel' | translate }}</app-button></div>
     </form>

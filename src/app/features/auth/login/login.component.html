@@ -40,9 +40,9 @@
     <form (ngSubmit)="login()" #loginForm="ngForm">
       <app-input
         name="email"
-        label="Email or mobile"
+        label="auth.emailOrMobile"
         type="text"
-        placeholder="Enter your email or mobile"
+        placeholder="auth.emailOrMobilePlaceholder"
         required
         [(ngModel)]="credentials.email"
       ></app-input>
@@ -62,6 +62,6 @@
         {{ (isSubmitting ? 'auth.signingIn' : 'auth.signIn') | translate }}
       </app-button>
     </form>
-    <p class="register-link">{{ 'New to PetLife?' | translate }} <a routerLink="/register">{{ 'Create an account' | translate }}</a></p>
+    <p class="register-link">{{ 'auth.newToPetLife' | translate }} <a routerLink="/register">{{ 'auth.createAccount' | translate }}</a></p>
   </div>
 </section>

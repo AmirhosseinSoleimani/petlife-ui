@@ -67,8 +67,8 @@
           <div class="admin-queue-list" *ngIf="adminPendingDocuments.length">
             <a *ngFor="let document of adminPendingDocuments | slice:0:5" routerLink="/admin/provider-verification">
               <span class="queue-avatar" aria-hidden="true">{{ (document.documentType || 'D').charAt(0) }}</span>
-              <span class="queue-copy"><strong>{{ document.documentType || 'Provider document' }}</strong><small>{{ document.originalFileName }} · {{ document.createdAt | date:'short' }}</small></span>
-              <app-badge tone="warning">{{ document.status || 'Pending' }}</app-badge>
+              <span class="queue-copy"><strong>{{ document.documentType ? (document.documentType | translate) : ('providerDocuments.documentType' | translate) }}</strong><small>{{ document.originalFileName }} · {{ document.createdAt | date:'short' }}</small></span>
+              <app-badge tone="warning">{{ (document.status || 'Pending') | translate }}</app-badge>
             </a>
           </div>
         </app-card>
@@ -82,9 +82,9 @@
           <div *ngIf="!adminDashboardLoading && !adminLatestRequests.length" class="admin-mini-state">{{ 'No requested services are waiting in this snapshot.' | translate }}</div>
           <div class="admin-request-list" *ngIf="adminLatestRequests.length">
             <a *ngFor="let request of adminLatestRequests" routerLink="/admin/operations">
-              <span class="request-main"><strong>{{ getProviderRequestService(request) || 'Service request' }}</strong><small>{{ request.customerName || request.customerUserId || 'Customer' }}<ng-container *ngIf="request.providerBusinessName"> · {{ request.providerBusinessName }}</ng-container></small></span>
+              <span class="request-main"><strong>{{ getProviderRequestService(request) || ('services.serviceFallback' | translate) }}</strong><small>{{ request.customerName || request.customerUserId || ('Customer' | translate) }}<ng-container *ngIf="request.providerBusinessName"> · {{ request.providerBusinessName }}</ng-container></small></span>
               <span class="request-time">{{ (request.requestedDate || request.createdAt) | date:'short' }}</span>
-              <app-badge [tone]="getRequestTone(request)">{{ request.status || 'Requested' }}</app-badge>
+              <app-badge [tone]="getRequestTone(request)">{{ (request.status || 'Requested') | translate }}</app-badge>
             </a>
           </div>
         </app-card>

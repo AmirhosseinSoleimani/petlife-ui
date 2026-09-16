@@ -14,7 +14,8 @@
     >
       <span class="pin" aria-hidden="true">⌖</span>
       <span class="selected-copy">
-        <strong>{{ selectedLabel }}</strong>
+        <strong>{{ selectedArea?.postcode }}</strong>
+        <span>{{ selectedArea?.suburb }}<ng-container *ngIf="selectedArea?.city"> · {{ selectedArea?.city }}</ng-container><ng-container *ngIf="selectedArea?.state"> · {{ selectedArea?.state }}</ng-container></span>
         <small>{{ 'geographySelector.managedArea' | translate }}</small>
       </span>
       <span class="replace">{{ 'geographySelector.change' | translate }}</span>
@@ -24,19 +25,25 @@
       <span class="search-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="m20 20-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/></svg>
       </span>
-      <input
-        type="search"
-        [value]="searchTerm"
-        [placeholder]="placeholder | translate"
-        [disabled]="disabled"
-        autocomplete="off"
-        (focus)="open()"
-        (input)="onSearch($any($event.target).value)"
-      />
+      <label class="search-copy">
+        <small>{{ 'geographySelector.postcode' | translate }}</small>
+        <input
+          type="search"
+          inputmode="numeric"
+          [value]="searchTerm"
+          [placeholder]="placeholder | translate"
+          [disabled]="disabled"
+          autocomplete="postal-code"
+          (focus)="open()"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </label>
       <button *ngIf="selectedId" type="button" class="clear-button" [disabled]="disabled" (click)="clear($event)">
         {{ 'common.clear' | translate }}
       </button>
     </div>
+
+    <div *ngIf="lookupMessage && isOpen" class="postcode-note">{{ lookupMessage | translate }}</div>
 
     <div class="option-panel" *ngIf="isOpen" role="listbox">
       <div *ngIf="isLoading" class="option-state">{{ 'geographySelector.loading' | translate }}</div>
@@ -52,8 +59,9 @@
       >
         <span class="option-pin" aria-hidden="true">⌖</span>
         <span>
-          <strong>{{ displayName(area) }}</strong>
-          <small *ngIf="area.postcode">{{ area.postcode }}</small>
+          <strong>{{ area.postcode || '—' }}</strong>
+          <span class="suburb-name">{{ area.suburb }}</span>
+          <small>{{ area.city }}<ng-container *ngIf="area.state"> · {{ area.state }}</ng-container></small>
         </span>
         <span *ngIf="area.id === selectedId" class="selected-mark">✓</span>
       </button>

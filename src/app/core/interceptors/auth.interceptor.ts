@@ -9,52 +9,39 @@ import {
 import { Router } from '@angular/router';
 import { Observable, catchError, throwError } from 'rxjs';
 
+import { ApiErrorService } from '../api/api-error.service';
 import { AUTH_TOKEN_KEY } from '../auth/auth.constants';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly apiErrorService: ApiErrorService
+  ) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     const authRequest = token
-      ? request.clone({
-          setHeaders: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+      ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
       : request;
 
     return next.handle(authRequest).pipe(
       catchError((error: HttpErrorResponse) => {
-        const normalizedError = this.normalizeValidationError(error);
-        if (normalizedError.status === 401) {
+        const normalizedError = this.apiErrorService.normalize(error);
+        const isTranslationAsset = request.url.includes('/assets/i18n/');
+
+        if (normalizedError.status === 401 && !isTranslationAsset) {
           localStorage.removeItem(AUTH_TOKEN_KEY);
-          this.router.navigate(['/login']);
+          this.apiErrorService.notify(normalizedError);
+          if (!this.router.url.startsWith('/login')) {
+            void this.router.navigate(['/login']);
+          }
+        } else if (!isTranslationAsset) {
+          this.apiErrorService.notify(normalizedError);
         }
 
         return throwError(() => normalizedError);
       })
     );
-  }
-
-  private normalizeValidationError(error: HttpErrorResponse): HttpErrorResponse {
-    const body = error.error;
-    if (!body || typeof body !== 'object' || !body.fieldErrors || typeof body.fieldErrors !== 'object') {
-      return error;
-    }
-
-    const fieldErrors = Object.entries(body.fieldErrors as Record<string, string[]>)
-      .flatMap(([field, messages]) => (messages || []).filter(Boolean).map((message) => `${field}: ${message}`));
-
-    if (!fieldErrors.length) return error;
-
-    return new HttpErrorResponse({
-      error: { ...body, errors: [fieldErrors.join(' | ')] },
-      headers: error.headers,
-      status: error.status,
-      statusText: error.statusText,
-      url: error.url || undefined
-    });
   }
 }

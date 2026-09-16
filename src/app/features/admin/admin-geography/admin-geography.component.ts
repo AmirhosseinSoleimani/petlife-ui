@@ -30,6 +30,8 @@ export class AdminGeographyComponent implements OnInit {
   isSaving = false;
   errorMessage = '';
   successMessage = '';
+  postcodeMatches: GeographyArea[] = [];
+  isPostcodeLookupLoading = false;
 
   constructor(private readonly api: ApiService, private readonly i18n: I18nService) {}
 
@@ -43,6 +45,36 @@ export class AdminGeographyComponent implements OnInit {
       next: (response) => { this.areas = response.data || []; this.isLoading = false; },
       error: (error) => { this.errorMessage = apiErrorMessage(error, 'adminGeography.loadError'); this.isLoading = false; }
     });
+  }
+
+
+  onPostcodeChange(value: string): void {
+    const postcode = (value || '').replace(/\D/g, '').slice(0, 4);
+    this.form.postcode = postcode;
+    this.postcodeMatches = [];
+    if (!/^\d{4}$/.test(postcode)) return;
+
+    this.isPostcodeLookupLoading = true;
+    this.api.get<ApiResponse<GeographyArea[]>>(`/geography/by-postcode/${encodeURIComponent(postcode)}`).subscribe({
+      next: (response) => {
+        this.postcodeMatches = response.data || [];
+        this.isPostcodeLookupLoading = false;
+        if (this.postcodeMatches.length === 1) this.applyPostcodeMatch(this.postcodeMatches[0]);
+      },
+      error: () => {
+        this.isPostcodeLookupLoading = false;
+        this.postcodeMatches = [];
+      }
+    });
+  }
+
+  applyPostcodeMatch(area: GeographyArea): void {
+    this.form.postcode = area.postcode || this.form.postcode;
+    this.form.suburb = area.suburb || this.form.suburb;
+    this.form.city = area.city || 'Sydney';
+    this.form.state = area.state || 'NSW';
+    this.form.country = area.country || 'Australia';
+    this.postcodeMatches = [];
   }
 
   save(): void {
@@ -97,6 +129,8 @@ export class AdminGeographyComponent implements OnInit {
   reset(): void {
     this.editingId = null;
     this.form = this.emptyForm();
+    this.postcodeMatches = [];
+    this.isPostcodeLookupLoading = false;
     this.isSaving = false;
   }
 

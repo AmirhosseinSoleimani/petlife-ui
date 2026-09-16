@@ -14,8 +14,8 @@ import { GeographyArea } from '../../../core/models/marketplace.models';
 export class GeographySelectorComponent implements OnInit, OnDestroy {
   @Input() endpoint = '/geography';
   @Input() label = 'Managed geography';
-  @Input() placeholder = 'Search managed area...';
-  @Input() helper = '';
+  @Input() placeholder = 'geographySelector.postcodeFirst';
+  @Input() helper = 'geographySelector.postcodeHint';
   @Input() selectedId: string | null = null;
   @Input() disabledIds: readonly string[] = [];
   @Input() state = '';
@@ -30,6 +30,7 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
   isOpen = false;
   isLoading = false;
   loadFailed = false;
+  lookupMessage = '';
   selectedArea: GeographyArea | null = null;
 
   private readonly search$ = new Subject<string>();
@@ -47,6 +48,7 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
       tap(() => {
         this.isLoading = true;
         this.loadFailed = false;
+        this.lookupMessage = '';
       }),
       switchMap((term: string) => this.apiService
         .get<ApiResponse<GeographyArea[]> | GeographyArea[]>(this.buildUrl(term))
@@ -56,9 +58,12 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
         })))
     ).subscribe((response: ApiResponse<GeographyArea[]> | GeographyArea[]) => {
       const items = Array.isArray(response) ? response : (response.data || []);
-      this.options = items.filter((area: GeographyArea) => area.isActive !== false);
+      this.options = items
+        .filter((area: GeographyArea) => area.isActive !== false)
+        .sort((a, b) => (a.postcode || '').localeCompare(b.postcode || '') || (a.suburb || '').localeCompare(b.suburb || ''));
       this.syncSelectedArea();
       this.isLoading = false;
+      this.handlePostcodeResult();
     });
 
     this.search$.next('');
@@ -77,6 +82,10 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
     return this.options.filter((area) => area.id === this.selectedId || !disabled.has(area.id));
   }
 
+  get isPostcodeSearch(): boolean {
+    return /^\d{4}$/.test(this.searchTerm.trim());
+  }
+
   open(): void {
     if (this.disabled) return;
     this.isOpen = true;
@@ -84,9 +93,9 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
   }
 
   onSearch(value: string): void {
-    this.searchTerm = value;
+    this.searchTerm = value.replace(/[^a-zA-Z0-9\s-]/g, '').slice(0, 120);
     this.isOpen = true;
-    this.search$.next(value.trim());
+    this.search$.next(this.searchTerm.trim());
   }
 
   select(area: GeographyArea): void {
@@ -95,6 +104,7 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
     this.selectedArea = area;
     this.searchTerm = '';
     this.isOpen = false;
+    this.lookupMessage = '';
     this.selectedIdChange.emit(area.id);
     this.selectedAreaChange.emit(area);
   }
@@ -105,14 +115,15 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
     this.selectedId = null;
     this.selectedArea = null;
     this.searchTerm = '';
+    this.lookupMessage = '';
     this.selectedIdChange.emit(null);
     this.selectedAreaChange.emit(null);
     this.search$.next('');
   }
 
   displayName(area: GeographyArea): string {
-    if (area.displayName?.trim()) return area.displayName.trim();
-    return [area.suburb, area.city, area.state, area.country].filter(Boolean).join(', ');
+    const locality = [area.suburb, area.city, area.state].filter(Boolean).join(', ');
+    return area.postcode ? `${area.postcode} · ${locality}` : (area.displayName?.trim() || locality || area.country);
   }
 
   @HostListener('document:click', ['$event'])
@@ -124,11 +135,30 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
   }
 
   private buildUrl(search: string): string {
+    const normalized = search.trim();
+    if (/^\d{4}$/.test(normalized)) {
+      return `/geography/by-postcode/${encodeURIComponent(normalized)}`;
+    }
+
     const params = new URLSearchParams();
-    if (search) params.set('search', search);
+    if (normalized) params.set('search', normalized);
     if (this.state.trim()) params.set('state', this.state.trim());
     const query = params.toString();
     return query ? `${this.endpoint}?${query}` : this.endpoint;
+  }
+
+  private handlePostcodeResult(): void {
+    if (!this.isPostcodeSearch) return;
+    const candidates = this.availableOptions;
+    if (candidates.length === 1) {
+      this.lookupMessage = 'geographySelector.autoSelected';
+      this.select(candidates[0]);
+      return;
+    }
+    if (candidates.length > 1) {
+      this.lookupMessage = 'geographySelector.multipleSuburbs';
+      this.isOpen = true;
+    }
   }
 
   private syncSelectedArea(): void {

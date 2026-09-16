@@ -213,8 +213,14 @@ export class ProviderProfileComponent implements OnInit {
 
   selectPrimaryGeography(areaId: string | null): void {
     this.form.primaryGeographyAreaId = areaId || null;
+    if (!areaId) return;
     const area = this.geographies.find((item) => item.id === areaId);
+    if (area) this.applyPrimaryGeography(area);
+  }
+
+  applyPrimaryGeography(area: GeographyArea | null): void {
     if (!area) return;
+    this.form.primaryGeographyAreaId = area.id;
     this.form.suburb = area.suburb;
     this.form.state = area.state;
     this.form.postcode = area.postcode;

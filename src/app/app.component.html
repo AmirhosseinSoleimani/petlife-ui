@@ -1,3 +1,13 @@
+<aside *ngIf="errorNotice" class="global-error-notice" role="alert" aria-live="assertive">
+  <div class="global-error-icon" aria-hidden="true">!</div>
+  <div class="global-error-copy">
+    <strong>{{ 'errors.requestFailed' | translate }}</strong>
+    <span>{{ errorNotice.message | translate }}</span>
+    <small *ngIf="errorNotice.traceId">{{ 'errors.traceId' | translate }}: {{ errorNotice.traceId }}</small>
+  </div>
+  <button type="button" class="global-error-close" [attr.aria-label]="'common.close' | translate" (click)="dismissError()">×</button>
+</aside>
+
 <ng-container *ngIf="uploadProgress$ | async as upload">
   <aside
     *ngIf="upload.active || upload.completed || upload.failed"
