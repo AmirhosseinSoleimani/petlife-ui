@@ -1,0 +1,36 @@
+name: Branch Flow Policy
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - test
+      - production
+
+jobs:
+  validate-flow:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate branch flow
+        shell: bash
+        run: |
+          SOURCE="${{ github.head_ref }}"
+          TARGET="${{ github.base_ref }}"
+
+          echo "SOURCE=$SOURCE"
+          echo "TARGET=$TARGET"
+
+          if [[ "$TARGET" == "develop" ]]; then
+            [[ "$SOURCE" =~ ^(feature|fix|refactor|chore|test)/.+$ ]] || exit 1
+          fi
+
+          if [[ "$TARGET" == "test" ]]; then
+            [[ "$SOURCE" == "develop" ]] || exit 1
+          fi
+
+          if [[ "$TARGET" == "production" ]]; then
+            [[ "$SOURCE" == "test" ]] || exit 1
+          fi
+
+          echo "Branch flow is valid"
