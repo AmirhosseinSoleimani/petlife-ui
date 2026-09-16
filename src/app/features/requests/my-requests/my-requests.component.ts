@@ -119,10 +119,10 @@ export class MyRequestsComponent implements OnInit {
     this.apiService.put<ApiResponse<ServiceRequest>>(`/service-requests/${request.id}/booking/confirm`, { confirm: true }).subscribe({
       next: response => {
         this.selectedRequest = response.data || request;
-        this.successMessage = 'Booking time confirmed.';
+        this.successMessage = 'requests.bookingConfirmedSuccess';
         this.loadRequests();
       },
-      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'Unable to confirm booking.'; this.isUpdating = false; },
+      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'requests.bookingConfirmError'; this.isUpdating = false; },
       complete: () => this.isUpdating = false
     });
   }
@@ -153,5 +153,4 @@ export class MyRequestsComponent implements OnInit {
       }
     });
   }
-
 }

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export type AppLanguage = 'en' | 'fa' | 'fr' | 'es';
 
@@ -37,16 +38,7 @@ export class I18nService {
     const nextLanguage = this.normalizeLanguage(language);
     localStorage.setItem(this.storageKey, nextLanguage);
     this.applyDocumentLanguage(nextLanguage);
-
-    this.http.get<Record<string, string>>(`assets/i18n/${nextLanguage}.json`).subscribe({
-      next: (translations) => {
-        this.translations = translations || {};
-        this.languageSubject.next(nextLanguage);
-      },
-      error: () => {
-        this.loadEnglishFallback();
-      }
-    });
+    this.loadLanguage(nextLanguage, false);
   }
 
   translate(key: string | null | undefined): string {
@@ -55,6 +47,29 @@ export class I18nService {
     }
 
     return this.translations[key] || key;
+  }
+
+  private loadLanguage(language: AppLanguage, isFallback: boolean): void {
+    forkJoin({
+      base: this.http.get<Record<string, string>>(`assets/i18n/${language}.json`),
+      overrides: this.http.get<Record<string, string>>(`assets/i18n/${language}.overrides.json`).pipe(
+        catchError(() => of({} as Record<string, string>))
+      )
+    }).subscribe({
+      next: ({ base, overrides }) => {
+        this.translations = { ...(base || {}), ...(overrides || {}) };
+        this.languageSubject.next(language);
+      },
+      error: () => {
+        if (isFallback || language === 'en') {
+          this.translations = {};
+          this.languageSubject.next('en');
+          return;
+        }
+
+        this.loadEnglishFallback();
+      }
+    });
   }
 
   private getInitialLanguage(): AppLanguage {
@@ -78,16 +93,6 @@ export class I18nService {
     const fallbackLanguage: AppLanguage = 'en';
     localStorage.setItem(this.storageKey, fallbackLanguage);
     this.applyDocumentLanguage(fallbackLanguage);
-
-    this.http.get<Record<string, string>>('assets/i18n/en.json').subscribe({
-      next: (translations) => {
-        this.translations = translations || {};
-        this.languageSubject.next(fallbackLanguage);
-      },
-      error: () => {
-        this.translations = {};
-        this.languageSubject.next(fallbackLanguage);
-      }
-    });
+    this.loadLanguage(fallbackLanguage, true);
   }
 }

@@ -1,26 +1,18 @@
 :host { display: block; }
-
-.delivery-area-rules {
-  display: grid;
-  gap: .75rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 1rem 0 1.5rem;
-
-  div {
-    background: #f7faf9;
-    border: 1px solid #dce8e4;
-    border-radius: .9rem;
-    padding: 1rem;
-  }
-
-  p {
-    color: #667085;
-    margin: .35rem 0 0;
-  }
-}
-
-@media (max-width: 640px) {
-  .delivery-area-rules {
-    grid-template-columns: 1fr;
-  }
-}
+.delivery-area-rules { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0 1.5rem; }
+.delivery-area-rules div { background: #f7faf9; border: 1px solid #dce8e4; border-radius: .9rem; padding: 1rem; }
+.delivery-area-rules p { color: #667085; margin: .35rem 0 0; }
+.area-statuses { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.coverage-copy { min-width: 0; }
+.coverage-copy p, .coverage-copy h3 { margin: 0; }
+.coverage-copy small { display: block; margin-top: 4px; color: var(--color-muted); line-height: 1.45; }
+.managed-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid #d9e8e4; border-radius: var(--radius-md); color: var(--color-primary-dark); background: #f4faf8; font-size: 12px; }
+.managed-note span { flex: 0 0 auto; font-weight: 900; }
+.managed-note p { margin: 0; }
+.managed-area-form .form-section { gap: 16px; }
+.selected-area-preview { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+.selected-area-preview > span { color: var(--color-primary); font-weight: 900; }
+.selected-area-preview div { min-width: 0; display: grid; gap: 2px; }
+.selected-area-preview strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selected-area-preview small { color: var(--color-muted); }
+@media (max-width: 640px) { .delivery-area-rules { grid-template-columns: 1fr; } .area-statuses { justify-content: flex-start; } }

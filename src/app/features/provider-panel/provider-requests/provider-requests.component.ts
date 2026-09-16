@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ProviderLeadDashboard, ServiceRequest } from '../../../core/models/marketplace.models';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
@@ -17,12 +18,12 @@ export class ProviderRequestsComponent implements OnInit {
   v: RequestFilter;
   l: string;
 }> = [
-  { v: 'all', l: 'All' },
-  { v: 'requested', l: 'New' },
-  { v: 'responding', l: 'Responding' },
-  { v: 'accepted', l: 'Accepted' },
-  { v: 'completed', l: 'Completed' },
-  { v: 'rejected', l: 'Rejected' }
+  { v: 'all', l: 'providerRequests.filterAll' },
+  { v: 'requested', l: 'providerRequests.filterNew' },
+  { v: 'responding', l: 'providerRequests.filterResponding' },
+  { v: 'accepted', l: 'providerRequests.filterAccepted' },
+  { v: 'completed', l: 'providerRequests.filterCompleted' },
+  { v: 'rejected', l: 'providerRequests.filterRejected' }
 ];
 
   responseMessage = '';
@@ -34,7 +35,11 @@ export class ProviderRequestsComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private readonly apiService: ApiService, private readonly preferencesService: UserPreferencesService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly preferencesService: UserPreferencesService,
+    private readonly i18nService: I18nService
+  ) {}
 
   ngOnInit(): void {
     this.preferencesService.load().subscribe(() => { this.loadDashboard(); this.loadRequests(); });
@@ -53,7 +58,7 @@ export class ProviderRequestsComponent implements OnInit {
         this.selectedRequest = this.selectedRequest ? visible.find(x => x.id === this.selectedRequest?.id) || visible[0] || null : visible[0] || null;
         this.isLoading = false;
       },
-      error: () => { this.errorMessage = 'Unable to load incoming requests.'; this.isLoading = false; }
+      error: () => { this.errorMessage = 'providerRequests.loadError'; this.isLoading = false; }
     });
   }
 
@@ -80,24 +85,24 @@ export class ProviderRequestsComponent implements OnInit {
   }
 
   needMoreInfo(request: ServiceRequest): void {
-    if (!this.responseMessage.trim()) { this.errorMessage = 'Add a message describing the information you need.'; return; }
-    this.updateRequest(`/service-requests/${request.id}/need-more-info`, { message: this.responseMessage.trim() }, 'Request marked as needing more information.');
+    if (!this.responseMessage.trim()) { this.errorMessage = 'providerRequests.messageRequired'; return; }
+    this.updateRequest(`/service-requests/${request.id}/need-more-info`, { message: this.responseMessage.trim() }, 'providerRequests.needMoreInfoSuccess');
   }
-  markAvailable(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/available`, { message: this.responseMessage.trim() || null }, 'Availability response sent.'); }
-  markContacted(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/contacted`, { message: this.responseMessage.trim() || null }, 'Request marked as contacted.'); }
-  acceptRequest(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/accept`, {}, 'Request accepted.'); }
-  completeRequest(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/complete`, {}, 'Request completed.'); }
+  markAvailable(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/available`, { message: this.responseMessage.trim() || null }, 'providerRequests.availableSuccess'); }
+  markContacted(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/contacted`, { message: this.responseMessage.trim() || null }, 'providerRequests.contactedSuccess'); }
+  acceptRequest(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/accept`, {}, 'providerRequests.acceptedSuccess'); }
+  completeRequest(request: ServiceRequest): void { this.updateRequest(`/service-requests/${request.id}/complete`, {}, 'providerRequests.completedSuccess'); }
   proposeBooking(request: ServiceRequest): void {
-    if (!this.proposedServiceAt) { this.errorMessage = 'Choose a proposed service date and time.'; return; }
-    const parsed = new Date(this.proposedServiceAt); if (Number.isNaN(parsed.getTime())) { this.errorMessage = 'The proposed service time is invalid.'; return; }
-    this.updateRequest(`/service-requests/${request.id}/booking/propose`, { proposedServiceAt: parsed.toISOString(), message: this.responseMessage.trim() || null }, 'Booking time proposed to the customer.');
+    if (!this.proposedServiceAt) { this.errorMessage = 'providerRequests.chooseBookingTime'; return; }
+    const parsed = new Date(this.proposedServiceAt); if (Number.isNaN(parsed.getTime())) { this.errorMessage = 'providerRequests.invalidBookingTime'; return; }
+    this.updateRequest(`/service-requests/${request.id}/booking/propose`, { proposedServiceAt: parsed.toISOString(), message: this.responseMessage.trim() || null }, 'providerRequests.bookingProposedSuccess');
   }
 
   openRejectDialog(request: ServiceRequest): void { this.selectedRequest = request; this.rejectionReason = request.rejectionReason || ''; this.isRejectDialogOpen = true; }
   closeRejectDialog(): void { if (!this.isUpdating) { this.isRejectDialogOpen = false; this.rejectionReason = ''; } }
   rejectRequest(): void {
     if (!this.selectedRequest) return;
-    this.updateRequest(`/service-requests/${this.selectedRequest.id}/reject`, { rejectionReason: this.rejectionReason.trim() || null }, 'Request rejected.', true);
+    this.updateRequest(`/service-requests/${this.selectedRequest.id}/reject`, { rejectionReason: this.rejectionReason.trim() || null }, 'providerRequests.rejectedSuccess', true);
   }
 
   canNeedMoreInfo(r: ServiceRequest): boolean { return ['requested','viewed'].includes(this.status(r)); }
@@ -111,9 +116,9 @@ export class ProviderRequestsComponent implements OnInit {
   getStatusTone(request: ServiceRequest): 'info' | 'success' | 'warning' | 'danger' | 'neutral' {
     const status = this.status(request); if (status === 'completed') return 'info'; if (status === 'accepted') return 'success'; if (status === 'rejected') return 'danger'; if (['requested','needmoreinfo'].includes(status)) return 'warning'; if (['viewed','available','contacted'].includes(status)) return 'info'; return 'neutral';
   }
-  getServiceName(r: ServiceRequest): string { return r.serviceName || r.providerService?.serviceName || r.providerService?.name || 'Service'; }
-  getPetLabel(r: ServiceRequest): string { return r.petName || r.pet?.petName || r.pet?.name || (r.consentSharePetProfile ? 'Pet' : 'Not shared'); }
-  getCustomerLabel(r: ServiceRequest): string { return r.customerName || (r.consentShareContactDetails ? 'Customer' : 'Contact not shared'); }
+  getServiceName(r: ServiceRequest): string { return r.serviceName || r.providerService?.serviceName || r.providerService?.name || this.i18nService.translate('providerRequests.serviceFallback'); }
+  getPetLabel(r: ServiceRequest): string { return r.petName || r.pet?.petName || r.pet?.name || this.i18nService.translate(r.consentSharePetProfile ? 'providerRequests.petFallback' : 'providerRequests.petNotShared'); }
+  getCustomerLabel(r: ServiceRequest): string { return r.customerName || this.i18nService.translate(r.consentShareContactDetails ? 'providerRequests.customerFallback' : 'providerRequests.contactNotShared'); }
   status(r: ServiceRequest): string { return (r.status || 'Requested').toLowerCase(); }
 
   private updateRequest(endpoint: string, body: unknown, message: string, closeReject = false, refreshDashboard = true): void {
@@ -125,7 +130,7 @@ export class ProviderRequestsComponent implements OnInit {
         if (closeReject) { this.isRejectDialogOpen = false; this.rejectionReason = ''; }
         this.loadRequests(); if (refreshDashboard) this.loadDashboard();
       },
-      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'Unable to update the request.'; this.isUpdating = false; },
+      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'providerRequests.updateError'; this.isUpdating = false; },
       complete: () => this.isUpdating = false
     });
   }

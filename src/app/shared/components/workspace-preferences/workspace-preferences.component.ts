@@ -31,6 +31,7 @@ export class WorkspacePreferencesComponent implements OnChanges {
   readonly accentColors: AccentColor[] = ['Teal', 'Coral', 'Blue', 'Purple', 'Green'];
   readonly customerFilters: CustomerRequestFilter[] = ['All', 'Active', 'Completed', 'Rejected'];
   readonly providerFilters: ProviderRequestFilter[] = ['All', 'New', 'Accepted', 'Completed', 'Rejected'];
+
   pets: Pet[] = [];
   themeMode: ThemeMode = 'Light';
   accentColor: AccentColor = 'Teal';
@@ -49,17 +50,31 @@ export class WorkspacePreferencesComponent implements OnChanges {
   ) {}
 
   get isProvider(): boolean {
-    return (this.authService.getCurrentUser()?.role || '').toLowerCase().includes('provider');
+    return this.currentRole.includes('provider');
+  }
+
+  get isCustomer(): boolean {
+    return this.currentRole.includes('customer');
+  }
+
+  get hasRoleSpecificPreferences(): boolean {
+    return this.isCustomer || this.isProvider;
   }
 
   get quickActions(): QuickActionDefinition[] {
-    return this.isProvider ? PROVIDER_QUICK_ACTIONS : CUSTOMER_QUICK_ACTIONS;
+    if (this.isProvider) {
+      return PROVIDER_QUICK_ACTIONS;
+    }
+    if (this.isCustomer) {
+      return CUSTOMER_QUICK_ACTIONS;
+    }
+    return [];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open']?.currentValue) {
       this.populate();
-      if (!this.isProvider && !this.pets.length) {
+      if (this.isCustomer && !this.pets.length) {
         this.loadPets();
       }
     }
@@ -73,15 +88,20 @@ export class WorkspacePreferencesComponent implements OnChanges {
 
   selectTheme(theme: ThemeMode): void {
     this.themeMode = theme;
+    this.successMessage = '';
     this.preferencesService.previewAppearance(this.themeMode, this.accentColor);
   }
 
   selectAccent(accent: AccentColor): void {
     this.accentColor = accent;
+    this.successMessage = '';
     this.preferencesService.previewAppearance(this.themeMode, this.accentColor);
   }
 
   close(): void {
+    if (this.isSaving) {
+      return;
+    }
     this.preferencesService.restoreAppearance();
     this.closed.emit();
   }
@@ -92,54 +112,65 @@ export class WorkspacePreferencesComponent implements OnChanges {
     this.defaultPetId = null;
     this.customerFilter = 'All';
     this.providerFilter = 'All';
-    this.selectedQuickActions = [...(this.isProvider
-      ? PROVIDER_DEFAULT_QUICK_ACTIONS
-      : CUSTOMER_DEFAULT_QUICK_ACTIONS)];
+    this.selectedQuickActions = this.defaultQuickActions;
+    this.errorMessage = '';
     this.successMessage = '';
     this.preferencesService.previewAppearance(this.themeMode, this.accentColor);
   }
 
   save(): void {
+    if (this.isSaving) {
+      return;
+    }
+
     const request: UpdateUserPreferencesRequest = {
       themeMode: this.themeMode,
       accentColor: this.accentColor,
       displayDensity: 'Comfortable',
-      defaultPetId: this.isProvider ? null : this.defaultPetId,
-      customerDefaultRequestFilter: this.isProvider ? null : this.customerFilter,
+      defaultPetId: this.isCustomer ? this.defaultPetId : null,
+      customerDefaultRequestFilter: this.isCustomer ? this.customerFilter : null,
       providerDefaultRequestFilter: this.isProvider ? this.providerFilter : null,
-      quickActions: this.selectedQuickActions
+      quickActions: this.hasRoleSpecificPreferences ? this.selectedQuickActions : []
     };
 
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
+
     this.preferencesService.save(request).subscribe({
       next: (preferences) => {
         this.isSaving = false;
         this.themeMode = preferences.themeMode;
         this.accentColor = preferences.accentColor;
+        this.defaultPetId = preferences.defaultPetId;
+        this.customerFilter = preferences.customerDefaultRequestFilter || 'All';
+        this.providerFilter = preferences.providerDefaultRequestFilter || 'All';
+        this.selectedQuickActions = [...preferences.quickActions];
         this.successMessage = 'preferences.saveSuccess';
       },
       error: () => {
         this.isSaving = false;
         this.errorMessage = 'preferences.saveError';
-        this.themeMode = this.preferencesService.current.themeMode;
-        this.accentColor = this.preferencesService.current.accentColor;
+        this.populateFromSavedPreferences();
         this.preferencesService.restoreAppearance();
       }
     });
   }
 
   private populate(): void {
+    this.populateFromSavedPreferences();
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  private populateFromSavedPreferences(): void {
     const value = this.preferencesService.current;
     this.themeMode = value.themeMode;
     this.accentColor = value.accentColor;
-    this.defaultPetId = value.defaultPetId;
-    this.customerFilter = value.customerDefaultRequestFilter || 'All';
-    this.providerFilter = value.providerDefaultRequestFilter || 'All';
-    this.selectedQuickActions = [...value.quickActions];
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.defaultPetId = this.isCustomer ? value.defaultPetId : null;
+    this.customerFilter = this.isCustomer ? (value.customerDefaultRequestFilter || 'All') : 'All';
+    this.providerFilter = this.isProvider ? (value.providerDefaultRequestFilter || 'All') : 'All';
+    this.selectedQuickActions = this.hasRoleSpecificPreferences ? [...value.quickActions] : [];
   }
 
   private loadPets(): void {
@@ -147,5 +178,19 @@ export class WorkspacePreferencesComponent implements OnChanges {
       next: (response) => this.pets = response.data || [],
       error: () => this.pets = []
     });
+  }
+
+  private get defaultQuickActions(): string[] {
+    if (this.isProvider) {
+      return [...PROVIDER_DEFAULT_QUICK_ACTIONS];
+    }
+    if (this.isCustomer) {
+      return [...CUSTOMER_DEFAULT_QUICK_ACTIONS];
+    }
+    return [];
+  }
+
+  private get currentRole(): string {
+    return (this.authService.getCurrentUser()?.role || '').trim().toLowerCase();
   }
 }

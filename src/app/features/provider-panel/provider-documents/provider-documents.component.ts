@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ProviderDocument } from '../../../core/models/marketplace.models';
-import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 @Component({
   selector: 'app-provider-documents',
@@ -23,7 +23,7 @@ export class ProviderDocumentsComponent implements OnInit {
   errorMessage = '';
   readonly documentTypes = ['Insurance', 'BusinessRegistration', 'Qualification', 'Identity', 'Other'];
 
-  constructor(private readonly api: ApiService, private readonly dialogService: AppDialogService) {}
+  constructor(private readonly api: ApiService, private readonly i18nService: I18nService) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -32,7 +32,7 @@ export class ProviderDocumentsComponent implements OnInit {
     this.errorMessage = '';
     this.api.get<ApiResponse<ProviderDocument[]>>('/provider-documents/me').subscribe({
       next: response => { this.documents = response.data || []; this.isLoading = false; },
-      error: () => { this.errorMessage = 'Unable to load provider documents.'; this.isLoading = false; }
+      error: () => { this.errorMessage = 'providerDocuments.loadError'; this.isLoading = false; }
     });
   }
 
@@ -57,8 +57,8 @@ export class ProviderDocumentsComponent implements OnInit {
   }
 
   submit(): void {
-    if (!this.selectedFile) { this.errorMessage = 'Select a PDF or image before submitting.'; return; }
-    if (this.documentType === 'Insurance' && !this.expiryDate) { this.errorMessage = 'Insurance documents require an expiry date.'; return; }
+    if (!this.selectedFile) { this.errorMessage = 'providerDocuments.selectFile'; return; }
+    if (this.documentType === 'Insurance' && !this.expiryDate) { this.errorMessage = 'providerDocuments.insuranceExpiryRequired'; return; }
     const form = new FormData();
     form.append('file', this.selectedFile, this.selectedFile.name);
     if (this.expiryDate) form.append('expiryDate', this.expiryDate);
@@ -70,31 +70,28 @@ export class ProviderDocumentsComponent implements OnInit {
     this.message = '';
     this.api.postForm<ApiResponse<ProviderDocument>>(endpoint, form).subscribe({
       next: () => {
-        this.message = this.renewingDocument ? 'Document renewed and returned to pending review.' : 'Document uploaded for review.';
+        this.message = this.renewingDocument ? 'providerDocuments.renewedSuccess' : 'providerDocuments.uploadedSuccess';
         this.renewingDocument = null;
         this.resetForm();
         this.load();
       },
-      error: err => { this.errorMessage = this.apiMessage(err, 'Unable to save the document.'); this.isSaving = false; },
+      error: err => { this.errorMessage = this.apiMessage(err, 'providerDocuments.saveError'); this.isSaving = false; },
       complete: () => this.isSaving = false
     });
   }
 
   remove(document: ProviderDocument): void {
-    if (document.status === 'Approved') return;
-    this.dialogService.confirm({ title: 'Delete provider document?', message: `Delete ${document.originalFileName}?`, confirmLabel: 'Delete document', tone: 'danger' }).then((confirmed) => {
-      if (!confirmed) return;
-      this.api.delete<ApiResponse<unknown>>(`/provider-documents/${document.id}`).subscribe({
-        next: () => { this.message = 'Document deleted.'; this.load(); },
-        error: err => this.errorMessage = this.apiMessage(err, 'Unable to delete the document.')
-      });
+    if (document.status === 'Approved' || !window.confirm(this.i18nService.translate('providerDocuments.deleteConfirm'))) return;
+    this.api.delete<ApiResponse<unknown>>(`/provider-documents/${document.id}`).subscribe({
+      next: () => { this.message = 'providerDocuments.deletedSuccess'; this.load(); },
+      error: err => this.errorMessage = this.apiMessage(err, 'providerDocuments.deleteError')
     });
   }
 
   download(document: ProviderDocument): void {
     this.api.download(`/provider-documents/${document.id}/download`).subscribe({
       next: blob => this.saveBlob(blob, document.originalFileName),
-      error: () => this.errorMessage = 'Unable to download the document.'
+      error: () => this.errorMessage = 'providerDocuments.downloadError'
     });
   }
 

@@ -18,6 +18,7 @@ import {
 })
 export class AppModalComponent implements OnChanges, OnDestroy {
   private static openModalCount = 0;
+  private static bodyPaddingInlineEndBeforeLock = '';
   @Input() open = false;
   @Input() title = '';
   @Input() description = '';
@@ -113,8 +114,20 @@ export class AppModalComponent implements OnChanges, OnDestroy {
     }
 
     this.hasBodyLock = true;
+
+    if (AppModalComponent.openModalCount === 0) {
+      const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+      AppModalComponent.bodyPaddingInlineEndBeforeLock = document.body.style.paddingInlineEnd;
+
+      if (scrollbarWidth > 0) {
+        const currentPadding = Number.parseFloat(window.getComputedStyle(document.body).paddingInlineEnd) || 0;
+        document.body.style.paddingInlineEnd = `${currentPadding + scrollbarWidth}px`;
+      }
+
+      document.body.classList.add('app-modal-open');
+    }
+
     AppModalComponent.openModalCount += 1;
-    document.body.classList.add('app-modal-open');
   }
 
   private releaseFocus(): void {
@@ -123,6 +136,8 @@ export class AppModalComponent implements OnChanges, OnDestroy {
       AppModalComponent.openModalCount = Math.max(0, AppModalComponent.openModalCount - 1);
       if (AppModalComponent.openModalCount === 0) {
         document.body.classList.remove('app-modal-open');
+        document.body.style.paddingInlineEnd = AppModalComponent.bodyPaddingInlineEndBeforeLock;
+        AppModalComponent.bodyPaddingInlineEndBeforeLock = '';
       }
     }
     if (this.previouslyFocusedElement?.isConnected) {

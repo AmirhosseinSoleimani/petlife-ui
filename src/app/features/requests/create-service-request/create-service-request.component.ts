@@ -8,6 +8,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
 import {
   DeliveryMode,
+  GeographyArea,
   ProviderService,
   ServiceRequest,
   ServiceRequestPayload
@@ -28,14 +29,12 @@ export class CreateServiceRequestComponent implements OnInit {
     requestMessage: '',
     requestedDate: '',
     serviceAddressLine1: '',
-    serviceSuburb: '',
-    serviceState: '',
-    servicePostcode: '',
     serviceGeographyAreaId: null,
     consentSharePetProfile: false,
     consentShareHealthSummary: false,
     consentShareContactDetails: false
   };
+  selectedServiceGeography: GeographyArea | null = null;
   isLoading = false;
   isSubmitting = false;
   errorMessage = '';
@@ -78,6 +77,11 @@ export class CreateServiceRequestComponent implements OnInit {
     return !this.form.consentShareHealthSummary || this.form.consentSharePetProfile;
   }
 
+  get isLocationValid(): boolean {
+    if (!this.needsCustomerLocation) return true;
+    return !!this.form.serviceAddressLine1?.trim() && !!this.form.serviceGeographyAreaId;
+  }
+
   get minRequestedDate(): string {
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
@@ -86,6 +90,16 @@ export class CreateServiceRequestComponent implements OnInit {
 
   onHealthConsentChanged(): void {
     if (this.form.consentShareHealthSummary) this.form.consentSharePetProfile = true;
+  }
+
+  onPetProfileConsentChanged(): void {
+    if (!this.form.consentSharePetProfile) this.form.consentShareHealthSummary = false;
+  }
+
+  onServiceGeographySelected(area: GeographyArea | null): void {
+    this.selectedServiceGeography = area;
+    this.form.serviceGeographyAreaId = area?.id || null;
+    this.errorMessage = '';
   }
 
   get isSelectedPetCompatible(): boolean {
@@ -162,7 +176,11 @@ export class CreateServiceRequestComponent implements OnInit {
       return;
     }
     if (!this.isConsentValid) {
-      this.errorMessage = 'Health sharing requires pet profile sharing.';
+      this.errorMessage = 'requestForm.healthConsentRequiresPet';
+      return;
+    }
+    if (!this.isLocationValid) {
+      this.errorMessage = 'requestForm.managedGeographyRequired';
       return;
     }
 
@@ -170,11 +188,15 @@ export class CreateServiceRequestComponent implements OnInit {
     this.errorMessage = '';
 
     const payload: ServiceRequestPayload = {
-      ...this.form,
-      serviceAddressLine1: this.needsCustomerLocation ? this.form.serviceAddressLine1 : undefined,
-      serviceSuburb: this.needsCustomerLocation ? this.form.serviceSuburb : undefined,
-      serviceState: this.needsCustomerLocation ? this.form.serviceState : undefined,
-      servicePostcode: this.needsCustomerLocation ? this.form.servicePostcode : undefined
+      petId: this.form.petId,
+      providerServiceId: this.form.providerServiceId,
+      requestMessage: this.form.requestMessage?.trim() || '',
+      requestedDate: this.form.requestedDate,
+      serviceAddressLine1: this.needsCustomerLocation ? this.form.serviceAddressLine1?.trim() : undefined,
+      serviceGeographyAreaId: this.needsCustomerLocation ? this.form.serviceGeographyAreaId : undefined,
+      consentSharePetProfile: !!this.form.consentSharePetProfile,
+      consentShareHealthSummary: !!this.form.consentShareHealthSummary,
+      consentShareContactDetails: !!this.form.consentShareContactDetails
     };
 
     this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({

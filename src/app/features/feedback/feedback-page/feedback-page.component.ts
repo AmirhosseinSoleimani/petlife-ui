@@ -9,11 +9,11 @@ export class FeedbackPageComponent {
   readonly priorities = ['Low','Normal','High','Critical'];
   constructor(private readonly api: ApiService) {}
   submit(): void {
-    if (!this.subject.trim() || !this.description.trim() || !this.category.trim()) { this.errorMessage = 'Category, subject and description are required.'; return; }
+    if (!this.subject.trim() || !this.description.trim() || !this.category.trim()) { this.errorMessage = 'feedback.required'; return; }
     this.isSaving = true; this.errorMessage = ''; this.successMessage = '';
     this.api.post<ApiResponse<FeedbackReport>>('/feedback', { category: this.category.trim(), priority: this.priority, subject: this.subject.trim(), description: this.description.trim() }).subscribe({
-      next: () => { this.successMessage = 'Thanks. Your report is now in the admin operations queue.'; this.subject = ''; this.description = ''; },
-      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'Unable to submit feedback.'; this.isSaving = false; },
+      next: () => { this.successMessage = 'feedback.success'; this.subject = ''; this.description = ''; },
+      error: err => { this.errorMessage = err?.error?.errors?.join(' ') || err?.error?.message || 'feedback.submitError'; this.isSaving = false; },
       complete: () => this.isSaving = false
     });
   }

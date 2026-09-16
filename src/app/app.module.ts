@@ -50,6 +50,8 @@ import { AppFileUploadComponent } from './shared/components/app-file-upload/app-
 import { AppPageHeaderComponent } from './shared/components/app-page-header/app-page-header.component';
 import { AppShellComponent } from './shared/layout/app-shell/app-shell.component';
 import { WorkspacePreferencesComponent } from './shared/components/workspace-preferences/workspace-preferences.component';
+import { GeographySelectorComponent } from './shared/components/geography-selector/geography-selector.component';
+import { AppLoadingStateComponent } from './shared/components/app-loading-state/app-loading-state.component';
 
 @NgModule({
   declarations: [
@@ -59,7 +61,7 @@ import { WorkspacePreferencesComponent } from './shared/components/workspace-pre
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
     AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
-    AppPageHeaderComponent, WorkspacePreferencesComponent, TranslatePipe
+    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, TranslatePipe
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],

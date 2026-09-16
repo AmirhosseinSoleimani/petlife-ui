@@ -187,6 +187,7 @@ export interface GeographyArea {
   state: string;
   postcode: string;
   country: string;
+  displayName?: string;
   latitude?: number | null;
   longitude?: number | null;
   sortOrder: number;
@@ -236,11 +237,7 @@ export interface ServiceArea {
 }
 
 export interface ServiceAreaPayload {
-  geographyAreaId?: string | null;
-  suburb?: string;
-  state?: string;
-  postcode?: string;
-  radiusKm: number | null;
+  geographyAreaId: string | null;
   isActive: boolean;
 }
 
