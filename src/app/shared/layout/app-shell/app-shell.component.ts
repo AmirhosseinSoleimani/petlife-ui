@@ -55,7 +55,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { labelKey: 'Geography', path: '/admin/geography', icon: 'emergency', enabled: true },
     { labelKey: 'Service catalog', path: '/admin/service-catalog', icon: 'services', enabled: true },
     { labelKey: 'nav.reminderTemplates', path: '/admin/reminder-templates', icon: 'reminders', enabled: true },
-    { labelKey: 'nav.expenseCategories', path: '/admin/expense-categories', icon: 'expenses', enabled: true }
+    { labelKey: 'nav.expenseCategories', path: '/admin/expense-categories', icon: 'expenses', enabled: true },
+    { labelKey: 'nav.traceQuest', path: '/admin/tracequest', icon: 'tracequest', enabled: true }
   ];
 
   readonly languageOptions = SUPPORTED_LANGUAGES;
@@ -74,7 +75,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   }
 
   get displayName(): string {
-    return this.currentUser?.name || 'PetLife User';
+    return this.currentUser?.name || 'Pet Lovers User';
   }
 
   get displayRole(): string {

@@ -45,7 +45,11 @@ testem.log
 .DS_Store
 Thumbs.db
 
-/petlife_deploy
-/petlife_deploy.pub
+/petlovers_deploy
+/petlovers_deploy.pub
 
 
+
+# Local deployment keys
+petlovers_deploy
+petlovers_deploy.pub

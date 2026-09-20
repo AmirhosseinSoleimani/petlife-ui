@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "petlife-ui": {
+    "pet-lovers-ui": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/petlife-ui",
+            "outputPath": "dist/pet-lovers-ui",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -41,12 +41,12 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "12kb",
+                  "maximumError": "16kb"
                 }
               ],
               "fileReplacements": [
@@ -72,10 +72,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "petlife-ui:build:production"
+              "browserTarget": "pet-lovers-ui:build:production"
             },
             "development": {
-              "browserTarget": "petlife-ui:build:development"
+              "browserTarget": "pet-lovers-ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -83,7 +83,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "petlife-ui:build"
+            "browserTarget": "pet-lovers-ui:build"
           }
         },
         "test": {
@@ -107,7 +107,7 @@
       }
     }
   },
-  "defaultProject": "petlife-ui",
+  "defaultProject": "pet-lovers-ui",
   "cli": {
     "analytics": "9dfeffef-1d98-4436-9e05-ce105ecd17e3"
   }

@@ -1,1 +1,1 @@
-export const AUTH_TOKEN_KEY = 'petlife_token';
+export const AUTH_TOKEN_KEY = 'pet_lovers_token';

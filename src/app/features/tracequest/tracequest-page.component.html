@@ -1,0 +1,579 @@
+<section class="tq-page">
+  <header class="tq-hero">
+    <div class="tq-hero-copy">
+      <span class="tq-eyebrow">
+        <span class="tq-eyebrow-mark" aria-hidden="true"></span>
+        {{ t('observability') }}
+      </span>
+      <h2>{{ t('title') }}</h2>
+      <p>{{ t('subtitle') }}</p>
+    </div>
+
+    <div class="tq-hero-actions">
+      <div class="tq-live-badge" [ngClass]="realtimeClass()">
+        <span class="tq-live-pulse" aria-hidden="true"></span>
+        <span>{{ realtimeLabel() }}</span>
+        <strong *ngIf="liveInsertCount > 0">+{{ liveInsertCount }}</strong>
+      </div>
+      <button type="button" class="tq-refresh-button" [disabled]="loading" (click)="refresh()">
+        <svg viewBox="0 0 24 24" aria-hidden="true" [class.is-spinning]="loading">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.68V3h-2v2.1A10 10 0 1 0 22 12h-2Z"/>
+        </svg>
+        <span>{{ loading ? t('refreshing') : t('refresh') }}</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="tq-runtime-strip" [ngClass]="healthClass()">
+    <div class="tq-runtime-main">
+      <span class="tq-runtime-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 5c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 4v4c0 1.7 3.6 3 8 3s8-1.3 8-3V9c-1.8 1.2-4.8 1.8-8 1.8S5.8 10.2 4 9Zm0 8v2c0 1.7 3.6 3 8 3s8-1.3 8-3v-2c-1.8 1.2-4.8 1.8-8 1.8S5.8 18.2 4 17Z"/></svg>
+      </span>
+      <div>
+        <strong>{{ health?.reachable ? t('storeOnline') : t('storeOffline') }}</strong>
+        <small *ngIf="health?.message">{{ health?.message }}</small>
+      </div>
+    </div>
+
+    <div class="tq-runtime-metrics">
+      <div>
+        <span>{{ t('backend') }}</span>
+        <strong>{{ health?.backend || 'Jaeger' }}</strong>
+      </div>
+      <div>
+        <span>{{ t('queryLatency') }}</span>
+        <strong>{{ health ? formatDuration(health.latencyMs) : '—' }}</strong>
+      </div>
+      <div>
+        <span>{{ t('service') }}</span>
+        <strong>{{ configuration?.defaultServiceName || 'Pet Lovers API' }}</strong>
+      </div>
+      <div>
+        <span>{{ t('window') }}</span>
+        <strong>{{ timeRangeLabel() }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tq-tabs" aria-label="TraceQuest sections">
+    <button type="button" [class.active]="activeTab === 'overview'" (click)="setTab('overview')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
+      {{ t('overview') }}
+    </button>
+    <button type="button" [class.active]="activeTab === 'traces'" (click)="setTab('traces')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h5v2H6v4h3v2H4V6Zm16 0v8h-5v-2h3V8h-3V6h5ZM8 11h8v-2H8v2Zm0 4h8v-2H8v2Zm0 4h8v-2H8v2Z"/></svg>
+      {{ t('traces') }}
+    </button>
+    <button type="button" [class.active]="activeTab === 'services'" (click)="setTab('services')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3V5Zm0 6h18v8H3v-8Zm3 2v4h3v-4H6Zm5 0v4h7v-4h-7Z"/></svg>
+      {{ t('services') }}
+    </button>
+    <button type="button" [class.active]="activeTab === 'topology'" (click)="setTab('topology')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm14 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM19 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM7.7 7.7l8.6 8.6 1.4-1.4-8.6-8.6-1.4 1.4Zm1.4-1.4 7.2 0 0-2-7.2 0v2Z"/></svg>
+      {{ t('topology') }}
+    </button>
+  </nav>
+
+  <form class="tq-filter-panel" (ngSubmit)="applyFilters()">
+    <div class="tq-time-filter">
+      <span class="tq-filter-label">{{ t('timeRange') }}</span>
+      <div class="tq-time-presets">
+        <button
+          *ngFor="let preset of timePresets"
+          type="button"
+          [class.active]="timePreset === preset.value"
+          (click)="setTimePreset(preset.value)"
+        >{{ preset.value === 'custom' ? t('custom') : preset.label }}</button>
+      </div>
+    </div>
+
+    <div *ngIf="timePreset === 'custom'" class="tq-custom-range">
+      <label>
+        <span>{{ t('start') }}</span>
+        <input type="datetime-local" [(ngModel)]="customStart" name="customStart" />
+      </label>
+      <span class="tq-range-arrow">→</span>
+      <label>
+        <span>{{ t('end') }}</span>
+        <input type="datetime-local" [(ngModel)]="customEnd" name="customEnd" />
+      </label>
+    </div>
+
+    <div class="tq-filter-grid">
+      <label class="tq-search-field">
+        <span>{{ t('search') }}</span>
+        <span class="tq-input-shell">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.7 19.3-4.2-4.2a7 7 0 1 0-1.4 1.4l4.2 4.2 1.4-1.4ZM5 11a6 6 0 1 1 12 0 6 6 0 0 1-12 0Z"/></svg>
+          <input [(ngModel)]="filters.search" name="search" [placeholder]="t('searchPlaceholder')" />
+        </span>
+      </label>
+
+      <label>
+        <span>{{ t('service') }}</span>
+        <select [(ngModel)]="filters.serviceName" name="serviceName">
+          <option value="">{{ t('allServices') }}</option>
+          <option *ngFor="let service of services" [value]="service">{{ service }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>{{ t('status') }}</span>
+        <select [(ngModel)]="filters.status" name="status">
+          <option value="">{{ t('allStatuses') }}</option>
+          <option value="Healthy">{{ t('healthy') }}</option>
+          <option value="Slow">{{ t('slow') }}</option>
+          <option value="Error">{{ t('error') }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>{{ t('operation') }}</span>
+        <input [(ngModel)]="filters.operation" name="operation" [placeholder]="t('operationPlaceholder')" />
+      </label>
+
+      <label>
+        <span>{{ t('minDuration') }} (ms)</span>
+        <input [(ngModel)]="filters.minDurationMs" name="minDurationMs" type="number" min="0" placeholder="0" />
+      </label>
+
+      <label>
+        <span>{{ t('resultLimit') }}</span>
+        <select [(ngModel)]="filters.limit" name="limit">
+          <option *ngFor="let limit of limitOptions" [ngValue]="limit">{{ limit }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="tq-filter-footer">
+      <div class="tq-auto-refresh">
+        <button type="button" class="tq-switch" [class.active]="autoRefresh" (click)="toggleAutoRefresh()" [attr.aria-pressed]="autoRefresh">
+          <span></span>
+        </button>
+        <div>
+          <strong>{{ t('autoRefresh') }}</strong>
+          <small>{{ t('lastUpdated') }}: {{ lastUpdatedLabel() }}</small>
+        </div>
+      </div>
+
+      <div class="tq-filter-actions">
+        <button type="button" class="tq-button tq-button-ghost" (click)="clearFilters()">{{ t('clear') }}</button>
+        <button type="submit" class="tq-button tq-button-primary">{{ t('applyFilters') }}</button>
+      </div>
+    </div>
+
+    <div *ngIf="filterError" class="tq-inline-error">{{ filterError }}</div>
+  </form>
+
+  <div *ngIf="errorMessage" class="tq-error-banner">
+    <span class="tq-error-icon" aria-hidden="true">!</span>
+    <div>
+      <strong>{{ health?.reachable === false ? t('storeOffline') : t('genericError') }}</strong>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <button type="button" (click)="refresh()">{{ t('refresh') }}</button>
+  </div>
+
+  <ng-container *ngIf="activeTab === 'overview'">
+    <section class="tq-kpi-grid">
+      <article class="tq-kpi tq-kpi-total">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z"/></svg></span>
+        <div><span>{{ t('totalTraces') }}</span><strong>{{ formatNumber(kpis.totalTraces) }}</strong></div>
+        <small>{{ t('p50') }} {{ formatDuration(kpis.p50DurationMs) }}</small>
+      </article>
+      <article class="tq-kpi tq-kpi-error">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V8h2v5Z"/></svg></span>
+        <div><span>{{ t('errorRate') }}</span><strong>{{ formatPercent(kpis.errorRatePercent) }}</strong></div>
+        <small>{{ formatNumber(kpis.errorTraces) }} {{ t('traceErrors') }}</small>
+      </article>
+      <article class="tq-kpi tq-kpi-latency">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 11h5v-2h-4V6h-2v7h1Z"/></svg></span>
+        <div><span>{{ t('p95Latency') }}</span><strong>{{ formatDuration(kpis.p95DurationMs) }}</strong></div>
+        <small>{{ t('p99') }} {{ formatDuration(kpis.p99DurationMs) }}</small>
+      </article>
+      <article class="tq-kpi tq-kpi-average">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17h3v4H3v-4Zm5-6h3v10H8V11Zm5-5h3v15h-3V6Zm5 8h3v7h-3v-7Z"/></svg></span>
+        <div><span>{{ t('averageLatency') }}</span><strong>{{ formatDuration(kpis.averageDurationMs) }}</strong></div>
+        <small>{{ t('max') }} {{ formatDuration(kpis.maxDurationMs) }}</small>
+      </article>
+      <article class="tq-kpi tq-kpi-slow">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3h2v12H3v-2Zm14-8h4v4h-2V7h-2V5Zm0 10h2v2h2v2h-4v-4Z"/></svg></span>
+        <div><span>{{ t('slowTraces') }}</span><strong>{{ formatNumber(kpis.slowTraces) }}</strong></div>
+        <small>{{ formatPercent(errorRatio(kpis.slowTraces, kpis.totalTraces)) }}</small>
+      </article>
+      <article class="tq-kpi tq-kpi-quality">
+        <span class="tq-kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm-1 14-4-4 1.4-1.4L11 13.2l4.6-4.6L17 10l-6 6Z"/></svg></span>
+        <div><span>{{ t('incomplete') }}</span><strong>{{ formatNumber(kpis.incompleteTraces) }}</strong></div>
+        <small>{{ t('dataQuality') }}</small>
+      </article>
+    </section>
+
+    <div class="tq-overview-grid">
+      <section class="tq-panel tq-recent-panel">
+        <div class="tq-panel-heading">
+          <div>
+            <h3>{{ t('recentActivity') }}</h3>
+            <p>{{ t('recentActivityHint') }}</p>
+          </div>
+          <button type="button" class="tq-text-button" (click)="setTab('traces')">{{ t('viewAll') }} →</button>
+        </div>
+
+        <div *ngIf="loading" class="tq-skeleton-list">
+          <span *ngFor="let item of [1,2,3,4,5]"></span>
+        </div>
+        <div *ngIf="!loading && !traces.length" class="tq-empty-state">{{ t('noTraces') }}</div>
+
+        <div *ngIf="!loading && traces.length" class="tq-compact-traces">
+          <button type="button" *ngFor="let trace of traces.slice(0, 7); trackBy: trackTrace" (click)="setTab('traces'); selectTrace(trace)">
+            <span class="tq-status-dot" [ngClass]="statusClass(trace.status)"></span>
+            <span class="tq-compact-main">
+              <strong>{{ trace.operation }}</strong>
+              <small>{{ trace.rootServiceName }} · {{ formatTimestamp(trace.startTimeUtc) }}</small>
+            </span>
+            <span class="tq-compact-metric">{{ formatDuration(trace.durationMs) }}</span>
+            <span class="tq-chevron">›</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="tq-panel tq-hotspots-panel">
+        <div class="tq-panel-heading">
+          <div>
+            <h3>{{ t('hotOperations') }}</h3>
+            <p>{{ t('hotOperationsHint') }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="!operations.length && !analyticsLoading" class="tq-empty-state tq-empty-compact">{{ t('noAnalytics') }}</div>
+        <div class="tq-hotspot-list" *ngIf="operations.length">
+          <article *ngFor="let operation of topOperations(); let i = index; trackBy: trackOperation">
+            <span class="tq-rank">{{ i + 1 }}</span>
+            <div class="tq-hotspot-copy">
+              <strong>{{ operation.operation }}</strong>
+              <small>{{ operation.serviceName }} · {{ formatNumber(operation.totalTraces) }} {{ t('traces') }}</small>
+              <span class="tq-metric-bar"><i [style.width.%]="errorRatio(operation.errorTraces, operation.totalTraces)"></i></span>
+            </div>
+            <div class="tq-hotspot-values">
+              <strong>{{ formatDuration(operation.p95DurationMs) }}</strong>
+              <small [class.has-error]="operation.errorTraces > 0">{{ formatPercent(operation.errorRatePercent) }}</small>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <section class="tq-panel">
+      <div class="tq-panel-heading">
+        <div>
+          <h3>{{ t('serviceHealth') }}</h3>
+          <p>{{ t('serviceHealthHint') }}</p>
+        </div>
+        <button type="button" class="tq-text-button" (click)="setTab('services')">{{ t('viewAll') }} →</button>
+      </div>
+      <div *ngIf="!serviceStats.length && !analyticsLoading" class="tq-empty-state tq-empty-compact">{{ t('noServices') }}</div>
+      <div *ngIf="serviceStats.length" class="tq-service-cards">
+        <button type="button" *ngFor="let service of topServices(4); trackBy: trackService" (click)="filterByService(service.serviceName)">
+          <div class="tq-service-card-head">
+            <span class="tq-service-mark">{{ service.serviceName.charAt(0).toUpperCase() }}</span>
+            <span>
+              <strong>{{ service.serviceName }}</strong>
+              <small>{{ formatNumber(service.totalSpans) }} {{ t('spans') }}</small>
+            </span>
+            <span class="tq-health-dot" [class.has-error]="service.errorTraces > 0"></span>
+          </div>
+          <div class="tq-service-card-metrics">
+            <span><small>{{ t('p95Latency') }}</small><strong>{{ formatDuration(service.p95DurationMs) }}</strong></span>
+            <span><small>{{ t('errorRate') }}</small><strong>{{ formatPercent(service.errorRatePercent) }}</strong></span>
+          </div>
+        </button>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-container *ngIf="activeTab === 'traces'">
+    <div class="tq-traces-layout" [class.has-detail]="selectedTrace || detailLoading">
+      <section class="tq-panel tq-trace-browser">
+        <div class="tq-panel-heading">
+          <div>
+            <h3>{{ t('traces') }}</h3>
+            <p>{{ formatNumber(traces.length) }} / {{ formatNumber(filters.limit) }} · {{ timeRangeLabel() }}</p>
+          </div>
+          <span class="tq-table-live"><i></i>{{ t('liveUpdates') }}</span>
+        </div>
+
+        <div *ngIf="loading" class="tq-skeleton-table">
+          <span *ngFor="let item of [1,2,3,4,5,6]"></span>
+        </div>
+        <div *ngIf="!loading && !traces.length" class="tq-empty-state">{{ t('noTraces') }}</div>
+
+        <div *ngIf="!loading && traces.length" class="tq-table-scroll">
+          <table class="tq-table tq-trace-table">
+            <thead>
+              <tr>
+                <th>{{ t('operation') }}</th>
+                <th>{{ t('service') }}</th>
+                <th>{{ t('duration') }}</th>
+                <th>{{ t('spans') }}</th>
+                <th>{{ t('status') }}</th>
+                <th>{{ t('started') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let trace of traces; trackBy: trackTrace" [class.selected]="selectedTrace?.traceId === trace.traceId">
+                <td>
+                  <button type="button" class="tq-operation-link" (click)="selectTrace(trace)">
+                    <strong>{{ trace.operation }}</strong>
+                    <small>{{ trace.traceId }}</small>
+                  </button>
+                </td>
+                <td><span class="tq-service-name">{{ trace.rootServiceName }}</span></td>
+                <td class="tq-mono-strong">{{ formatDuration(trace.durationMs) }}</td>
+                <td>
+                  <span class="tq-span-count">{{ trace.spanCount }}</span>
+                  <span *ngIf="trace.errorSpanCount > 0" class="tq-error-count">{{ trace.errorSpanCount }}</span>
+                </td>
+                <td><span class="tq-status-pill" [ngClass]="statusClass(trace.status)">{{ t(trace.status.toLowerCase()) }}</span></td>
+                <td><span class="tq-time-cell">{{ formatTimestamp(trace.startTimeUtc) }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="tq-detail-panel" *ngIf="selectedTrace || detailLoading">
+        <div *ngIf="detailLoading" class="tq-detail-loading">
+          <span class="tq-loader"></span>
+          <p>{{ t('traceDetails') }}…</p>
+        </div>
+
+        <ng-container *ngIf="!detailLoading && selectedTrace as detail">
+          <header class="tq-detail-header">
+            <div>
+              <span class="tq-detail-kicker">{{ t('traceDetails') }}</span>
+              <h3>{{ detail.operation }}</h3>
+            </div>
+            <button type="button" class="tq-icon-button" aria-label="Close" (click)="closeTraceDetail()">×</button>
+          </header>
+
+          <div class="tq-trace-id-box">
+            <div>
+              <span>{{ t('traceId') }}</span>
+              <code>{{ detail.traceId }}</code>
+            </div>
+            <button type="button" (click)="copyTraceId(detail.traceId)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7V4h12v12h-3v4H4V7h4Zm2 0h7v7h1V6h-8v1Zm-4 2v9h9V9H6Z"/></svg>
+              {{ t('copyId') }}
+            </button>
+          </div>
+
+          <div class="tq-detail-summary">
+            <div><span>{{ t('status') }}</span><strong><span class="tq-status-pill" [ngClass]="statusClass(detail.status)">{{ t(detail.status.toLowerCase()) }}</span></strong></div>
+            <div><span>{{ t('duration') }}</span><strong>{{ formatDuration(detail.durationMs) }}</strong></div>
+            <div><span>{{ t('spans') }}</span><strong>{{ detail.spans.length }}</strong></div>
+            <div><span>{{ t('started') }}</span><strong>{{ formatTimestamp(detail.startTimeUtc) }}</strong></div>
+          </div>
+
+          <div class="tq-service-chips">
+            <span>{{ t('servicesInTrace') }}</span>
+            <div><button type="button" *ngFor="let service of detail.services" (click)="filterByService(service)">{{ service }}</button></div>
+          </div>
+
+          <section class="tq-waterfall-section">
+            <div class="tq-subheading">
+              <h4>{{ t('spanWaterfall') }}</h4>
+              <span>{{ formatDuration(detail.durationMs) }}</span>
+            </div>
+            <div class="tq-waterfall-head"><span>{{ t('spans') }}</span><span>{{ t('timeline') }}</span></div>
+            <div class="tq-waterfall">
+              <button
+                type="button"
+                class="tq-span-row"
+                *ngFor="let span of detail.spans; trackBy: trackSpan"
+                [class.active]="selectedSpan?.spanId === span.spanId"
+                (click)="selectSpan(span)"
+              >
+                <span class="tq-span-label" [style.padding-inline-start.px]="10 + spanDepth(span) * 13">
+                  <strong>{{ span.name }}</strong>
+                  <small>{{ span.serviceName }} · {{ formatDuration(span.durationMs) }}</small>
+                </span>
+                <span class="tq-timeline">
+                  <i class="tq-timeline-bar" [ngClass]="statusClass(span.status)" [style.left.%]="waterfallLeft(span)" [style.width.%]="waterfallWidth(span)"></i>
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <section *ngIf="selectedSpan as span" class="tq-span-inspector">
+            <div class="tq-subheading">
+              <div><span class="tq-detail-kicker">{{ t('spanInspector') }}</span><h4>{{ span.name }}</h4></div>
+              <span class="tq-status-pill" [ngClass]="statusClass(span.status)">{{ t(span.status.toLowerCase()) }}</span>
+            </div>
+
+            <dl class="tq-inspector-grid">
+              <div><dt>{{ t('service') }}</dt><dd>{{ span.serviceName }}</dd></div>
+              <div><dt>{{ t('kind') }}</dt><dd>{{ span.kind }}</dd></div>
+              <div><dt>{{ t('duration') }}</dt><dd>{{ formatDuration(span.durationMs) }}</dd></div>
+              <div><dt>{{ t('parent') }}</dt><dd><code>{{ span.parentSpanId || t('root') }}</code></dd></div>
+            </dl>
+
+            <div class="tq-inspector-block">
+              <h5>{{ t('attributes') }} <span>{{ attributeEntries(span).length }}</span></h5>
+              <div *ngIf="attributeEntries(span).length" class="tq-attribute-list">
+                <div *ngFor="let item of attributeEntries(span)">
+                  <code>{{ item.key }}</code>
+                  <span>{{ item.value }}</span>
+                </div>
+              </div>
+              <p *ngIf="!attributeEntries(span).length" class="tq-muted-copy">{{ t('noAttributes') }}</p>
+            </div>
+
+            <div class="tq-inspector-block">
+              <h5>{{ t('events') }} <span>{{ span.events.length }}</span></h5>
+              <div *ngIf="span.events.length" class="tq-event-list">
+                <article *ngFor="let event of span.events; let eventIndex = index; trackBy: trackSpanEvent">
+                  <div><strong>{{ event.name }}</strong><time>{{ formatTimestamp(event.timestampUtc) }}</time></div>
+                  <div *ngIf="eventAttributeEntries(event).length" class="tq-event-attributes">
+                    <span *ngFor="let item of eventAttributeEntries(event)"><code>{{ item.key }}</code>{{ item.value }}</span>
+                  </div>
+                </article>
+              </div>
+              <p *ngIf="!span.events.length" class="tq-muted-copy">{{ t('noEvents') }}</p>
+            </div>
+          </section>
+        </ng-container>
+      </aside>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="activeTab === 'services'">
+    <section class="tq-panel">
+      <div class="tq-panel-heading">
+        <div>
+          <h3>{{ t('serviceHealth') }}</h3>
+          <p>{{ t('serviceHealthHint') }}</p>
+        </div>
+      </div>
+      <div *ngIf="!serviceStats.length && !analyticsLoading" class="tq-empty-state">{{ t('noServices') }}</div>
+      <div *ngIf="serviceStats.length" class="tq-table-scroll">
+        <table class="tq-table tq-services-table">
+          <thead><tr><th>{{ t('service') }}</th><th>{{ t('traces') }}</th><th>{{ t('totalSpans') }}</th><th>{{ t('traceErrors') }}</th><th>{{ t('errorSpans') }}</th><th>{{ t('slowTraces') }}</th><th>{{ t('avg') }}</th><th>{{ t('p95Latency') }}</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let service of serviceStats; trackBy: trackService">
+              <td><button type="button" class="tq-service-link" (click)="filterByService(service.serviceName)"><span>{{ service.serviceName.charAt(0).toUpperCase() }}</span><strong>{{ service.serviceName }}</strong></button></td>
+              <td>{{ formatNumber(service.totalTraces) }}</td>
+              <td>{{ formatNumber(service.totalSpans) }}</td>
+              <td><span [class.tq-danger-text]="service.errorTraces > 0">{{ formatNumber(service.errorTraces) }}</span></td>
+              <td><span [class.tq-danger-text]="service.errorSpans > 0">{{ formatNumber(service.errorSpans) }}</span></td>
+              <td>{{ formatNumber(service.slowTraces) }}</td>
+              <td>{{ formatDuration(service.averageDurationMs) }}</td>
+              <td class="tq-mono-strong">{{ formatDuration(service.p95DurationMs) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tq-panel">
+      <div class="tq-panel-heading">
+        <div><h3>{{ t('hotOperations') }}</h3><p>{{ t('hotOperationsHint') }}</p></div>
+      </div>
+      <div *ngIf="!operations.length && !analyticsLoading" class="tq-empty-state">{{ t('noAnalytics') }}</div>
+      <div *ngIf="operations.length" class="tq-table-scroll">
+        <table class="tq-table tq-operations-table">
+          <thead><tr><th>{{ t('operation') }}</th><th>{{ t('service') }}</th><th>{{ t('traces') }}</th><th>{{ t('traceErrors') }}</th><th>{{ t('slowTraces') }}</th><th>{{ t('errorRate') }}</th><th>{{ t('avg') }}</th><th>{{ t('p95Latency') }}</th><th>{{ t('max') }}</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let operation of operations; trackBy: trackOperation">
+              <td><strong>{{ operation.operation }}</strong></td>
+              <td>{{ operation.serviceName }}</td>
+              <td>{{ formatNumber(operation.totalTraces) }}</td>
+              <td><span [class.tq-danger-text]="operation.errorTraces > 0">{{ formatNumber(operation.errorTraces) }}</span></td>
+              <td>{{ formatNumber(operation.slowTraces) }}</td>
+              <td><span class="tq-rate-pill" [class.has-error]="operation.errorRatePercent > 0">{{ formatPercent(operation.errorRatePercent) }}</span></td>
+              <td>{{ formatDuration(operation.averageDurationMs) }}</td>
+              <td class="tq-mono-strong">{{ formatDuration(operation.p95DurationMs) }}</td>
+              <td>{{ formatDuration(operation.maxDurationMs) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-container *ngIf="activeTab === 'topology'">
+    <section class="tq-panel tq-topology-panel">
+      <div class="tq-panel-heading">
+        <div>
+          <h3>{{ t('serviceMap') }}</h3>
+          <p>{{ t('serviceMapHint') }}</p>
+        </div>
+        <small *ngIf="topology.nodes.length">{{ formatNumber(topology.nodes.length) }} nodes · {{ formatNumber(topology.edges.length) }} edges</small>
+      </div>
+
+      <div *ngIf="!topology.nodes.length && !analyticsLoading" class="tq-empty-state">{{ t('noTopology') }}</div>
+
+      <div *ngIf="topology.nodes.length" class="tq-topology-workspace">
+        <div class="tq-topology-canvas">
+          <svg viewBox="0 0 1000 440" role="img" aria-label="TraceQuest dependency topology">
+            <defs>
+              <marker id="tqArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z"></path>
+              </marker>
+            </defs>
+
+            <g class="tq-edge-layer">
+              <line
+                *ngFor="let connection of topologyConnections; trackBy: trackTopologyEdge"
+                [attr.x1]="connection.x1"
+                [attr.y1]="connection.y1"
+                [attr.x2]="connection.x2"
+                [attr.y2]="connection.y2"
+                [attr.stroke-width]="edgeStrokeWidth(connection.edge.callCount)"
+                [class.has-error]="connection.edge.errorCount > 0"
+                marker-end="url(#tqArrow)"
+              >
+                <title>{{ connection.edge.source }} → {{ connection.edge.target }} · {{ connection.edge.callCount }} {{ t('calls') }}</title>
+              </line>
+            </g>
+
+            <g
+              *ngFor="let point of topologyPoints; trackBy: trackTopologyNode"
+              class="tq-node-group"
+              [class.is-clickable]="point.node.kind.toLowerCase() === 'service'"
+              (click)="inspectTopologyNode(point.node)"
+            >
+              <circle class="tq-node-halo" [attr.cx]="point.x" [attr.cy]="point.y" r="46" [class.has-error]="point.node.errorCount > 0"></circle>
+              <circle class="tq-node-dot" [ngClass]="topologyNodeClass(point.node.kind)" [attr.cx]="point.x" [attr.cy]="point.y" r="34"></circle>
+              <text class="tq-node-name" [attr.x]="point.x" [attr.y]="point.y + 4" text-anchor="middle">{{ shortNodeName(point.node.name) }}</text>
+              <text class="tq-node-kind" [attr.x]="point.x" [attr.y]="point.y + 62" text-anchor="middle">{{ topologyKindLabel(point.node.kind) }}</text>
+              <title>{{ point.node.name }} · {{ point.node.spanCount }} {{ t('spans') }} · {{ point.node.errorCount }} {{ t('errors') }}</title>
+            </g>
+          </svg>
+        </div>
+
+        <div class="tq-topology-legend">
+          <span><i class="kind-service"></i>{{ t('nodeService') }}</span>
+          <span><i class="kind-database"></i>{{ t('nodeDatabase') }}</span>
+          <span><i class="kind-messaging"></i>{{ t('nodeMessaging') }}</span>
+          <span><i class="kind-external"></i>{{ t('nodeExternal') }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="topology.edges.length" class="tq-panel">
+      <div class="tq-panel-heading"><div><h3>{{ t('dependency') }}</h3><p>{{ t('generated') }}: {{ formatFullTimestamp(topology.generatedAtUtc) }}</p></div></div>
+      <div class="tq-edge-cards">
+        <article *ngFor="let edge of topology.edges">
+          <div class="tq-edge-route"><strong>{{ edge.source }}</strong><span>→</span><strong>{{ edge.target }}</strong></div>
+          <div class="tq-edge-stats">
+            <span><small>{{ t('calls') }}</small><strong>{{ formatNumber(edge.callCount) }}</strong></span>
+            <span><small>{{ t('errors') }}</small><strong [class.tq-danger-text]="edge.errorCount > 0">{{ formatNumber(edge.errorCount) }}</strong></span>
+            <span><small>{{ t('averageLatency') }}</small><strong>{{ formatDuration(edge.averageDurationMs) }}</strong></span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+
+  <div *ngIf="toastMessage" class="tq-toast" role="status">
+    <span>✓</span>{{ toastMessage }}
+  </div>
+</section>

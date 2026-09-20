@@ -76,6 +76,11 @@ const routes: Routes = [
       { path: 'admin/service-catalog', component: AdminServiceCatalogComponent, canActivate: [AdminGuard] },
       { path: 'admin/reminder-templates', component: AdminReminderTemplatesComponent, canActivate: [AdminGuard] },
       { path: 'admin/expense-categories', component: AdminExpenseCategoriesComponent, canActivate: [AdminGuard] },
+      {
+        path: 'admin/tracequest',
+        canActivate: [AdminGuard],
+        loadChildren: () => import('./features/tracequest/tracequest.module').then(module => module.TraceQuestModule)
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
     ]
   },

@@ -19,7 +19,7 @@ export const SUPPORTED_LANGUAGES: readonly AppLanguageOption[] = [
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
-  private readonly storageKey = 'petlife.language';
+  private readonly storageKey = 'pet_lovers.language';
   private translations: Record<string, string> = {};
   private readonly languageSubject = new BehaviorSubject<AppLanguage>(this.getInitialLanguage());
 
