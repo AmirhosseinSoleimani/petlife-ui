@@ -17,8 +17,8 @@
       <app-input name="mobileNumber" label="Mobile number" required [error]="fieldError('mobileNumber')" [(ngModel)]="mobileNumber" (ngModelChange)="clearFieldError('mobileNumber')"></app-input>
       <app-input name="email" label="Email" type="email" required [error]="fieldError('email')" [(ngModel)]="email" (ngModelChange)="clearFieldError('email')"></app-input>
       <div class="two-col">
-        <app-input name="password" label="Password" type="password" required [error]="fieldError('password')" [(ngModel)]="password" (ngModelChange)="clearFieldError('password')"></app-input>
-        <app-input name="confirmPassword" label="Confirm password" type="password" required [error]="confirmPasswordError" [(ngModel)]="confirmPassword" (ngModelChange)="clearFieldError('confirmPassword')"></app-input>
+        <app-input name="password" label="Password" type="password" showPasswordToggle required [error]="fieldError('password')" [(ngModel)]="password" (ngModelChange)="clearFieldError('password')"></app-input>
+        <app-input name="confirmPassword" label="Confirm password" type="password" showPasswordToggle required [error]="confirmPasswordError" [(ngModel)]="confirmPassword" (ngModelChange)="clearFieldError('confirmPassword')"></app-input>
       </div>
       <div class="password-policy" aria-live="polite">
         <strong>{{ 'auth.passwordRequirements' | translate }}</strong>

@@ -42,5 +42,26 @@ textarea:disabled { color: var(--color-muted); background: #f1f4f5; cursor: not-
 .checkbox input { order: 1; }
 input[type='checkbox'] { width: 17px; min-height: 17px; margin: 0; accent-color: var(--color-primary); }
 
+.input-control { position: relative; min-width: 0; }
+.password-control input { min-height: 44px; padding-inline-end: 52px; }
+.password-toggle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 44px;
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.password-toggle:hover:not(:disabled) { color: var(--color-primary-dark); }
+.password-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -4px; border-radius: var(--radius-sm); }
+.password-toggle:disabled { cursor: not-allowed; opacity: .55; }
+.password-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
 small { color: var(--color-muted); font-size: 11px; font-weight: 500; line-height: 1.35; }
 .error-text { color: var(--color-danger); font-weight: 650; }

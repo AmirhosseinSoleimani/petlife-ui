@@ -1,4 +1,4 @@
-import { Component, forwardRef, Input } from '@angular/core';
+import { Component, ElementRef, forwardRef, Input, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface AppInputOption {
@@ -19,6 +19,8 @@ export interface AppInputOption {
   ]
 })
 export class AppInputComponent implements ControlValueAccessor {
+  @ViewChild('passwordInput') private passwordInput?: ElementRef<HTMLInputElement>;
+
   @Input() label = '';
   @Input() helper = '';
   @Input() error = '';
@@ -31,9 +33,11 @@ export class AppInputComponent implements ControlValueAccessor {
   @Input() placeholderValue: string | number | boolean | null = '';
   @Input() rows = 3;
   @Input() options: AppInputOption[] | string[] = [];
+  @Input() showPasswordToggle: boolean | string = false;
 
   value: string | number | boolean | null = '';
   isDisabled = false;
+  passwordVisible = false;
 
   private onChange: (value: string | number | boolean | null) => void = () => {};
   private onTouched: () => void = () => {};
@@ -56,6 +60,17 @@ export class AppInputComponent implements ControlValueAccessor {
 
   get isRequired(): boolean {
     return this.required === '' || this.required === true || this.required === 'true';
+  }
+
+  get isPasswordToggleEnabled(): boolean {
+    const enabled = this.showPasswordToggle === ''
+      || this.showPasswordToggle === true
+      || this.showPasswordToggle === 'true';
+    return enabled && this.type === 'password';
+  }
+
+  get resolvedPasswordType(): 'password' | 'text' {
+    return this.passwordVisible ? 'text' : 'password';
   }
 
   writeValue(value: string | number | boolean | null): void {
@@ -81,5 +96,25 @@ export class AppInputComponent implements ControlValueAccessor {
 
   markTouched(): void {
     this.onTouched();
+  }
+
+  preventPasswordToggleMouseDown(event: MouseEvent): void {
+    event.preventDefault();
+  }
+
+  togglePasswordVisibility(): void {
+    const input = this.passwordInput?.nativeElement;
+    const selectionStart = input?.selectionStart ?? null;
+    const selectionEnd = input?.selectionEnd ?? null;
+    this.passwordVisible = !this.passwordVisible;
+
+    setTimeout(() => {
+      const updatedInput = this.passwordInput?.nativeElement;
+      if (!updatedInput) return;
+      updatedInput.focus();
+      if (selectionStart !== null && selectionEnd !== null) {
+        updatedInput.setSelectionRange(selectionStart, selectionEnd);
+      }
+    });
   }
 }
