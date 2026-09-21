@@ -200,4 +200,36 @@ describe('RegisterComponent template', () => {
 
     expect(visibleNames()).toEqual(expectedNames);
   });
+
+  it('renders one independent password visibility toggle for each password field', () => {
+    const passwordField = fixture.nativeElement.querySelector('app-input[name="password"]') as HTMLElement;
+    const confirmPasswordField = fixture.nativeElement.querySelector('app-input[name="confirmPassword"]') as HTMLElement;
+    const passwordToggle = passwordField.querySelector('.password-toggle') as HTMLButtonElement;
+    const confirmPasswordToggle = confirmPasswordField.querySelector('.password-toggle') as HTMLButtonElement;
+    const passwordInput = () => passwordField.querySelector('input') as HTMLInputElement;
+    const confirmPasswordInput = () => confirmPasswordField.querySelector('input') as HTMLInputElement;
+
+    expect(passwordField.querySelectorAll('.password-toggle').length).toBe(1);
+    expect(confirmPasswordField.querySelectorAll('.password-toggle').length).toBe(1);
+    expect(passwordInput().type).toBe('password');
+    expect(confirmPasswordInput().type).toBe('password');
+
+    passwordToggle.click();
+    fixture.detectChanges();
+
+    expect(passwordInput().type).toBe('text');
+    expect(confirmPasswordInput().type).toBe('password');
+
+    confirmPasswordToggle.click();
+    fixture.detectChanges();
+
+    expect(passwordInput().type).toBe('text');
+    expect(confirmPasswordInput().type).toBe('text');
+
+    passwordToggle.click();
+    fixture.detectChanges();
+
+    expect(passwordInput().type).toBe('password');
+    expect(confirmPasswordInput().type).toBe('text');
+  });
 });

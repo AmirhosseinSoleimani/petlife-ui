@@ -44,6 +44,8 @@ input[type='checkbox'] { width: 17px; min-height: 17px; margin: 0; accent-color:
 
 .input-control { position: relative; min-width: 0; }
 .password-control input { min-height: 44px; padding-inline-end: 52px; }
+.password-control input::-ms-reveal,
+.password-control input::-ms-clear { display: none; }
 .password-toggle {
   position: absolute;
   inset-block: 0;
