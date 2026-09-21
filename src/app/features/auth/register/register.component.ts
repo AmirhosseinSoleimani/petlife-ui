@@ -2,7 +2,9 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { RegisterCustomerMobileRequest, RegisterCustomerRequest } from '../../../core/models/auth.models';
+import { AuthResultCode, LoginResponse, RegisterRequest } from '../../../core/models/auth.models';
+
+type RegistrationRole = 'Customer' | 'Provider';
 
 @Component({
   selector: 'app-register',
@@ -10,7 +12,7 @@ import { RegisterCustomerMobileRequest, RegisterCustomerRequest } from '../../..
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
-  mode: 'email' | 'mobile' = 'email';
+  role: RegistrationRole = 'Customer';
   firstName = '';
   lastName = '';
   email = '';
@@ -19,13 +21,15 @@ export class RegisterComponent {
   confirmPassword = '';
   isSubmitting = false;
   errorMessage = '';
+  errorTraceId = '';
 
   constructor(private readonly authService: AuthService, private readonly router: Router) {}
 
-  setMode(mode: 'email' | 'mobile'): void {
-    if (this.mode === mode) return;
-    this.mode = mode;
+  setRole(role: RegistrationRole): void {
+    if (this.role === role) return;
+    this.role = role;
     this.errorMessage = '';
+    this.errorTraceId = '';
   }
 
   register(): void {
@@ -36,23 +40,25 @@ export class RegisterComponent {
 
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.errorTraceId = '';
 
-    const request = this.mode === 'email'
-      ? this.authService.registerCustomer(this.emailRequest())
-      : this.authService.registerCustomerMobile(this.mobileRequest());
+    const request = this.registrationRequest();
+    const registration = this.role === 'Customer'
+      ? this.authService.registerCustomer(request)
+      : this.authService.registerProvider(request);
 
-    request.subscribe({
-      next: () => {
-        const channel = this.mode === 'email' ? 'Email' : 'Mobile';
-        this.authService.sendVerification(channel).subscribe({
-          next: () => this.router.navigate(['/verify-contact'], { queryParams: { channel } }),
-          error: (error: { error?: { message?: string; errors?: string[] } }) => {
-            this.errorMessage = error.error?.errors?.[0]
-              || error.error?.message
-              || 'Your account was created, but the verification code could not be sent. Please try again from contact verification.';
-            this.isSubmitting = false;
-          }
-        });
+    registration.subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        if (this.isSuccessful(response)) {
+          void this.router.navigate(this.authService.getPostAuthRoute(response.data));
+          return;
+        }
+
+        this.errorMessage = response.resultCode === AuthResultCode.UnhandledError
+          ? 'errors.server'
+          : response.error?.message || 'Unable to create account.';
+        this.errorTraceId = response.error?.traceId || '';
       },
       error: (error: { error?: { message?: string; errors?: string[] } }) => {
         this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Unable to create account.';
@@ -61,23 +67,20 @@ export class RegisterComponent {
     });
   }
 
-  private emailRequest(): RegisterCustomerRequest {
+  private registrationRequest(): RegisterRequest {
     return {
       firstName: this.firstName,
       lastName: this.lastName,
       email: this.email.trim(),
-      mobileNumber: '',
-      password: this.password
+      mobileNumber: this.mobileNumber.trim(),
+      password: this.password,
+      confirmPassword: this.confirmPassword
     };
   }
 
-  private mobileRequest(): RegisterCustomerMobileRequest {
-    return {
-      firstName: this.firstName,
-      lastName: this.lastName,
-      mobileNumber: this.mobileNumber.trim(),
-      email: undefined,
-      password: this.password
-    };
+  private isSuccessful(response: LoginResponse): boolean {
+    return response.success === true
+      && response.resultCode === AuthResultCode.Success
+      && !!response.data?.token;
   }
 }

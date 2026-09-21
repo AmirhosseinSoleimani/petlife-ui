@@ -44,7 +44,7 @@
         type="text"
         placeholder="auth.emailOrMobilePlaceholder"
         required
-        [(ngModel)]="credentials.email"
+        [(ngModel)]="credentials.identifier"
       ></app-input>
 
       <app-input
@@ -56,7 +56,10 @@
         [(ngModel)]="credentials.password"
       ></app-input>
 
-      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+      <p *ngIf="errorMessage" class="error">
+        {{ errorMessage | translate }}
+        <span *ngIf="errorTraceId">{{ 'errors.traceId' | translate }}: {{ errorTraceId }}</span>
+      </p>
 
       <app-button type="submit" [loading]="isSubmitting" [disabled]="loginForm.invalid">
         {{ (isSubmitting ? 'auth.signingIn' : 'auth.signIn') | translate }}

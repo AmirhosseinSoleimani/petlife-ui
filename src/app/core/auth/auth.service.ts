@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap, throwError } from 'rxjs';
 
 import { ApiService } from '../api/api.service';
 import { AUTH_TOKEN_KEY } from './auth.constants';
 import {
   AuthUser,
+  AuthApiResponse,
+  AuthResponseData,
+  AuthResultCode,
   ContactVerificationChannel,
   ContactVerificationStatus,
   LoginRequest,
   LoginResponse,
-  RegisterCustomerMobileRequest,
-  RegisterCustomerRequest
+  RegisterCustomerRequest,
+  RegisterProviderRequest
 } from '../models/auth.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -26,25 +30,18 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     const request: LoginRequest = {
-      email: credentials.identifier || credentials.email,
-      identifier: credentials.identifier || credentials.email,
+      identifier: credentials.identifier.trim(),
       password: credentials.password
     };
-    return this.apiService.post<LoginResponse>('/auth/login', request).pipe(
-      tap((response) => this.storeToken(response))
-    );
+    return this.authRequest('/auth/login', request);
   }
 
   registerCustomer(request: RegisterCustomerRequest): Observable<LoginResponse> {
-    return this.apiService.post<LoginResponse>('/auth/register/customer', request).pipe(
-      tap((response) => this.storeToken(response))
-    );
+    return this.authRequest('/auth/register/customer', request);
   }
 
-  registerCustomerMobile(request: RegisterCustomerMobileRequest): Observable<LoginResponse> {
-    return this.apiService.post<LoginResponse>('/auth/register/customer/mobile', request).pipe(
-      tap((response) => this.storeToken(response))
-    );
+  registerProvider(request: RegisterProviderRequest): Observable<LoginResponse> {
+    return this.authRequest('/auth/register/provider', request);
   }
 
   getVerificationStatus(): Observable<ApiResponse<ContactVerificationStatus>> {
@@ -103,9 +100,45 @@ export class AuthService {
     return (this.getCurrentUser()?.role || '').toLowerCase() === role.toLowerCase();
   }
 
-  private storeToken(response: LoginResponse): void {
+  getPostAuthRoute(data: AuthResponseData): string[] {
+    const role = (data.role || '').trim().toLowerCase();
+    const status = (data.status || '').trim().toLowerCase();
+    return role === 'provider' && status === 'pending'
+      ? ['/provider/pending-approval']
+      : ['/dashboard'];
+  }
+
+  private authRequest(endpoint: string, request: unknown): Observable<LoginResponse> {
+    return this.apiService.post<LoginResponse>(endpoint, request).pipe(
+      catchError((error: unknown) => {
+        const response = this.authResponseFromError(error);
+        return response ? of(response) : throwError(() => error);
+      }),
+      tap((response) => this.storeToken(response))
+    );
+  }
+
+  private storeToken(response: AuthApiResponse<AuthResponseData>): void {
     const token = response.data?.token;
-    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+    if (response.success === true && response.resultCode === AuthResultCode.Success && token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    }
+  }
+
+  private authResponseFromError(error: unknown): LoginResponse | null {
+    if (!(error instanceof HttpErrorResponse) || !this.isAuthResponse(error.error)) return null;
+    return error.error;
+  }
+
+  private isAuthResponse(value: unknown): value is LoginResponse {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Partial<LoginResponse>;
+    return typeof candidate.success === 'boolean'
+      && typeof candidate.resultCode === 'number'
+      && !!candidate.data
+      && typeof candidate.data === 'object'
+      && !!candidate.error
+      && typeof candidate.error === 'object';
   }
 
   private decodeToken(token: string): Record<string, any> | null {

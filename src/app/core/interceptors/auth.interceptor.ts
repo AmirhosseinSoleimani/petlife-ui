@@ -29,14 +29,15 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         const normalizedError = this.apiErrorService.normalize(error);
         const isTranslationAsset = request.url.includes('/assets/i18n/');
+        const isPublicAuthRequest = /\/auth\/(login|register\/(customer|provider))(?:\?|$)/.test(request.url);
 
-        if (normalizedError.status === 401 && !isTranslationAsset) {
+        if (normalizedError.status === 401 && !isTranslationAsset && !isPublicAuthRequest) {
           localStorage.removeItem(AUTH_TOKEN_KEY);
           this.apiErrorService.notify(normalizedError);
           if (!this.router.url.startsWith('/login')) {
             void this.router.navigate(['/login']);
           }
-        } else if (!isTranslationAsset) {
+        } else if (!isTranslationAsset && !isPublicAuthRequest) {
           this.apiErrorService.notify(normalizedError);
         }
 

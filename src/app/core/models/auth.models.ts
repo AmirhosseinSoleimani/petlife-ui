@@ -1,23 +1,39 @@
 export interface LoginRequest {
-  email: string;
-  identifier?: string;
+  identifier: string;
   password: string;
 }
 
-export interface RegisterCustomerRequest {
+export interface RegisterRequest {
   firstName: string;
   lastName: string;
-  email: string;
   mobileNumber: string;
+  email: string;
   password: string;
+  confirmPassword: string;
 }
 
-export interface RegisterCustomerMobileRequest {
-  firstName: string;
-  lastName: string;
-  mobileNumber: string;
-  email?: string;
-  password: string;
+export type RegisterCustomerRequest = RegisterRequest;
+export type RegisterProviderRequest = RegisterRequest;
+
+export enum AuthResultCode {
+  Success = 0,
+  BusinessOrValidationError = 1,
+  AccessDenied = 2,
+  AuthenticationRequired = 3,
+  UnhandledError = 4
+}
+
+export interface AuthError {
+  message?: string;
+  traceId?: string;
+  fieldErrors?: Record<string, string[]>;
+}
+
+export interface AuthApiResponse<T> {
+  success: boolean;
+  resultCode: AuthResultCode;
+  data: T;
+  error: AuthError;
 }
 
 export interface AuthResponseData {
@@ -33,12 +49,7 @@ export interface AuthResponseData {
   isMobileVerified: boolean;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  message: string;
-  data: AuthResponseData;
-  errors?: string[];
-}
+export type LoginResponse = AuthApiResponse<AuthResponseData>;
 
 export interface ContactVerificationStatus {
   email?: string | null;
