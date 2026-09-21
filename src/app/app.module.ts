@@ -35,6 +35,7 @@ import { CustomerProfileComponent } from './features/profile/customer-profile/cu
 import { ProviderProfileComponent } from './features/provider-panel/provider-profile/provider-profile.component';
 import { ProviderDocumentsComponent } from './features/provider-panel/provider-documents/provider-documents.component';
 import { ProviderRequestsComponent } from './features/provider-panel/provider-requests/provider-requests.component';
+import { ProviderPendingApprovalComponent } from './features/provider-panel/provider-pending-approval/provider-pending-approval.component';
 import { ProviderServiceAreasComponent } from './features/provider-panel/provider-service-areas/provider-service-areas.component';
 import { ProviderServicesManagementComponent } from './features/provider-panel/provider-services-management/provider-services-management.component';
 import { ProvidersPageComponent } from './features/providers/providers-page/providers-page.component';
@@ -61,7 +62,7 @@ import { AppAlertComponent } from './shared/components/app-alert/app-alert.compo
     AppComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
     DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
-    ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
+    ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderPendingApprovalComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
     AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
     AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, AppAlertComponent, TranslatePipe

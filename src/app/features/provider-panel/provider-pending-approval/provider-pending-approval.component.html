@@ -1,0 +1,34 @@
+<section class="pending-page">
+  <app-card class="pending-card">
+    <div class="brand">
+      <span class="brand-mark">P</span>
+      <span>{{ 'app.name' | translate }}</span>
+    </div>
+
+    <div class="status-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+    </div>
+
+    <div class="heading">
+      <app-badge tone="warning">{{ 'providerPending.statusPending' | translate }}</app-badge>
+      <h1>{{ 'providerPending.title' | translate }}</h1>
+      <p>{{ 'providerPending.description' | translate }}</p>
+    </div>
+
+    <div class="status-region" role="status" aria-live="polite">
+      <span>{{ 'providerPending.currentStatus' | translate }}</span>
+      <strong>{{ (currentUser?.status || 'Pending') | translate }}</strong>
+    </div>
+
+    <app-alert *ngIf="errorMessage" [message]="errorMessage"></app-alert>
+
+    <div class="actions">
+      <app-button type="button" [loading]="isRefreshing" (buttonClick)="refreshStatus()">
+        {{ 'providerPending.refresh' | translate }}
+      </app-button>
+      <app-button type="button" variant="ghost" (buttonClick)="logout()">
+        {{ 'auth.logout' | translate }}
+      </app-button>
+    </div>
+  </app-card>
+</section>

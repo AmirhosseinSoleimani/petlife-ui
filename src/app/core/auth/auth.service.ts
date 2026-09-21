@@ -23,6 +23,9 @@ import { ApiResponse } from '../models/api-response.model';
   providedIn: 'root'
 })
 export class AuthService {
+  private currentUserSnapshot: AuthUser | null = null;
+  private currentUserSnapshotToken: string | null = null;
+
   constructor(
     private readonly apiService: ApiService,
     private readonly router: Router
@@ -56,9 +59,21 @@ export class AuthService {
     return this.apiService.post<ApiResponse<ContactVerificationStatus>>('/auth/verification/verify', { channel, code });
   }
 
+  refreshCurrentUser(): Observable<ApiResponse<AuthUser>> {
+    return this.apiService.get<ApiResponse<AuthUser>>('/auth/me').pipe(
+      tap((response) => {
+        if (!response.success || !response.data) return;
+        this.currentUserSnapshot = { ...(this.getCurrentUser() || {}), ...response.data };
+        this.currentUserSnapshotToken = this.getToken();
+      })
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(AUTH_TOKEN_KEY);
-    this.router.navigate(['/login']);
+    this.currentUserSnapshot = null;
+    this.currentUserSnapshotToken = null;
+    void this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
@@ -72,6 +87,9 @@ export class AuthService {
   getCurrentUser(): AuthUser | null {
     const token = this.getToken();
     if (!token) return null;
+    if (this.currentUserSnapshot && this.currentUserSnapshotToken === token) {
+      return this.currentUserSnapshot;
+    }
 
     const payload = this.decodeToken(token);
     if (!payload) return null;
@@ -100,6 +118,12 @@ export class AuthService {
     return (this.getCurrentUser()?.role || '').toLowerCase() === role.toLowerCase();
   }
 
+  isPendingProvider(user: AuthUser | null = this.getCurrentUser()): boolean {
+    const role = (user?.role || '').trim().toLowerCase();
+    const status = (user?.status || '').trim().toLowerCase();
+    return role === 'provider' && status === 'pending';
+  }
+
   getPostAuthRoute(data: AuthResponseData): string[] {
     const role = (data.role || '').trim().toLowerCase();
     const status = (data.status || '').trim().toLowerCase();
@@ -122,6 +146,17 @@ export class AuthService {
     const token = response.data?.token;
     if (response.success === true && response.resultCode === AuthResultCode.Success && token) {
       localStorage.setItem(AUTH_TOKEN_KEY, token);
+      this.currentUserSnapshotToken = token;
+      this.currentUserSnapshot = {
+        id: response.data.userId,
+        name: [response.data.firstName, response.data.lastName].filter(Boolean).join(' '),
+        email: response.data.email || undefined,
+        mobileNumber: response.data.mobileNumber || undefined,
+        role: response.data.role,
+        status: response.data.status,
+        isEmailVerified: response.data.isEmailVerified,
+        isMobileVerified: response.data.isMobileVerified
+      };
     }
   }
 
