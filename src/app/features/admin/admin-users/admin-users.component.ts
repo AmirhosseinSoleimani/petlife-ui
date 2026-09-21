@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { AdminUser, PagedResult } from '../../../core/models/admin.models';
@@ -26,9 +27,11 @@ export class AdminUsersComponent implements OnInit {
   actionUserId: string | null = null;
   errorMessage = '';
 
-  constructor(private readonly apiService: ApiService) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
 
   ngOnInit(): void {
+    this.role = this.route.snapshot.queryParamMap.get('role') || '';
+    this.status = this.route.snapshot.queryParamMap.get('status') || '';
     this.load();
   }
 
@@ -117,6 +120,16 @@ export class AdminUsersComponent implements OnInit {
     this.updateStatus(user, 'Active', '');
   }
 
+  approveProvider(user: AdminUser): void {
+    if (!this.canApproveProvider(user)) return;
+    this.updateStatus(user, 'Active', '', false, 'adminUsers.approveError');
+  }
+
+  canApproveProvider(user: AdminUser): boolean {
+    return (user.role || '').trim().toLowerCase() === 'provider'
+      && (user.status || '').trim().toLowerCase() === 'pending';
+  }
+
   previous(): void {
     if (this.page > 1) {
       this.page -= 1;
@@ -131,16 +144,30 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
-  private updateStatus(user: AdminUser, status: 'Active' | 'Suspended', reason: string, closeSuspendOnSuccess = false): void {
+  private updateStatus(
+    user: AdminUser,
+    status: 'Active' | 'Suspended',
+    reason: string,
+    closeSuspendOnSuccess = false,
+    errorFallback = 'Unable to update user status.'
+  ): void {
     this.actionUserId = user.id;
     this.errorMessage = '';
     this.apiService.put<ApiResponse<AdminUser>>(`/admin/users/${user.id}/status`, { status, reason }).subscribe({
       next: (response) => {
+        if (!response.success) {
+          this.errorMessage = response.message || errorFallback;
+          this.actionUserId = null;
+          return;
+        }
+
         if (response.data) {
           Object.assign(user, response.data);
           if (this.selectedUser?.id === user.id) {
             this.selectedUser = { ...response.data };
           }
+        } else {
+          this.load();
         }
         this.actionUserId = null;
         if (closeSuspendOnSuccess) {
@@ -149,7 +176,7 @@ export class AdminUsersComponent implements OnInit {
         }
       },
       error: (error: { error?: { message?: string } }) => {
-        this.errorMessage = error.error?.message || 'Unable to update user status.';
+        this.errorMessage = error.error?.message || errorFallback;
         this.actionUserId = null;
       }
     });
