@@ -1,0 +1,10 @@
+<div class="alert" role="alert" [attr.aria-live]="ariaLive">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3 2.8 20h18.4L12 3Z" />
+    <path d="M12 9v5M12 17.5v.1" />
+  </svg>
+  <div class="content">
+    <p>{{ message | translate }}</p>
+    <small *ngIf="traceId">{{ 'errors.traceId' | translate }}: {{ traceId }}</small>
+  </div>
+</div>

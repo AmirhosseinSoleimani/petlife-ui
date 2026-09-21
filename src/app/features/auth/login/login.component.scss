@@ -183,17 +183,8 @@ h2 {
   line-height: 1.5;
 }
 
-form { display: grid; gap: 18px; }
-
-.error {
-  margin: 0;
-  padding: 12px 14px;
-  border: 1px solid rgba(220, 38, 38, 0.22);
-  border-radius: 14px;
-  color: var(--color-danger);
-  background: #fef2f2;
-  font-size: 14px;
-}
+form { display: grid; gap: var(--space-lg); }
+.register-link { margin-top: var(--space-lg); text-align: center; }
 
 @media (max-width: 860px) {
   .login-page {
@@ -280,4 +271,3 @@ form { display: grid; gap: 18px; }
     font-size: 25px;
   }
 }
-

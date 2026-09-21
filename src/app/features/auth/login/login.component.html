@@ -57,10 +57,7 @@
         [(ngModel)]="credentials.password"
       ></app-input>
 
-      <p *ngIf="errorMessage" class="error">
-        {{ errorMessage | translate }}
-        <span *ngIf="errorTraceId">{{ 'errors.traceId' | translate }}: {{ errorTraceId }}</span>
-      </p>
+      <app-alert *ngIf="errorMessage" [message]="errorMessage" [traceId]="errorTraceId"></app-alert>
 
       <app-button type="submit" [loading]="isSubmitting" [disabled]="loginForm.invalid">
         {{ (isSubmitting ? 'auth.signingIn' : 'auth.signIn') | translate }}

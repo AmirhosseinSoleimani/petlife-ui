@@ -54,6 +54,7 @@ import { AppShellComponent } from './shared/layout/app-shell/app-shell.component
 import { WorkspacePreferencesComponent } from './shared/components/workspace-preferences/workspace-preferences.component';
 import { GeographySelectorComponent } from './shared/components/geography-selector/geography-selector.component';
 import { AppLoadingStateComponent } from './shared/components/app-loading-state/app-loading-state.component';
+import { AppAlertComponent } from './shared/components/app-alert/app-alert.component';
 
 @NgModule({
   declarations: [
@@ -63,7 +64,7 @@ import { AppLoadingStateComponent } from './shared/components/app-loading-state/
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
     AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
-    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, TranslatePipe
+    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, AppAlertComponent, TranslatePipe
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
