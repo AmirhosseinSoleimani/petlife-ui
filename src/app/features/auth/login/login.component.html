@@ -6,7 +6,7 @@
     </select>
   </label>
 
-  <div class="login-copy" aria-hidden="true">
+  <header class="login-hero">
     <div class="brand">
       <span class="brand-mark">P</span>
       <span>{{ 'app.name' | translate }}</span>
@@ -14,24 +14,9 @@
     <p class="pitch-label">{{ 'auth.pitchLabel' | translate }}</p>
     <h1>{{ 'auth.heroTitle' | translate }}</h1>
     <p>{{ 'auth.heroDescription' | translate }}</p>
-    <div class="value-strip">
-      <span>{{ 'auth.valueCare' | translate }}</span>
-      <span>{{ 'auth.valueNetwork' | translate }}</span>
-      <span>{{ 'auth.valueLifecycle' | translate }}</span>
-    </div>
-    <div class="benefit-grid">
-      <div><strong>{{ 'auth.benefitRecords' | translate }}</strong><small>{{ 'auth.benefitRecordsText' | translate }}</small></div>
-      <div><strong>{{ 'auth.benefitMarketplace' | translate }}</strong><small>{{ 'auth.benefitMarketplaceText' | translate }}</small></div>
-      <div><strong>{{ 'auth.benefitProvider' | translate }}</strong><small>{{ 'auth.benefitProviderText' | translate }}</small></div>
-    </div>
-  </div>
+  </header>
 
   <div class="login-panel">
-    <div class="brand compact">
-      <span class="brand-mark">P</span>
-      <span>{{ 'app.name' | translate }}</span>
-    </div>
-
     <div class="heading">
       <h2>{{ 'auth.loginTitle' | translate }}</h2>
       <p>{{ 'auth.loginSubtitle' | translate }}</p>
@@ -64,5 +49,32 @@
       </app-button>
     </form>
     <p class="register-link">{{ 'auth.newToPetLife' | translate }} <a routerLink="/register">{{ 'auth.createAccount' | translate }}</a></p>
+  </div>
+
+  <div class="value-strip">
+    <span>{{ 'auth.valueCare' | translate }}</span>
+    <span>{{ 'auth.valueNetwork' | translate }}</span>
+    <span>{{ 'auth.valueLifecycle' | translate }}</span>
+  </div>
+
+  <div class="benefit-grid">
+    <article>
+      <span class="benefit-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 3v4M16 3v4M4 9h16M8 14h2l1.5-3 2.5 6 1.5-3H18" /></svg>
+      </span>
+      <div><strong>{{ 'auth.benefitRecords' | translate }}</strong><small>{{ 'auth.benefitRecordsText' | translate }}</small></div>
+    </article>
+    <article>
+      <span class="benefit-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.9 8.2 7 10 4.1-1.8 7-5.4 7-10V6l-7-3ZM9 12l2 2 4-4" /></svg>
+      </span>
+      <div><strong>{{ 'auth.benefitMarketplace' | translate }}</strong><small>{{ 'auth.benefitMarketplaceText' | translate }}</small></div>
+    </article>
+    <article>
+      <span class="benefit-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 5h14v4H5zM5 15h14v4H5zM8 9v6M16 9v6M3 12h18" /></svg>
+      </span>
+      <div><strong>{{ 'auth.benefitProvider' | translate }}</strong><small>{{ 'auth.benefitProviderText' | translate }}</small></div>
+    </article>
   </div>
 </section>
