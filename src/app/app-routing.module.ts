@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { AdminGuard } from './core/guards/admin.guard';
 import { AuthGuard } from './core/guards/auth.guard';
+import { PendingProviderGuard } from './core/guards/pending-provider.guard';
 import { AdminPetsComponent } from './features/admin/admin-pets/admin-pets.component';
 import { AdminReminderTemplatesComponent } from './features/admin/admin-reminder-templates/admin-reminder-templates.component';
 import { AdminExpenseCategoriesComponent } from './features/admin/admin-expense-categories/admin-expense-categories.component';
@@ -33,6 +34,7 @@ import { ProviderDocumentsComponent } from './features/provider-panel/provider-d
 import { ProviderRequestsComponent } from './features/provider-panel/provider-requests/provider-requests.component';
 import { ProviderServiceAreasComponent } from './features/provider-panel/provider-service-areas/provider-service-areas.component';
 import { ProviderServicesManagementComponent } from './features/provider-panel/provider-services-management/provider-services-management.component';
+import { ProviderPendingApprovalComponent } from './features/provider-panel/provider-pending-approval/provider-pending-approval.component';
 import { ProvidersPageComponent } from './features/providers/providers-page/providers-page.component';
 import { CreateServiceRequestComponent } from './features/requests/create-service-request/create-service-request.component';
 import { MyRequestsComponent } from './features/requests/my-requests/my-requests.component';
@@ -44,9 +46,15 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'verify-contact', component: ContactVerificationComponent, canActivate: [AuthGuard] },
+  {
+    path: 'provider/pending-approval',
+    component: ProviderPendingApprovalComponent,
+    canActivate: [AuthGuard, PendingProviderGuard],
+    data: { pendingApprovalOnly: true }
+  },
   { path: 'shared/pet/:token', component: PublicPetShareComponent },
   {
-    path: '', component: AppShellComponent, canActivateChild: [AuthGuard], children: [
+    path: '', component: AppShellComponent, canActivateChild: [AuthGuard, PendingProviderGuard], children: [
       { path: 'ai', component: AiAssistantComponent },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'profile', component: CustomerProfileComponent },

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18n/i18n.service';
-import { LoginRequest } from '../../../core/models/auth.models';
+import { AuthResultCode, LoginRequest, LoginResponse } from '../../../core/models/auth.models';
 
 @Component({
   selector: 'app-login',
@@ -13,12 +13,13 @@ import { LoginRequest } from '../../../core/models/auth.models';
 })
 export class LoginComponent {
   credentials: LoginRequest = {
-    email: '',
+    identifier: '',
     password: ''
   };
   readonly languageOptions = SUPPORTED_LANGUAGES;
   isSubmitting = false;
   errorMessage = '';
+  errorTraceId = '';
 
   constructor(
     private readonly authService: AuthService,
@@ -29,10 +30,20 @@ export class LoginComponent {
   login(): void {
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.errorTraceId = '';
 
     this.authService.login(this.credentials).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (response) => {
+        this.isSubmitting = false;
+        if (this.isSuccessful(response)) {
+          void this.router.navigate(this.authService.getPostAuthRoute(response.data));
+          return;
+        }
+
+        this.errorMessage = response.resultCode === AuthResultCode.UnhandledError
+          ? 'errors.server'
+          : response.error?.message || 'auth.loginError';
+        this.errorTraceId = response.error?.traceId || '';
       },
       error: (error) => {
         this.errorMessage = apiErrorMessage(error, 'auth.loginError');
@@ -43,5 +54,11 @@ export class LoginComponent {
 
   changeLanguage(language: AppLanguage): void {
     this.i18nService.useLanguage(language);
+  }
+
+  private isSuccessful(response: LoginResponse): boolean {
+    return response.success === true
+      && response.resultCode === AuthResultCode.Success
+      && !!response.data?.token;
   }
 }

@@ -35,6 +35,7 @@ import { CustomerProfileComponent } from './features/profile/customer-profile/cu
 import { ProviderProfileComponent } from './features/provider-panel/provider-profile/provider-profile.component';
 import { ProviderDocumentsComponent } from './features/provider-panel/provider-documents/provider-documents.component';
 import { ProviderRequestsComponent } from './features/provider-panel/provider-requests/provider-requests.component';
+import { ProviderPendingApprovalComponent } from './features/provider-panel/provider-pending-approval/provider-pending-approval.component';
 import { ProviderServiceAreasComponent } from './features/provider-panel/provider-service-areas/provider-service-areas.component';
 import { ProviderServicesManagementComponent } from './features/provider-panel/provider-services-management/provider-services-management.component';
 import { ProvidersPageComponent } from './features/providers/providers-page/providers-page.component';
@@ -54,16 +55,17 @@ import { AppShellComponent } from './shared/layout/app-shell/app-shell.component
 import { WorkspacePreferencesComponent } from './shared/components/workspace-preferences/workspace-preferences.component';
 import { GeographySelectorComponent } from './shared/components/geography-selector/geography-selector.component';
 import { AppLoadingStateComponent } from './shared/components/app-loading-state/app-loading-state.component';
+import { AppAlertComponent } from './shared/components/app-alert/app-alert.component';
 
 @NgModule({
   declarations: [
     AppComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
     DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
-    ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
+    ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderPendingApprovalComponent, ProviderServicesPageComponent,
     CreateServiceRequestComponent, MyRequestsComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
     AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
-    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, TranslatePipe
+    AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, AppAlertComponent, TranslatePipe
   ],
   imports: [BrowserModule, FormsModule, HttpClientModule, AppRoutingModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],

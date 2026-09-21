@@ -47,7 +47,7 @@
     </div>
   </div>
 
-  <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
+  <app-alert *ngIf="errorMessage" [message]="errorMessage"></app-alert>
   <div *ngIf="isLoading" class="state">{{ 'Loading users...' | translate }}</div>
 
   <div class="table-wrap users-table-wrap" *ngIf="!isLoading">
@@ -78,6 +78,7 @@
           <td>{{ user.petCount }}</td>
           <td>{{ user.lastLoginAt ? (user.lastLoginAt | date:'medium') : ('Never' | translate) }}</td>
           <td class="row-actions">
+            <app-button *ngIf="canApproveProvider(user)" type="button" [loading]="actionUserId === user.id" (buttonClick)="approveProvider(user)">{{ 'adminUsers.approveProvider' | translate }}</app-button>
             <app-button type="button" variant="secondary" (buttonClick)="viewUser(user)">{{ 'Details' | translate }}</app-button>
             <app-button *ngIf="user.status !== 'Suspended'" type="button" variant="danger" [loading]="actionUserId === user.id" (buttonClick)="requestSuspend(user)">{{ 'Suspend' | translate }}</app-button>
             <app-button *ngIf="user.status === 'Suspended'" type="button" [loading]="actionUserId === user.id" (buttonClick)="activate(user)">{{ 'Activate' | translate }}</app-button>

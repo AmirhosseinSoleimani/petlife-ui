@@ -4,6 +4,7 @@
 .notification-card { display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; padding:16px; border:1px solid var(--color-border); border-radius:var(--radius-xl); background:var(--color-surface); box-shadow:var(--shadow-soft); }
 .notification-card.unread { border-color:rgba(15,118,110,.34); background:linear-gradient(135deg,var(--color-primary-soft),var(--color-surface) 44%); }
 .notification-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:12px; background:var(--color-primary-soft); color:var(--color-primary); font-size:22px; font-weight:900; }
+.notification-icon svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .notification-copy { min-width:0; display:grid; gap:8px; }
 .notification-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
 .notification-heading h3 { margin:2px 0 0; font-size:16px; }

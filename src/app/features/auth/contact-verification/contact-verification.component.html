@@ -25,7 +25,7 @@
       </ng-container>
     </ng-container>
     <p *ngIf="message" class="success">{{ message | translate }}</p>
-    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
+    <app-alert *ngIf="errorMessage" [message]="errorMessage"></app-alert>
     <button class="continue" type="button" (click)="continue()">{{ 'Continue to dashboard' | translate }}</button>
   </div>
 </section>

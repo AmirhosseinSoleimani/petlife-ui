@@ -85,6 +85,10 @@ export class NotificationsPageComponent implements OnInit {
   }
 
   openAction(item: InAppNotification): void {
+    if (this.isProviderApprovalRequest(item)) {
+      void this.router.navigate(['/admin/users'], { queryParams: { role: 'Provider', status: 'Pending' } });
+      return;
+    }
     if (!item.actionPath) return;
     const action = item.actionPath.startsWith('/') ? item.actionPath : `/${item.actionPath}`;
     if (/^\/pets\/[^/]+$/.test(action)) {
@@ -96,6 +100,9 @@ export class NotificationsPageComponent implements OnInit {
 
 
   localizedType(item: InAppNotification): string {
+    if (this.isProviderApprovalRequest(item)) {
+      return this.i18n.translate('notifications.type.providerApprovalRequested');
+    }
     if (item.type === 'PetOwnershipTransferredOut' || item.type === 'PetOwnershipTransferredIn') {
       return this.i18n.translate('notifications.type.petTransfer');
     }
@@ -103,6 +110,9 @@ export class NotificationsPageComponent implements OnInit {
   }
 
   localizedTitle(item: InAppNotification): string {
+    if (this.isProviderApprovalRequest(item)) {
+      return this.i18n.translate('notifications.providerApprovalTitle');
+    }
     if (this.i18n.currentLanguage !== 'fa') return item.title;
     if (item.type === 'PetOwnershipTransferredOut') return 'انتقال حیوان تکمیل شد';
     if (item.type === 'PetOwnershipTransferredIn') return 'حیوان دریافت شد';
@@ -110,6 +120,9 @@ export class NotificationsPageComponent implements OnInit {
   }
 
   localizedMessage(item: InAppNotification): string {
+    if (this.isProviderApprovalRequest(item)) {
+      return this.i18n.translate('notifications.providerApprovalMessage');
+    }
     if (this.i18n.currentLanguage !== 'fa') return item.message;
     if (item.type === 'PetOwnershipTransferredOut') {
       const match = item.message.match(/^(.*?) was transferred to (.*?)\.?$/i);
@@ -128,5 +141,13 @@ export class NotificationsPageComponent implements OnInit {
     if (normalized.includes('request')) return '↗';
     if (normalized.includes('reminder')) return '◷';
     return '•';
+  }
+
+  hasAction(item: InAppNotification): boolean {
+    return this.isProviderApprovalRequest(item) || !!item.actionPath;
+  }
+
+  isProviderApprovalRequest(item: InAppNotification): boolean {
+    return item.type === 'ProviderApprovalRequested';
   }
 }

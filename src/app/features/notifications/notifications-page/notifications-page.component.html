@@ -10,7 +10,7 @@
     </div>
   </app-page-header>
 
-  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
+  <app-alert *ngIf="errorMessage" [message]="errorMessage"></app-alert>
   <app-loading-state *ngIf="isLoading" message="notifications.loading"></app-loading-state>
 
   <div *ngIf="!isLoading && !notifications.length" class="state">
@@ -20,7 +20,10 @@
 
   <div *ngIf="!isLoading && notifications.length" class="notification-list">
     <article *ngFor="let item of notifications" class="notification-card" [class.unread]="!item.isRead">
-      <span class="notification-icon" aria-hidden="true">{{ notificationIcon(item.type) }}</span>
+      <span class="notification-icon" aria-hidden="true">
+        <svg *ngIf="isProviderApprovalRequest(item)" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21c.5-4.2 2.9-6.5 7-6.5 1.5 0 2.8.3 3.8.9M15 18l2 2 4-5" /></svg>
+        <span *ngIf="!isProviderApprovalRequest(item)">{{ notificationIcon(item.type) }}</span>
+      </span>
       <div class="notification-copy">
         <div class="notification-heading">
           <div>
@@ -33,7 +36,7 @@
         <small>{{ item.createdAt | date:'medium' }}</small>
         <div class="notification-actions">
           <app-button *ngIf="!item.isRead" type="button" variant="secondary" (buttonClick)="markRead(item)">{{ 'notifications.markRead' | translate }}</app-button>
-          <app-button *ngIf="item.actionPath" type="button" (buttonClick)="markRead(item, true)">{{ 'notifications.open' | translate }}</app-button>
+          <app-button *ngIf="hasAction(item)" type="button" (buttonClick)="markRead(item, true)">{{ 'notifications.open' | translate }}</app-button>
         </div>
       </div>
     </article>
