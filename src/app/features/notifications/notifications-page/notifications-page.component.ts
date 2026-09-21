@@ -117,7 +117,7 @@ export class NotificationsPageComponent implements OnInit {
     }
     if (item.type === 'PetOwnershipTransferredIn') {
       const match = item.message.match(/^(.*?) is now available in your PetLife profile\.?$/i);
-      if (match) return `${match[1]} اکنون در پروفایل PetLife شما در دسترس است.`;
+      if (match) return `${match[1]} اکنون در پروفایل Pet Lovers شما در دسترس است.`;
     }
     return this.i18n.translate(item.message);
   }
