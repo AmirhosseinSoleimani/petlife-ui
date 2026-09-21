@@ -2,7 +2,7 @@
   <div class="auth-card">
     <a routerLink="/login" class="brand">PetLife AU</a>
     <h1>{{ 'Create your account' | translate }}</h1>
-    <p>{{ 'Create a customer or provider account.' | translate }}</p>
+    <p>{{ 'auth.registerSubtitle' | translate }}</p>
 
     <div class="mode-switch" role="tablist">
       <button type="button" role="tab" [attr.aria-selected]="role === 'Customer'" [class.active]="role === 'Customer'" (click)="setRole('Customer')">{{ 'Customer' | translate }}</button>
