@@ -12,6 +12,7 @@ describe('NotificationsPageComponent Provider approval workflow', () => {
   let http: HttpTestingController;
   let router: jasmine.SpyObj<Router>;
   let dispatchSpy: jasmine.Spy;
+  let i18n: { currentLanguage: string; translate: (value: string) => string };
 
   const notification = (overrides: Partial<InAppNotification> = {}): InAppNotification => ({
     id: 'notification-1',
@@ -28,7 +29,7 @@ describe('NotificationsPageComponent Provider approval workflow', () => {
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
     router.navigate.and.returnValue(Promise.resolve(true));
     router.navigateByUrl.and.returnValue(Promise.resolve(true));
-    const i18n = {
+    i18n = {
       currentLanguage: 'en',
       translate: (value: string) => `translated:${value}`
     };
@@ -81,6 +82,18 @@ describe('NotificationsPageComponent Provider approval workflow', () => {
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/reminders');
     expect(http.match(() => true).length).toBe(0);
+  });
+
+  it('displays the Pet Lovers brand for incoming pet transfer notifications', () => {
+    const item = notification({
+      type: 'PetOwnershipTransferredIn',
+      message: 'Milo is now available in your PetLife profile.'
+    });
+
+    expect(component.localizedMessage(item)).toBe('Milo is now available in your Pet Lovers profile.');
+
+    i18n.currentLanguage = 'fa';
+    expect(component.localizedMessage(item)).toBe('Milo اکنون در پروفایل Pet Lovers شما در دسترس است.');
   });
 
   it('maps mark-as-read API failures to the page error state', () => {

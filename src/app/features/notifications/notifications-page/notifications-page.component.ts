@@ -123,14 +123,17 @@ export class NotificationsPageComponent implements OnInit {
     if (this.isProviderApprovalRequest(item)) {
       return this.i18n.translate('notifications.providerApprovalMessage');
     }
+    if (item.type === 'PetOwnershipTransferredIn') {
+      const match = item.message.match(/^(.*?) is now available in your (?:PetLife|Pet Lovers) profile\.?$/i);
+      if (match) {
+        if (this.i18n.currentLanguage === 'fa') return `${match[1]} اکنون در پروفایل Pet Lovers شما در دسترس است.`;
+        return `${match[1]} is now available in your Pet Lovers profile.`;
+      }
+    }
     if (this.i18n.currentLanguage !== 'fa') return item.message;
     if (item.type === 'PetOwnershipTransferredOut') {
       const match = item.message.match(/^(.*?) was transferred to (.*?)\.?$/i);
       if (match) return `${match[1]} به ${match[2]} منتقل شد.`;
-    }
-    if (item.type === 'PetOwnershipTransferredIn') {
-      const match = item.message.match(/^(.*?) is now available in your PetLife profile\.?$/i);
-      if (match) return `${match[1]} اکنون در پروفایل PetLife شما در دسترس است.`;
     }
     return this.i18n.translate(item.message);
   }
