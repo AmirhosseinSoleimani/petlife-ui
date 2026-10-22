@@ -5,6 +5,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { ProviderReviewsSectionComponent } from './features/provider-reviews/provider-reviews-section.component';
+import { MyReviewsComponent } from './features/provider-reviews/my-reviews.component';
 import { AppComponent } from './app.component';
 import { AdminPetsComponent } from './features/admin/admin-pets/admin-pets.component';
 import { AdminReminderTemplatesComponent } from './features/admin/admin-reminder-templates/admin-reminder-templates.component';
@@ -58,7 +59,7 @@ import { AppLoadingStateComponent } from './shared/components/app-loading-state/
 
 @NgModule({
   declarations: [
-    AppComponent, ProviderReviewsSectionComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
+    AppComponent, ProviderReviewsSectionComponent, MyReviewsComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
     DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,

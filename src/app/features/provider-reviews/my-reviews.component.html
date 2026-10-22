@@ -1,0 +1,34 @@
+<section class="reviews-panel" *ngIf="api.flags.readEnabled && api.flags.customerEnabled">
+  <h1>My provider reviews</h1>
+  <p *ngIf="loading" role="status">Loading…</p>
+  <p *ngIf="error" role="alert">{{ error }}</p>
+  <p *ngIf="notice" role="status">{{ notice }}</p>
+  <p *ngIf="!loading && !items.length">You have no reviews yet.</p>
+  <article class="review-item" *ngFor="let review of items">
+    <h2>{{ review.rating === null ? 'Comment only' : (review.rating + ' out of 5 stars') }}</h2>
+    <small>Status: {{ review.visibility }}</small>
+    <p class="review-comment">{{ review.comment }}</p>
+    <button type="button" *ngIf="review.visibility === 'PendingModeration' || review.visibility === 'Published'"
+      [disabled]="saving" (click)="edit(review)">Edit review</button>
+    <button type="button" *ngIf="review.visibility !== 'Withdrawn'" [disabled]="saving"
+      (click)="withdraw(review)">Withdraw</button>
+  </article>
+  <button type="button" *ngIf="nextCursor" [disabled]="loading" (click)="load(nextCursor)">More</button>
+
+  <app-modal [open]="!!selected" title="Edit provider review" (closed)="cancel()">
+    <form *ngIf="selected" (ngSubmit)="save()">
+      <fieldset>
+        <legend>Select your rating</legend>
+        <label *ngFor="let star of stars">
+          <input type="radio" name="rating" [value]="star" [checked]="rating === star"
+            (change)="rating = star"> {{ star }} stars
+        </label>
+        <button type="button" (click)="rating = null" *ngIf="api.flags.commentOnlyApproved">Clear rating</button>
+      </fieldset>
+      <label for="review-edit-comment">Review comment (optional)</label>
+      <textarea id="review-edit-comment" name="comment" [(ngModel)]="comment" maxlength="2000" rows="4"></textarea>
+      <p>Publishing or verification depends on the server's decision.</p>
+      <app-button type="submit" [loading]="saving">Save changes</app-button>
+    </form>
+  </app-modal>
+</section>

@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AdminGuard } from './core/guards/admin.guard';
+import { MyReviewsComponent } from './features/provider-reviews/my-reviews.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { AdminPetsComponent } from './features/admin/admin-pets/admin-pets.component';
 import { AdminReminderTemplatesComponent } from './features/admin/admin-reminder-templates/admin-reminder-templates.component';
@@ -61,6 +62,7 @@ const routes: Routes = [
       { path: 'emergency-vets', component: EmergencyVetsPageComponent },
       { path: 'feedback', component: FeedbackPageComponent },
       { path: 'providers', component: ProvidersPageComponent },
+      { path: 'my/provider-reviews', component: MyReviewsComponent },
       { path: 'provider/profile', component: ProviderProfileComponent },
       { path: 'provider/documents', component: ProviderDocumentsComponent },
       { path: 'provider/services', component: ProviderServicesManagementComponent },
