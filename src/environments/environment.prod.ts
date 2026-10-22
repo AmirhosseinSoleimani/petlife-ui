@@ -1,4 +1,11 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '/api'
+  apiBaseUrl: '/api',
+  providerReviews: {
+    readEnabled: false,
+    customerEnabled: false,
+    providerEnabled: false,
+    moderationEnabled: false,
+    commentOnlyApproved: false
+  }
 };

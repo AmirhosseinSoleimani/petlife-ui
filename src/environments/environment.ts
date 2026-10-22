@@ -4,7 +4,14 @@
 
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:5156/api'
+  apiBaseUrl: 'http://localhost:5156/api',
+  providerReviews: {
+    readEnabled: false,
+    customerEnabled: false,
+    providerEnabled: false,
+    moderationEnabled: false,
+    commentOnlyApproved: false
+  }
 };
 
 /*
