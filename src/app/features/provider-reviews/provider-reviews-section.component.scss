@@ -1,0 +1,13 @@
+:host { display: block; }
+.reviews-panel { margin-block: var(--space-xl); color: var(--color-text); }
+.rating-overview, .review-item { padding: var(--space-lg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-block: var(--space-md); }
+.rating-distribution { display: grid; grid-template-columns: 5rem minmax(3rem, 1fr) 2rem; gap: var(--space-sm); align-items: center; }
+.rating-distribution progress { width: 100%; accent-color: var(--color-primary); }
+.rating-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); border: 0; padding: 0; }
+.rating-filters legend { width: 100%; }
+button { padding: .65rem .85rem; border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-surface); cursor: pointer; min-height: 44px; }
+button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-soft); }
+button:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.review-comment { white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-reply { border-inline-start: 3px solid var(--color-primary); padding-inline-start: var(--space-md); }
+.review-disclaimer { color: var(--color-muted); font-size: var(--font-size-caption); }

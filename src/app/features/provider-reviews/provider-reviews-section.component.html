@@ -1,0 +1,37 @@
+<section class="reviews-panel" *ngIf="api.flags.readEnabled" aria-labelledby="provider-review-heading">
+  <h4 id="provider-review-heading">Customer reviews</h4>
+  <p *ngIf="loading" role="status" aria-live="polite">Loading reviews…</p>
+  <div *ngIf="error" role="alert"><p>{{ error }}</p><button type="button" (click)="load()">Retry</button></div>
+  <ng-container *ngIf="!loading && available">
+    <div class="rating-overview" *ngIf="rating as summary">
+      <strong *ngIf="summary.ratingCount > 0">{{ summary.averageRating | number:'1.2-2' }} / 5</strong>
+      <strong *ngIf="summary.ratingCount === 0">Unrated</strong>
+      <p>{{ summary.ratingCount }} numeric ratings</p>
+      <div *ngFor="let score of stars" class="rating-distribution">
+        <span>{{ score }} stars</span>
+        <progress [value]="summary.starCounts[score - 1] || 0" [max]="summary.ratingCount || 1"
+          [attr.aria-label]="score + ' star count'"></progress>
+        <span>{{ summary.starCounts[score - 1] || 0 }}</span>
+      </div>
+    </div>
+    <fieldset class="rating-filters">
+      <legend>Filter reviews by rating</legend>
+      <button type="button" [attr.aria-pressed]="filter === null" (click)="setFilter(null)">All</button>
+      <button type="button" *ngFor="let score of stars" [attr.aria-pressed]="filter === score"
+        (click)="setFilter(score)">{{ score }} stars</button>
+    </fieldset>
+    <p *ngIf="!items.length" role="status">No published reviews match this filter.</p>
+    <article *ngFor="let review of items" class="review-item">
+      <h5>{{ review.rating === null ? 'Customer comment' : (review.rating + ' out of 5 stars') }}</h5>
+      <time [attr.datetime]="review.publishedAtUtc">{{ review.publishedAtUtc | date:'mediumDate' }}</time>
+      <p class="review-comment" *ngIf="review.comment">{{ review.comment }}</p>
+      <aside *ngIf="review.officialReply as reply" class="review-reply">
+        <strong>Official provider response</strong><p class="review-comment">{{ reply.text }}</p>
+      </aside>
+    </article>
+    <button *ngIf="nextCursor" type="button" [disabled]="loadingMore" (click)="more()">
+      {{ loadingMore ? 'Loading…' : 'Load more reviews' }}
+    </button>
+  </ng-container>
+  <p class="review-disclaimer">Ratings are separate from provider verification badges.</p>
+</section>
