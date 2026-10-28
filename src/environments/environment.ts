@@ -4,7 +4,11 @@
 
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:5156/api'
+  apiBaseUrl: 'http://localhost:5156/api',
+  // Explicit opt-in: the Gateway exposes only reviewed v1 routes.
+  gatewayBaseUrl: 'http://127.0.0.1:5180',
+  useIndependentIdentity: false,
+  useIndependentPets: false
 };
 
 /*

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap, of, switchMap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 import { ApiService } from '../api/api.service';
 import { AUTH_TOKEN_KEY } from './auth.constants';
@@ -8,6 +9,8 @@ import {
   AuthUser,
   ContactVerificationChannel,
   ContactVerificationStatus,
+  IndependentLoginResponse,
+  IndependentIdentityResponse,
   LoginRequest,
   LoginResponse,
   RegisterCustomerMobileRequest,
@@ -30,18 +33,27 @@ export class AuthService {
       identifier: credentials.identifier || credentials.email,
       password: credentials.password
     };
-    return this.apiService.post<LoginResponse>('/auth/login', request).pipe(
+    const endpoint = environment.useIndependentIdentity ? '/v1/identity/auth/login' : '/auth/login';
+    const body = environment.useIndependentIdentity ? { identifier: request.identifier, password: request.password } : request;
+    return this.apiService.post<LoginResponse | IndependentLoginResponse>(endpoint, body).pipe(
+      map((response) => environment.useIndependentIdentity ? this.normalizeIndependentLogin(response as IndependentLoginResponse) : response as LoginResponse),
       tap((response) => this.storeToken(response))
     );
   }
 
   registerCustomer(request: RegisterCustomerRequest): Observable<LoginResponse> {
+    if (environment.useIndependentIdentity) {
+      return this.registerIndependent({ ...request, confirmPassword: request.password });
+    }
     return this.apiService.post<LoginResponse>('/auth/register/customer', request).pipe(
       tap((response) => this.storeToken(response))
     );
   }
 
   registerCustomerMobile(request: RegisterCustomerMobileRequest): Observable<LoginResponse> {
+    if (environment.useIndependentIdentity) {
+      return this.registerIndependent({ ...request, confirmPassword: request.password, allowMobileOnly: true });
+    }
     return this.apiService.post<LoginResponse>('/auth/register/customer/mobile', request).pipe(
       tap((response) => this.storeToken(response))
     );
@@ -60,8 +72,21 @@ export class AuthService {
   }
 
   logout(): void {
+    const token = this.getToken();
+    // Revoke the server session while the bearer token is still available.
+    if (environment.useIndependentIdentity && token) {
+      this.apiService.post<void>('/v1/identity/logout', {}).subscribe({
+        next: () => this.clearSession(),
+        error: () => this.clearSession()
+      });
+      return;
+    }
+    this.clearSession();
+  }
+
+  private clearSession(): void {
     localStorage.removeItem(AUTH_TOKEN_KEY);
-    this.router.navigate(['/login']);
+    void this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
@@ -101,6 +126,27 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     return (this.getCurrentUser()?.role || '').toLowerCase() === role.toLowerCase();
+  }
+
+  private registerIndependent(request: RegisterCustomerRequest & { confirmPassword: string; allowMobileOnly?: boolean }): Observable<LoginResponse> {
+    return this.apiService.post<IndependentIdentityResponse<{
+      userId: string; firstName: string; lastName: string; email?: string | null;
+      mobileNumber?: string | null; role: string; status: string;
+      isEmailVerified: boolean; isMobileVerified: boolean;
+    }>>('/v1/identity/auth/register/customer', request).pipe(
+      map((response) => ({ success: response.success, message: 'Registration successful. Please sign in.', data: {
+        ...response.data, token: ''
+      } }))
+    );
+  }
+
+  private normalizeIndependentLogin(response: IndependentLoginResponse): LoginResponse {
+    if (!response.success || !response.data?.accessToken) {
+      throw new Error(response.error?.message || 'Login failed.');
+    }
+    return { success: true, message: 'Signed in.', data: {
+      ...response.data.user, token: response.data.accessToken
+    } };
   }
 
   private storeToken(response: LoginResponse): void {

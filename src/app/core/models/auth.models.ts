@@ -63,3 +63,19 @@ export interface AuthUser {
   isEmailVerified?: boolean;
   isMobileVerified?: boolean;
 }
+
+/** Standalone Users v1 login returns a different JSON envelope. */
+export interface IndependentIdentityResponse<T> {
+  success: boolean;
+  resultCode: number;
+  data: T;
+  error?: { message?: string; traceId?: string; fieldErrors?: Record<string, string[]> };
+}
+
+export interface IndependentLoginResponse extends IndependentIdentityResponse<{
+  user: Omit<AuthResponseData, 'token'>;
+  accessToken: string;
+  accessTokenExpiresAtUtc: string;
+  refreshToken: string;
+  refreshTokenExpiresAtUtc: string;
+}> {}

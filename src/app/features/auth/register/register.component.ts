@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { RegisterCustomerMobileRequest, RegisterCustomerRequest } from '../../../core/models/auth.models';
@@ -15,6 +16,7 @@ export class RegisterComponent {
   lastName = '';
   email = '';
   mobileNumber = '';
+  readonly independentIdentity = environment.useIndependentIdentity;
   password = '';
   confirmPassword = '';
   isSubmitting = false;
@@ -43,6 +45,11 @@ export class RegisterComponent {
 
     request.subscribe({
       next: () => {
+        if (this.independentIdentity) {
+          this.isSubmitting = false;
+          this.router.navigate(['/login']);
+          return;
+        }
         const channel = this.mode === 'email' ? 'Email' : 'Mobile';
         this.authService.sendVerification(channel).subscribe({
           next: () => this.router.navigate(['/verify-contact'], { queryParams: { channel } }),
@@ -66,7 +73,7 @@ export class RegisterComponent {
       firstName: this.firstName,
       lastName: this.lastName,
       email: this.email.trim(),
-      mobileNumber: '',
+      mobileNumber: this.mobileNumber.trim(),
       password: this.password
     };
   }

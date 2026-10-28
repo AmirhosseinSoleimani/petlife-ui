@@ -32,6 +32,7 @@ const INITIAL_UPLOAD_PROGRESS: UploadProgressState = {
 })
 export class ApiService {
   private readonly baseUrl = environment.apiBaseUrl;
+  private readonly gatewayBaseUrl = environment.gatewayBaseUrl.replace(/\/+$/, '');
   private readonly uploadProgressSubject = new BehaviorSubject<UploadProgressState>(INITIAL_UPLOAD_PROGRESS);
   private readonly trackedUploads = new Map<number, TrackedUpload>();
   private nextUploadId = 1;
@@ -242,6 +243,19 @@ export class ApiService {
 
   private buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    // Never rewrite non-CRUD pet routes (sharing, images, health, expenses, etc.).
+    // Those APIs are not part of the isolated Pets Gateway allowlist.
+    if (environment.useIndependentPets && /^\/pets(?:\/[^/?]+)?(?:\?.*)?$/i.test(normalizedEndpoint)) {
+      const v1Path = normalizedEndpoint.replace(/^\/pets(?=\/|\?|$)/i, '/v1/pets');
+      return `${this.gatewayBaseUrl}${v1Path}`;
+    }
+
+    if (normalizedEndpoint.startsWith('/v1/identity/') ||
+        normalizedEndpoint.startsWith('/v1/pets/')) {
+      return `${this.gatewayBaseUrl}${normalizedEndpoint}`;
+    }
+
     return `${this.baseUrl}${normalizedEndpoint}`;
   }
 }

@@ -29,6 +29,7 @@
         required
         [(ngModel)]="mobileNumber"
       ></app-input>
+      <app-input *ngIf="mode === 'email' && independentIdentity" name="mobileNumber" label="Mobile number" required [(ngModel)]="mobileNumber"></app-input>
       <div class="two-col">
         <app-input name="password" label="Password" type="password" required [(ngModel)]="password"></app-input>
         <app-input name="confirmPassword" label="Confirm password" type="password" required [(ngModel)]="confirmPassword"></app-input>

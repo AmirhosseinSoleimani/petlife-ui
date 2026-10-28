@@ -13,17 +13,18 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
   const body = apiErrorBody(error);
   if (!body) return fallback;
 
-  const fieldMessages = Object.entries(body.fieldErrors || {})
+  const fieldMessages = Object.entries(body.fieldErrors || body.error?.fieldErrors || {})
     .flatMap(([field, messages]) => (messages || []).filter(Boolean).map((message) => `${field}: ${message}`));
 
   if (fieldMessages.length) return fieldMessages.join(' | ');
   if (body.errors?.length) return body.errors.filter(Boolean).join(' ');
-  return body.message || fallback;
+  return body.message || body.error?.message || fallback;
 }
 
 export function apiFieldError(error: unknown, field: string): string {
   const body = apiErrorBody(error);
-  if (!body?.fieldErrors) return '';
-  const key = Object.keys(body.fieldErrors).find((item) => item.toLowerCase() === field.toLowerCase());
-  return key ? (body.fieldErrors[key] || []).filter(Boolean).join(' ') : '';
+  const fieldErrors = body?.fieldErrors || body?.error?.fieldErrors;
+  if (!fieldErrors) return '';
+  const key = Object.keys(fieldErrors).find((item) => item.toLowerCase() === field.toLowerCase());
+  return key ? (fieldErrors[key] || []).filter(Boolean).join(' ') : '';
 }

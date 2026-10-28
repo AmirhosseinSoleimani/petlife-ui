@@ -20,7 +20,7 @@ export class ApiErrorService {
     const body = this.body(error);
     if (!body) return error;
 
-    const fieldErrors = this.normalizeFieldErrors(body.fieldErrors);
+    const fieldErrors = this.normalizeFieldErrors(body.fieldErrors || body.error?.fieldErrors);
     const flattened = Object.entries(fieldErrors)
       .flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`));
     const errors = flattened.length
@@ -28,7 +28,7 @@ export class ApiErrorService {
       : (body.errors || []).filter((item): item is string => !!item?.trim());
 
     return new HttpErrorResponse({
-      error: { ...body, fieldErrors, errors },
+      error: { ...body, message: body.message || body.error?.message, fieldErrors, errors },
       headers: error.headers,
       status: error.status,
       statusText: error.statusText,
@@ -41,7 +41,7 @@ export class ApiErrorService {
     const body = this.body(normalized);
     const fieldErrors = this.normalizeFieldErrors(body?.fieldErrors);
     const message = this.resolveMessage(normalized.status, body, fieldErrors);
-    const traceId = normalized.headers.get('X-Trace-Id') || undefined;
+    const traceId = normalized.headers.get('X-Correlation-Id') || body?.traceId || body?.error?.traceId || normalized.headers.get('X-Trace-Id') || undefined;
 
     this.noticeSubject.next({
       message,
