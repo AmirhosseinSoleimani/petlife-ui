@@ -30,8 +30,13 @@ export class AuthInterceptor implements HttpInterceptor {
         const normalizedError = this.apiErrorService.normalize(error);
         const isTranslationAsset = /(?:^|\/)assets\/i18n\//.test(request.url);
 
-        if (normalizedError.status === 401 && !isTranslationAsset) {
+        // A legacy /api/ service can reject a valid Users JWT. Its 401 must not
+        // sign the user out of the independently authenticated identity session.
+        // Only the Users identity authority can invalidate that session here.
+        const identitySessionCheck = /(?:^|\/)v1\/identity\/(?:profile|security|permissions|sessions)(?:[/?]|$)/.test(request.url);
+        if (normalizedError.status === 401 && !!token && identitySessionCheck) {
           localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem('petlife_user');
           this.apiErrorService.notify(normalizedError);
           if (!this.router.url.startsWith('/login')) {
             void this.router.navigate(['/login']);
