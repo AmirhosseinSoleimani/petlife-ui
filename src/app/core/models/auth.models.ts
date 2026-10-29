@@ -21,7 +21,6 @@ export interface RegisterCustomerMobileRequest {
 }
 
 export interface AuthResponseData {
-  token: string;
   userId: string;
   firstName: string;
   lastName: string;
@@ -35,9 +34,15 @@ export interface AuthResponseData {
 
 export interface LoginResponse {
   success: boolean;
-  message: string;
-  data: AuthResponseData;
-  errors?: string[];
+  resultCode: number;
+  data: {
+    user: AuthResponseData;
+    accessToken: string;
+    accessTokenExpiresAtUtc: string;
+    refreshToken: string;
+    refreshTokenExpiresAtUtc: string;
+  };
+  error?: { message?: string; traceId?: string; fieldErrors?: Record<string, string[]> };
 }
 
 export interface ContactVerificationStatus {
