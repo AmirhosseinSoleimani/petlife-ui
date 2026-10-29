@@ -72,8 +72,8 @@ fi
 echo "Frontend deployed. Backup at $backup"
 '@
     $payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($deployScript))
-    Invoke-Native "ssh" @($remote, ("echo " + $payload + " | base64 -d | bash"))
-    Write-Host "Deployed frontend to $remote:/var/www/petlife"
+    Invoke-Native "ssh" @($remote, ("printf %s " + $payload + " | base64 -d | bash"))
+    Write-Host ("Deployed frontend to " + $remote + ":/var/www/petlife")
   }
   finally { Remove-Item -Force -ErrorAction SilentlyContinue $archive }
 }
