@@ -71,7 +71,10 @@ if ! nginx -t; then
 fi
 echo "Frontend deployed. Backup at $backup"
 '@
-    $payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($deployScript))
+    # A Windows checkout may turn the Bash here-string into CRLF. Bash requires LF.
+    # Normalize before base64 encoding; do not rely on Git's line-ending settings.
+    $deployScript = $deployScript.Replace("`r`n", "`n").Replace("`r", "")
+    $payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($deployScript + "`n"))
     Invoke-Native "ssh" @($remote, ("printf %s " + $payload + " | base64 -d | bash"))
     Write-Host ("Deployed frontend to " + $remote + ":/var/www/petlife")
   }
