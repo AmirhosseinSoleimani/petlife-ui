@@ -1,0 +1,49 @@
+:host { display: block; }
+.auth-stage {
+  position: relative; isolation: isolate; display: flex; min-height: 100vh; min-height: 100dvh;
+  align-items: center; justify-content: center; overflow: hidden; padding: 72px 16px 32px;
+  background: var(--gradient-warm, var(--app-bg)); color: var(--color-text);
+}
+.ambient { position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; filter: blur(18px); }
+.ambient-one { width: 520px; height: 520px; top: -260px; left: -170px; background: radial-gradient(circle, rgba(7,156,145,.27), transparent 68%); animation: drift-a 18s ease-in-out infinite alternate; }
+.ambient-two { width: 580px; height: 580px; top: 10%; right: -250px; background: radial-gradient(circle, rgba(255,118,92,.19), transparent 68%); animation: drift-b 21s ease-in-out infinite alternate; }
+.ambient-three { width: 520px; height: 520px; bottom: -310px; left: 22%; background: radial-gradient(circle, rgba(79,125,243,.18), transparent 68%); animation: drift-c 19s ease-in-out infinite alternate; }
+@keyframes drift-a { to { transform: translate(115px, 85px) scale(1.14); } }
+@keyframes drift-b { to { transform: translate(-100px, 70px) scale(1.16); } }
+@keyframes drift-c { to { transform: translate(65px, -95px) scale(1.16); } }
+.language-picker {
+  position: absolute; z-index: 1; inset-block-start: 16px; inset-inline-end: clamp(16px, 4vw, 48px);
+  display: flex; align-items: center; gap: 8px; color: var(--color-muted); font-size: 12px; font-weight: 700;
+}
+.language-picker select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; cursor: pointer; }
+.language-picker select:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.auth-content { display: flex; width: min(100%, 950px); flex-direction: column; align-items: center; gap: 24px; margin-inline: auto; }
+.auth-hero { display: flex; width: 100%; max-width: 760px; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.brand { display: inline-flex; align-items: center; justify-content: center; gap: 12px; font-size: 23px; font-weight: 800; }
+.brand-mark { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 16px; background: linear-gradient(135deg, var(--color-primary), var(--color-blue, #4e7df3) 70%, #fb7185); color: white; font-size: 23px; box-shadow: var(--shadow-glow); }
+.eyebrow { margin: 4px 0 0; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-primary-dark); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.auth-hero h1 { max-width: 740px; margin: 0; font-size: clamp(30px, 4.6vw, 48px); line-height: 1.12; letter-spacing: -.025em; }
+.description { max-width: 640px; margin: 0; color: var(--color-muted); font-size: clamp(14px, 1.7vw, 17px); line-height: 1.65; }
+.value-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.value-strip span { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-primary-dark); font-size: 12px; font-weight: 750; }
+.auth-card { width: min(100%, 464px); padding: 24px; border: 1px solid var(--color-border); border-radius: 24px; background: var(--color-surface); box-shadow: var(--shadow-premium); }
+.auth-card-wide { width: min(100%, 640px); }
+.benefits { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.benefit { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); box-shadow: var(--shadow-sm); text-align: center; }
+.benefit-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px; background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.benefit:nth-child(2) .benefit-icon { background: var(--color-info-soft, var(--color-primary-soft)); color: var(--color-info, var(--color-primary-dark)); }
+.benefit:nth-child(3) .benefit-icon { background: var(--color-accent-soft, var(--color-primary-soft)); color: var(--color-primary-dark); }
+.benefit-icon svg { width: 24px; height: 24px; }
+.benefit strong { color: var(--color-text); font-size: 14px; line-height: 1.4; }
+.benefit p { margin: 0; color: var(--color-muted); font-size: 12px; line-height: 1.55; }
+@media (max-width: 620px) {
+  .auth-stage { align-items: flex-start; padding: 84px 12px 24px; }
+  .auth-content { gap: 20px; }
+  .brand { font-size: 20px; }
+  .brand-mark { width: 44px; height: 44px; }
+  .auth-hero h1 { font-size: clamp(28px, 8vw, 36px); }
+  .auth-card { padding: 20px 16px; border-radius: 20px; }
+  .benefits { grid-template-columns: 1fr; }
+  .benefit { padding: 12px 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .ambient { animation: none; } }

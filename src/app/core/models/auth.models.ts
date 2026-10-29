@@ -20,6 +20,22 @@ export interface RegisterCustomerMobileRequest {
   password: string;
 }
 
+export interface RegisterAccountRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobileNumber: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface RegistrationResponse {
+  success: boolean;
+  resultCode: number;
+  data: AuthResponseData;
+  error?: { message?: string; traceId?: string; fieldErrors?: Record<string, string[]> };
+}
+
 export interface AuthResponseData {
   userId: string;
   firstName: string;

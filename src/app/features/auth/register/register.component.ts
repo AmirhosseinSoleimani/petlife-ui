@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { AuthService } from '../../../core/auth/auth.service';
-import { RegisterCustomerMobileRequest, RegisterCustomerRequest } from '../../../core/models/auth.models';
+import { meetsPasswordPolicy } from '../../../core/auth/password-policy';
+import { RegisterAccountRequest } from '../../../core/models/auth.models';
+
+type AccountType = 'customer' | 'provider';
 
 @Component({
   selector: 'app-register',
@@ -10,7 +14,7 @@ import { RegisterCustomerMobileRequest, RegisterCustomerRequest } from '../../..
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
-  mode: 'email' | 'mobile' = 'email';
+  readonly accountType: AccountType;
   firstName = '';
   lastName = '';
   email = '';
@@ -18,66 +22,75 @@ export class RegisterComponent {
   password = '';
   confirmPassword = '';
   isSubmitting = false;
+  registrationComplete = false;
+  showErrors = false;
   errorMessage = '';
 
-  constructor(private readonly authService: AuthService, private readonly router: Router) {}
+  constructor(
+    private readonly authService: AuthService,
+    route: ActivatedRoute
+  ) {
+    this.accountType = route.snapshot.data['accountType'] === 'provider' ? 'provider' : 'customer';
+  }
 
-  setMode(mode: 'email' | 'mobile'): void {
-    if (this.mode === mode) return;
-    this.mode = mode;
-    this.errorMessage = '';
+  get validEmail(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim()) && this.email.trim().length <= 320;
+  }
+
+  get validMobile(): boolean {
+    const mobile = this.mobileNumber.trim();
+    const digits = mobile.replace(/\D/g, '');
+    return /^[+\d\s()\-]+$/.test(mobile) && digits.length >= 8 && digits.length <= 15;
+  }
+
+  get validPassword(): boolean {
+    return meetsPasswordPolicy(this.password);
+  }
+
+  get validName(): boolean {
+    return this.firstName.trim().length > 0 && this.firstName.trim().length <= 100
+      && this.lastName.trim().length > 0 && this.lastName.trim().length <= 100;
+  }
+
+  get validForm(): boolean {
+    return this.validName && this.validEmail && this.validMobile
+      && this.validPassword && this.password === this.confirmPassword;
   }
 
   register(): void {
-    if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match.';
-      return;
-    }
+    if (this.isSubmitting || this.registrationComplete) return;
+    this.showErrors = true;
+    this.errorMessage = '';
+    if (!this.validForm) return;
+
+    const request: RegisterAccountRequest = {
+      firstName: this.firstName.trim(),
+      lastName: this.lastName.trim(),
+      email: this.email.trim(),
+      mobileNumber: this.mobileNumber.trim(),
+      password: this.password,
+      confirmPassword: this.confirmPassword
+    };
 
     this.isSubmitting = true;
-    this.errorMessage = '';
-
-    const request = this.mode === 'email'
-      ? this.authService.registerCustomer(this.emailRequest())
-      : this.authService.registerCustomerMobile(this.mobileRequest());
-
-    request.subscribe({
-      next: () => {
-        const channel = this.mode === 'email' ? 'Email' : 'Mobile';
-        this.authService.sendVerification(channel).subscribe({
-          next: () => this.router.navigate(['/verify-contact'], { queryParams: { channel } }),
-          error: (error: { error?: { message?: string; errors?: string[] } }) => {
-            this.errorMessage = error.error?.errors?.[0]
-              || error.error?.message
-              || 'Your account was created, but the verification code could not be sent. Please try again from contact verification.';
-            this.isSubmitting = false;
-          }
-        });
+    const action = this.accountType === 'provider'
+      ? this.authService.registerProvider(request)
+      : this.authService.registerCustomer(request);
+    action.subscribe({
+      next: response => {
+        this.isSubmitting = false;
+        if (!response.success) {
+          this.errorMessage = response.error?.message || 'auth.registerError';
+          return;
+        }
+        this.password = '';
+        this.confirmPassword = '';
+        this.registrationComplete = true;
       },
-      error: (error: { error?: { message?: string; errors?: string[] } }) => {
-        this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Unable to create account.';
+      error: error => {
+        this.errorMessage = apiErrorMessage(error, 'auth.registerError');
         this.isSubmitting = false;
       }
     });
-  }
-
-  private emailRequest(): RegisterCustomerRequest {
-    return {
-      firstName: this.firstName,
-      lastName: this.lastName,
-      email: this.email.trim(),
-      mobileNumber: '',
-      password: this.password
-    };
-  }
-
-  private mobileRequest(): RegisterCustomerMobileRequest {
-    return {
-      firstName: this.firstName,
-      lastName: this.lastName,
-      mobileNumber: this.mobileNumber.trim(),
-      email: undefined,
-      password: this.password
-    };
   }
 }

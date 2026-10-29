@@ -16,6 +16,7 @@ import { AiAssistantComponent } from './features/ai/ai-assistant/ai-assistant.co
 import { ContactVerificationComponent } from './features/auth/contact-verification/contact-verification.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { PasswordRecoveryComponent } from './features/auth/password-recovery/password-recovery.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { NotificationsPageComponent } from './features/notifications/notifications-page/notifications-page.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
@@ -42,7 +43,11 @@ import { AppShellComponent } from './shared/layout/app-shell/app-shell.component
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'register', pathMatch: 'full', redirectTo: 'register/customer' },
+  { path: 'register/customer', component: RegisterComponent, data: { accountType: 'customer' } },
+  { path: 'register/provider', component: RegisterComponent, data: { accountType: 'provider' } },
+  { path: 'forgot-password', component: PasswordRecoveryComponent },
+  { path: 'reset-password', component: PasswordRecoveryComponent },
   { path: 'verify-contact', component: ContactVerificationComponent, canActivate: [AuthGuard] },
   { path: 'shared/pet/:token', component: PublicPetShareComponent },
   {

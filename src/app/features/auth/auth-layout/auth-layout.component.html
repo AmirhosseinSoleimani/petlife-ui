@@ -1,0 +1,54 @@
+<section class="auth-stage">
+  <span class="ambient ambient-one" aria-hidden="true"></span>
+  <span class="ambient ambient-two" aria-hidden="true"></span>
+  <span class="ambient ambient-three" aria-hidden="true"></span>
+  <label class="language-picker">
+    <span>{{ 'language.label' | translate }}</span>
+    <select [ngModel]="i18n.currentLanguage" (ngModelChange)="changeLanguage($event)">
+      <option *ngFor="let language of languages" [ngValue]="language.code">{{ language.labelKey | translate }}</option>
+    </select>
+  </label>
+  <div class="auth-content">
+    <header class="auth-hero">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">P</span><span>{{ 'app.name' | translate }}</span></div>
+      <p class="eyebrow">{{ 'auth.pitchLabel' | translate }}</p>
+      <h1>{{ 'auth.heroTitle' | translate }}</h1>
+      <p class="description">{{ 'auth.heroDescription' | translate }}</p>
+      <div class="value-strip">
+        <span>{{ 'auth.valueCare' | translate }}</span>
+        <span>{{ 'auth.valueNetwork' | translate }}</span>
+        <span>{{ 'auth.valueLifecycle' | translate }}</span>
+      </div>
+    </header>
+    <main class="auth-card" [class.auth-card-wide]="wide"><ng-content></ng-content></main>
+    <section class="benefits" [attr.aria-label]="'auth.benefitsHeading' | translate">
+      <article class="benefit">
+        <span class="benefit-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4.5h6M9 10h6M9 14h6M9 18h4"></path>
+          </svg>
+        </span>
+        <strong>{{ 'auth.benefitRecords' | translate }}</strong>
+        <p>{{ 'auth.benefitRecordsText' | translate }}</p>
+      </article>
+      <article class="benefit">
+        <span class="benefit-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10 5 4h14l2 6v10H3V10ZM3 10h18M9 20v-7h6v7"></path><path d="M3 10c0 2 3 3 4.5 0 1.5 3 4.5 2 4.5 0 1.5 2 4.5 3 4.5 0"></path>
+          </svg>
+        </span>
+        <strong>{{ 'auth.benefitMarketplace' | translate }}</strong>
+        <p>{{ 'auth.benefitMarketplaceText' | translate }}</p>
+      </article>
+      <article class="benefit">
+        <span class="benefit-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c0-4 3-6 7-6s7 2 7 6M17.5 11l1.5 1.5 3-3"></path>
+          </svg>
+        </span>
+        <strong>{{ 'auth.benefitProvider' | translate }}</strong>
+        <p>{{ 'auth.benefitProviderText' | translate }}</p>
+      </article>
+    </section>
+  </div>
+</section>

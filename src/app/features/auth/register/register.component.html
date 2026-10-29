@@ -1,44 +1,54 @@
-<section class="auth-page">
-  <div class="auth-card">
-    <a routerLink="/login" class="brand">Pet Lovers</a>
-    <h1>{{ 'Create your account' | translate }}</h1>
-    <p>{{ 'Register with email or mobile. You can verify both contact channels later.' | translate }}</p>
-
-    <div class="mode-switch" role="tablist">
-      <button type="button" [class.active]="mode === 'email'" (click)="setMode('email')">{{ 'Email' | translate }}</button>
-      <button type="button" [class.active]="mode === 'mobile'" (click)="setMode('mobile')">{{ 'Mobile' | translate }}</button>
-    </div>
-
-    <form (ngSubmit)="register()" #registerForm="ngForm">
-      <div class="two-col">
-        <app-input name="firstName" label="First name" required [(ngModel)]="firstName"></app-input>
-        <app-input name="lastName" label="Last name" required [(ngModel)]="lastName"></app-input>
-      </div>
-      <app-input
-        *ngIf="mode === 'email'"
-        name="email"
-        label="Email"
-        type="email"
-        required
-        [(ngModel)]="email"
-      ></app-input>
-      <app-input
-        *ngIf="mode === 'mobile'"
-        name="mobileNumber"
-        label="Mobile number"
-        required
-        [(ngModel)]="mobileNumber"
-      ></app-input>
-      <div class="two-col">
-        <app-input name="password" label="Password" type="password" required [(ngModel)]="password"></app-input>
-        <app-input name="confirmPassword" label="Confirm password" type="password" required [(ngModel)]="confirmPassword"></app-input>
-      </div>
-      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-      <app-button type="submit" [loading]="isSubmitting" [disabled]="registerForm.invalid || password.length < 8">
-        {{ (isSubmitting ? 'Creating account...' : 'Create account') | translate }}
-      </app-button>
-    </form>
-
-    <p class="footer-copy">{{ 'Already have an account?' | translate }} <a routerLink="/login">{{ 'Sign in' | translate }}</a></p>
+<app-auth-layout [wide]="true">
+  <div class="heading">
+    <h2>{{ (accountType === 'provider' ? 'auth.registerProviderTitle' : 'auth.registerCustomerTitle') | translate }}</h2>
+    <p>{{ (accountType === 'provider' ? 'auth.registerProviderSubtitle' : 'auth.registerCustomerSubtitle') | translate }}</p>
   </div>
-</section>
+  <nav class="account-switch" [attr.aria-label]="'auth.accountType' | translate">
+    <a routerLink="/register/customer" [class.active]="accountType === 'customer'"
+       [attr.aria-current]="accountType === 'customer' ? 'page' : null">{{ 'auth.customerAccount' | translate }}</a>
+    <a routerLink="/register/provider" [class.active]="accountType === 'provider'"
+       [attr.aria-current]="accountType === 'provider' ? 'page' : null">{{ 'auth.providerAccount' | translate }}</a>
+  </nav>
+  <div *ngIf="registrationComplete; else registrationForm" class="success" role="status">
+    <strong>{{ 'auth.registrationComplete' | translate }}</strong>
+    <p>{{ (accountType === 'provider' ? 'auth.providerPending' : 'auth.customerRegistered') | translate }}</p>
+    <a routerLink="/login">{{ 'auth.signIn' | translate }}</a>
+  </div>
+  <ng-template #registrationForm>
+    <form class="registration-form" (ngSubmit)="register()" #registerForm="ngForm" novalidate>
+      <div class="two-col">
+        <app-input name="firstName" label="auth.firstName" required
+          [error]="showErrors && (!firstName.trim() || firstName.trim().length > 100) ? 'auth.nameInvalid' : ''"
+          [(ngModel)]="firstName"></app-input>
+        <app-input name="lastName" label="auth.lastName" required
+          [error]="showErrors && (!lastName.trim() || lastName.trim().length > 100) ? 'auth.nameInvalid' : ''"
+          [(ngModel)]="lastName"></app-input>
+      </div>
+      <div class="two-col">
+        <app-input name="email" label="auth.email" type="email" required placeholder="auth.emailPlaceholder"
+          [error]="showErrors && !validEmail ? 'auth.emailInvalid' : ''"
+          [(ngModel)]="email"></app-input>
+        <app-input name="mobileNumber" label="auth.mobileNumber" type="tel" required placeholder="auth.mobilePlaceholder"
+          [error]="showErrors && !validMobile ? 'auth.mobileInvalid' : ''"
+          [(ngModel)]="mobileNumber"></app-input>
+      </div>
+      <div class="two-col">
+        <app-input name="password" label="auth.password" type="password" required
+          helper="auth.passwordRules" placeholder="auth.passwordPlaceholder"
+          [error]="showErrors && !validPassword ? 'auth.passwordInvalid' : ''"
+          [(ngModel)]="password"></app-input>
+        <app-input name="confirmPassword" label="auth.confirmPassword" type="password" required
+          placeholder="auth.confirmPasswordPlaceholder"
+          [error]="showErrors && password !== confirmPassword ? 'auth.passwordMismatch' : ''"
+          [(ngModel)]="confirmPassword"></app-input>
+      </div>
+      <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
+      <div class="form-actions">
+        <app-button type="submit" [loading]="isSubmitting" [disabled]="isSubmitting">
+          {{ (isSubmitting ? 'auth.creatingAccount' : 'auth.createAccount') | translate }}
+        </app-button>
+      </div>
+    </form>
+  </ng-template>
+  <p class="footer-copy">{{ 'auth.alreadyHaveAccount' | translate }} <a routerLink="/login">{{ 'auth.signIn' | translate }}</a></p>
+</app-auth-layout>

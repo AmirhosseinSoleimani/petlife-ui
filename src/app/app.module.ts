@@ -20,6 +20,8 @@ import { TranslatePipe } from './core/i18n/translate.pipe';
 import { ContactVerificationComponent } from './features/auth/contact-verification/contact-verification.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { AuthLayoutComponent } from './features/auth/auth-layout/auth-layout.component';
+import { PasswordRecoveryComponent } from './features/auth/password-recovery/password-recovery.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { NotificationsPageComponent } from './features/notifications/notifications-page/notifications-page.component';
 import { EmergencyVetsPageComponent } from './features/emergency-vets/emergency-vets-page/emergency-vets-page.component';
@@ -57,7 +59,7 @@ import { AppLoadingStateComponent } from './shared/components/app-loading-state/
 
 @NgModule({
   declarations: [
-    AppComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, ContactVerificationComponent,
+    AppComponent, AiAssistantComponent, AppShellComponent, LoginComponent, RegisterComponent, AuthLayoutComponent, PasswordRecoveryComponent, ContactVerificationComponent,
     DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,

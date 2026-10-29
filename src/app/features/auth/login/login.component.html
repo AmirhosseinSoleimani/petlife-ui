@@ -1,67 +1,25 @@
-<section class="login-page">
-  <label class="login-language">
-    <span>{{ 'language.label' | translate }}</span>
-    <select [ngModel]="i18nService.currentLanguage" (ngModelChange)="changeLanguage($event)">
-      <option *ngFor="let option of languageOptions" [ngValue]="option.code">{{ option.labelKey | translate }}</option>
-    </select>
-  </label>
-
-  <div class="login-copy" aria-hidden="true">
-    <div class="brand">
-      <span class="brand-mark">P</span>
-      <span>{{ 'app.name' | translate }}</span>
-    </div>
-    <p class="pitch-label">{{ 'auth.pitchLabel' | translate }}</p>
-    <h1>{{ 'auth.heroTitle' | translate }}</h1>
-    <p>{{ 'auth.heroDescription' | translate }}</p>
-    <div class="value-strip">
-      <span>{{ 'auth.valueCare' | translate }}</span>
-      <span>{{ 'auth.valueNetwork' | translate }}</span>
-      <span>{{ 'auth.valueLifecycle' | translate }}</span>
-    </div>
-    <div class="benefit-grid">
-      <div><strong>{{ 'auth.benefitRecords' | translate }}</strong><small>{{ 'auth.benefitRecordsText' | translate }}</small></div>
-      <div><strong>{{ 'auth.benefitMarketplace' | translate }}</strong><small>{{ 'auth.benefitMarketplaceText' | translate }}</small></div>
-      <div><strong>{{ 'auth.benefitProvider' | translate }}</strong><small>{{ 'auth.benefitProviderText' | translate }}</small></div>
-    </div>
+<app-auth-layout>
+  <div class="heading">
+    <h2>{{ 'auth.loginTitle' | translate }}</h2>
+    <p>{{ 'auth.loginSubtitle' | translate }}</p>
   </div>
-
-  <div class="login-panel">
-    <div class="brand compact">
-      <span class="brand-mark">P</span>
-      <span>{{ 'app.name' | translate }}</span>
-    </div>
-
-    <div class="heading">
-      <h2>{{ 'auth.loginTitle' | translate }}</h2>
-      <p>{{ 'auth.loginSubtitle' | translate }}</p>
-    </div>
-
-    <form (ngSubmit)="login()" #loginForm="ngForm">
-      <app-input
-        name="email"
-        label="auth.emailOrMobile"
-        type="text"
-        placeholder="auth.emailOrMobilePlaceholder"
-        required
-        [(ngModel)]="credentials.email"
-      ></app-input>
-
-      <app-input
-        name="password"
-        label="auth.password"
-        type="password"
-        placeholder="auth.passwordPlaceholder"
-        required
-        [(ngModel)]="credentials.password"
-      ></app-input>
-
-      <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-
-      <app-button type="submit" [loading]="isSubmitting" [disabled]="loginForm.invalid">
+  <form class="auth-form" (ngSubmit)="login()" #loginForm="ngForm">
+    <app-input name="email" label="auth.emailOrMobile" type="text"
+      placeholder="auth.emailOrMobilePlaceholder" required
+      [(ngModel)]="credentials.email"></app-input>
+    <app-input name="password" label="auth.password" type="password"
+      placeholder="auth.passwordPlaceholder" required
+      [(ngModel)]="credentials.password"></app-input>
+    <div class="form-links"><a routerLink="/forgot-password">{{ 'auth.forgotPassword' | translate }}</a></div>
+    <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
+    <div class="form-actions">
+      <app-button type="submit" [loading]="isSubmitting" [disabled]="loginForm.invalid || isSubmitting">
         {{ (isSubmitting ? 'auth.signingIn' : 'auth.signIn') | translate }}
       </app-button>
-    </form>
-    <p class="register-link">{{ 'auth.newToPetLife' | translate }} <a routerLink="/register">{{ 'auth.createAccount' | translate }}</a></p>
-  </div>
-</section>
+    </div>
+  </form>
+  <p class="footer-copy">
+    {{ 'auth.newToPetLife' | translate }}
+    <a routerLink="/register/customer">{{ 'auth.createAccount' | translate }}</a>
+  </p>
+</app-auth-layout>

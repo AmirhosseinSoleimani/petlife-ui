@@ -12,7 +12,9 @@ import {
   LoginRequest,
   LoginResponse,
   RegisterCustomerMobileRequest,
-  RegisterCustomerRequest
+  RegisterCustomerRequest,
+  RegisterAccountRequest,
+  RegistrationResponse
 } from '../models/auth.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -36,11 +38,13 @@ export class AuthService {
     );
   }
 
-  registerCustomer(request: RegisterCustomerRequest): Observable<LoginResponse> {
-    return this.apiService.post<unknown>('/v1/identity/auth/register/customer',
-      { ...request, confirmPassword: request.password }).pipe(
-      switchMap(() => this.login({ email: request.email, password: request.password }))
-    );
+  registerCustomer(request: RegisterCustomerRequest | RegisterAccountRequest): Observable<RegistrationResponse> {
+    return this.apiService.post<RegistrationResponse>('/v1/identity/auth/register/customer',
+      { ...request, confirmPassword: 'confirmPassword' in request ? request.confirmPassword : request.password });
+  }
+
+  registerProvider(request: RegisterAccountRequest): Observable<RegistrationResponse> {
+    return this.apiService.post<RegistrationResponse>('/v1/identity/auth/register/provider', request);
   }
 
   registerCustomerMobile(request: RegisterCustomerMobileRequest): Observable<LoginResponse> {
