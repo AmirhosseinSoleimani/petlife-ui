@@ -28,7 +28,7 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(authRequest).pipe(
       catchError((error: HttpErrorResponse) => {
         const normalizedError = this.apiErrorService.normalize(error);
-        const isTranslationAsset = request.url.includes('/assets/i18n/');
+        const isTranslationAsset = /(?:^|\/)assets\/i18n\//.test(request.url);
 
         if (normalizedError.status === 401 && !isTranslationAsset) {
           localStorage.removeItem(AUTH_TOKEN_KEY);
