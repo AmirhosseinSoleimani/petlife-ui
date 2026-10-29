@@ -46,12 +46,12 @@ export class ApiService {
     return this.http.get<T>(this.buildUrl(endpoint));
   }
 
-  post<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.http.post<T>(this.buildUrl(endpoint), body);
+  post<T>(endpoint: string, body: unknown, headers?: Record<string, string>): Observable<T> {
+    return this.http.post<T>(this.buildUrl(endpoint), body, headers ? { headers } : undefined);
   }
 
-  put<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.http.put<T>(this.buildUrl(endpoint), body);
+  put<T>(endpoint: string, body: unknown, headers?: Record<string, string>): Observable<T> {
+    return this.http.put<T>(this.buildUrl(endpoint), body, headers ? { headers } : undefined);
   }
 
   delete<T>(endpoint: string): Observable<T> {
@@ -242,6 +242,19 @@ export class ApiService {
 
   private buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return `${this.baseUrl}${normalizedEndpoint}`;
+    if (normalizedEndpoint.startsWith('/v1/')) {
+      const origin = this.baseUrl.endsWith('/api') ? this.baseUrl.slice(0, -4) : this.baseUrl;
+      return `${origin}${normalizedEndpoint}`;
+    }
+    const path = normalizedEndpoint === '/pets' || normalizedEndpoint.startsWith('/pets?') ||
+      /^\/pets\/[0-9a-f-]{36}(?:\?.*)?$/i.test(normalizedEndpoint) ||
+      /^\/pets\/[0-9a-f-]{36}\/shares(?:\?.*)?$/i.test(normalizedEndpoint) ||
+      normalizedEndpoint.startsWith('/pet-shares/')
+      ? `/v1${normalizedEndpoint}` : normalizedEndpoint;
+    if (path.startsWith('/v1/')) {
+      const origin = this.baseUrl.endsWith('/api') ? this.baseUrl.slice(0, -4) : this.baseUrl;
+      return `${origin}${path}`;
+    }
+    return `${this.baseUrl}${path}`;
   }
 }
