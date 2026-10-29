@@ -7,10 +7,11 @@ import { meetsPasswordPolicy } from '../../../core/auth/password-policy';
 @Component({selector:'app-password-recovery',templateUrl:'./password-recovery.component.html',styleUrls:['./password-recovery.component.scss']})
 export class PasswordRecoveryComponent implements OnInit {
   token = ''; email = ''; password = ''; confirmPassword = '';
+  resetMode = false;
   isSubmitting = false; completed = false; errorMessage = ''; showErrors = false;
   constructor(private readonly route: ActivatedRoute, private readonly api: ApiService) {}
-  ngOnInit(): void { this.token = this.route.snapshot.queryParamMap.get('token') || ''; }
-  get isReset(): boolean { return !!this.token; }
+  ngOnInit(): void { this.token = this.route.snapshot.queryParamMap.get('token') || ''; this.resetMode = !!this.token; }
+  get isReset(): boolean { return this.resetMode; }
   get validPassword(): boolean { return meetsPasswordPolicy(this.password); }
   submit(): void {
     if (this.isSubmitting || this.completed) return;
