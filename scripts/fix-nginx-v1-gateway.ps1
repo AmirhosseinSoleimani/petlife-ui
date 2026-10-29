@@ -30,11 +30,19 @@ cleanup() {
 }
 trap cleanup EXIT
 before="$(probe http://127.0.0.1/v1/identity/auth/login)"
-if test "$before" = 400 && grep -q '"success":false' "$tmp/body"; then
-  echo 'Already configured, no changes made'
+if [ "$before" = 400 ] && grep -q '"success":false' "$tmp/body"; then
+  echo 'ALREADY VERIFIED: /v1/ returns Gateway JSON. No changes made.'
   exit 0
 fi
-test "$before" = 405 || { echo "Unexpected initial HTTP $before; aborting"; exit 1; }
+if [ "$before" != 405 ]; then
+  echo "FAIL: Unexpected precheck HTTP $before. Nothing changed." >&2
+  exit 1
+fi
+if grep -Eq '^[[:space:]]*location[[:space:]]+(\^~[[:space:]]+)?/v1/' "$real"; then
+  echo 'FAIL: A /v1/ location already exists but requests return 405. Refusing duplicate changes.' >&2
+  echo 'Run scripts/diagnose-gateway.ps1 for current routing evidence.' >&2
+  exit 1
+fi
 direct="$(curl -s --max-time 8 -H 'Content-Type: application/json' -d '{}' -o "$tmp/direct" -w '%{http_code}' http://127.0.0.1:5300/v1/identity/auth/login)"
 test "$direct" = 400 && grep -q '"success":false' "$tmp/direct" || { echo 'Gateway precheck failed'; exit 1; }
 mkdir -p /var/backups/petlife-nginx-v1
@@ -74,10 +82,16 @@ systemctl reload nginx
 for route in login register/customer; do
   code="$(probe "http://127.0.0.1/v1/identity/auth/$route")"
   echo "$route HTTP $code"
-  test "$code" = 400 && grep -q '"success":false' "$tmp/body"
+  if [ "$code" != 400 ] || ! grep -q '"success":false' "$tmp/body"; then
+    echo "FAIL: $route did not return a Gateway JSON validation response. HTTP $code" >&2
+    exit 1
+  fi
 done
 home="$(curl -s -o /dev/null -w '%{http_code}' -H "Host: $host" http://127.0.0.1/)"
-test "$home" = 200
+if [ "$home" != 200 ]; then
+  echo "FAIL: Homepage regression. HTTP $home" >&2
+  exit 1
+fi
 changed=0
 echo "SUCCESS: /v1/ forwards to Gateway. Backup: $backup"
 echo "Existing /api/ and /uploads/ were not modified."
