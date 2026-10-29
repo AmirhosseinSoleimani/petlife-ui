@@ -47,3 +47,46 @@
   .benefit { padding: 12px 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .ambient { animation: none; } }
+
+/* Slow, purely decorative ambient motion behind both authentication cards. */
+.auth-stage::before,
+.auth-stage::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: min(60vw, 650px);
+  height: min(60vw, 650px);
+  border: 1px solid rgba(7, 156, 145, .11);
+  border-radius: 46% 54% 59% 41%;
+  transform-origin: 50% 50%;
+}
+.auth-stage::before {
+  top: 4%;
+  left: -22%;
+  box-shadow: 0 0 0 34px rgba(7,156,145,.035), 0 0 0 82px rgba(7,156,145,.024);
+  animation: auth-orbit-one 34s ease-in-out infinite alternate;
+}
+.auth-stage::after {
+  right: -24%;
+  bottom: -16%;
+  border-color: rgba(79,125,243,.13);
+  box-shadow: 0 0 0 42px rgba(79,125,243,.045), 0 0 0 96px rgba(79,125,243,.027);
+  animation: auth-orbit-two 39s ease-in-out infinite alternate;
+}
+.auth-content { position: relative; z-index: 1; }
+.auth-card { box-shadow: 0 22px 70px rgba(15,37,48,.13), 0 4px 16px rgba(15,37,48,.04); }
+.ambient-one { animation-duration: 14s; }
+.ambient-two { animation-duration: 17s; }
+.ambient-three { animation-duration: 16s; }
+@keyframes auth-orbit-one {
+  from { transform: translate(-12px, 8px) rotate(-20deg); }
+  to { transform: translate(96px, 50px) rotate(25deg); }
+}
+@keyframes auth-orbit-two {
+  from { transform: translate(35px, 15px) rotate(20deg); }
+  to { transform: translate(-80px, -60px) rotate(-30deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-stage::before, .auth-stage::after { animation: none; }
+}

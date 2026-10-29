@@ -19,10 +19,16 @@ export interface AppInputOption {
   ]
 })
 export class AppInputComponent implements ControlValueAccessor {
+  private static nextPasswordInputId = 0;
+  readonly passwordInputId = 'app-password-input-' + ++AppInputComponent.nextPasswordInputId;
+  passwordVisible = false;
+
   @Input() label = '';
   @Input() helper = '';
   @Input() error = '';
   @Input() type = 'text';
+  @Input() showPasswordToggle = false;
+  @Input() autocomplete = '';
   @Input() placeholder = '';
   @Input() required: boolean | string = false;
   @Input() min: string | number | null = null;

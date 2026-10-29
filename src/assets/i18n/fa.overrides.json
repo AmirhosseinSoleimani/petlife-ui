@@ -44,5 +44,7 @@
   "auth.customerRegistered": "حساب شما ساخته شد. برای ادامه وارد شوید.",
   "auth.alreadyHaveAccount": "قبلاً ثبت‌نام کرده‌اید؟",
   "auth.registerError": "ایجاد حساب انجام نشد.",
-  "auth.recoveryError": "بازیابی رمز عبور ناموفق بود."
+  "auth.recoveryError": "بازیابی رمز عبور ناموفق بود.",
+  "auth.showPassword": "نمایش رمز عبور",
+  "auth.hidePassword": "پنهان کردن رمز عبور"
 }

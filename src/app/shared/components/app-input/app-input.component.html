@@ -1,53 +1,92 @@
-<label class="field" [class.checkbox]="isCheckbox">
-  <span *ngIf="label">{{ label | translate }}</span>
-
-  <input
-    *ngIf="isCheckbox"
-    type="checkbox"
-    [required]="isRequired"
-    [disabled]="isDisabled"
-    [checked]="!!value"
-    (change)="updateValue($any($event.target).checked)"
-    (blur)="markTouched()"
-  />
-
-  <textarea
-    *ngIf="isTextarea && !isCheckbox"
-    [rows]="rows"
-    [placeholder]="placeholder | translate"
-    [required]="isRequired"
-    [disabled]="isDisabled"
-    [ngModel]="value"
-    (ngModelChange)="updateValue($event)"
-    (blur)="markTouched()"
-  ></textarea>
-
-  <select
-    *ngIf="isSelect && !isCheckbox"
-    [required]="isRequired"
-    [disabled]="isDisabled"
-    [ngModel]="value"
-    (ngModelChange)="updateValue($event)"
-    (blur)="markTouched()"
-  >
-    <option [ngValue]="placeholderValue">{{ (placeholder || 'Select an option') | translate }}</option>
-    <option *ngFor="let option of normalizedOptions" [ngValue]="option.value">{{ option.label | translate }}</option>
-  </select>
-
-  <input
-    *ngIf="!isTextarea && !isSelect && !isCheckbox"
-    [type]="type"
-    [placeholder]="placeholder | translate"
-    [required]="isRequired"
-    [disabled]="isDisabled"
-    [min]="min"
-    [max]="max"
-    [step]="step"
-    [ngModel]="value"
-    (ngModelChange)="updateValue($event)"
-    (blur)="markTouched()"
-  />
-
-  <small *ngIf="helper && !error">{{ helper | translate }}</small>
-  <small *ngIf="error" class="error-text">{{ error | translate }}</small>
-</label>
+<ng-container *ngIf="type === 'password' && showPasswordToggle; else defaultInput">
+  <div class="field">
+    <label *ngIf="label" [for]="passwordInputId">{{ label | translate }}</label>
+    <div class="password-input-wrap">
+      <input
+        [id]="passwordInputId"
+        [type]="passwordVisible ? 'text' : 'password'"
+        [placeholder]="placeholder | translate"
+        [required]="isRequired"
+        [disabled]="isDisabled"
+        [attr.autocomplete]="autocomplete || 'current-password'"
+        [ngModel]="value"
+        (ngModelChange)="updateValue($event)"
+        (blur)="markTouched()"
+      />
+      <button type="button" class="password-visibility-button"
+        [disabled]="isDisabled"
+        [attr.aria-label]="(passwordVisible ? 'auth.hidePassword' : 'auth.showPassword') | translate"
+        [attr.title]="(passwordVisible ? 'auth.hidePassword' : 'auth.showPassword') | translate"
+        [attr.aria-pressed]="passwordVisible"
+        (click)="passwordVisible = !passwordVisible">
+        <svg *ngIf="!passwordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.1 12s3.3-7 9.9-7 9.9 7 9.9 7-3.3 7-9.9 7-9.9-7-9.9-7Z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg *ngIf="passwordVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3l18 18M9.9 5.2A11 11 0 0 1 12 5c6.6 0 9.9 7 9.9 7a14 14 0 0 1-3.1 4.1"/>
+          <path d="M6.6 6.6A14 14 0 0 0 2.1 12S5.4 19 12 19c1.5 0 2.8-.3 4-.9"/>
+        </svg>
+      </button>
+    </div>
+    <small *ngIf="helper && !error">{{ helper | translate }}</small>
+    <small *ngIf="error" class="error-text">{{ error | translate }}</small>
+  </div>
+</ng-container>
+<ng-template #defaultInput>
+  <label class="field" [class.checkbox]="isCheckbox">
+    <span *ngIf="label">{{ label | translate }}</span>
+  
+    <input
+      *ngIf="isCheckbox"
+      type="checkbox"
+      [required]="isRequired"
+      [disabled]="isDisabled"
+      [checked]="!!value"
+      (change)="updateValue($any($event.target).checked)"
+      (blur)="markTouched()"
+    />
+  
+    <textarea
+      *ngIf="isTextarea && !isCheckbox"
+      [rows]="rows"
+      [placeholder]="placeholder | translate"
+      [required]="isRequired"
+      [disabled]="isDisabled"
+      [ngModel]="value"
+      (ngModelChange)="updateValue($event)"
+      (blur)="markTouched()"
+    ></textarea>
+  
+    <select
+      *ngIf="isSelect && !isCheckbox"
+      [required]="isRequired"
+      [disabled]="isDisabled"
+      [ngModel]="value"
+      (ngModelChange)="updateValue($event)"
+      (blur)="markTouched()"
+    >
+      <option [ngValue]="placeholderValue">{{ (placeholder || 'Select an option') | translate }}</option>
+      <option *ngFor="let option of normalizedOptions" [ngValue]="option.value">{{ option.label | translate }}</option>
+    </select>
+  
+    <input
+      *ngIf="!isTextarea && !isSelect && !isCheckbox"
+      [type]="type"
+      [placeholder]="placeholder | translate"
+      [required]="isRequired"
+      [disabled]="isDisabled"
+      [min]="min"
+      [max]="max"
+      [step]="step"
+      [ngModel]="value"
+      (ngModelChange)="updateValue($event)"
+      (blur)="markTouched()"
+    />
+  
+    <small *ngIf="helper && !error">{{ helper | translate }}</small>
+    <small *ngIf="error" class="error-text">{{ error | translate }}</small>
+  </label>
+</ng-template>

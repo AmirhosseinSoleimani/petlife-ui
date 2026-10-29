@@ -7,7 +7,7 @@
     <app-input name="email" label="auth.emailOrMobile" type="text"
       placeholder="auth.emailOrMobilePlaceholder" required
       [(ngModel)]="credentials.email"></app-input>
-    <app-input name="password" label="auth.password" type="password"
+    <app-input name="password" label="auth.password" type="password" [showPasswordToggle]="true" autocomplete="current-password"
       placeholder="auth.passwordPlaceholder" required
       [(ngModel)]="credentials.password"></app-input>
     <div class="form-links"><a routerLink="/forgot-password">{{ 'auth.forgotPassword' | translate }}</a></div>

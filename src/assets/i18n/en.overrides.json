@@ -44,5 +44,7 @@
   "auth.customerRegistered": "Your customer account was created. Sign in to continue.",
   "auth.alreadyHaveAccount": "Already have an account?",
   "auth.registerError": "Unable to create account.",
-  "auth.recoveryError": "Password recovery failed. Please try again."
+  "auth.recoveryError": "Password recovery failed. Please try again.",
+  "auth.showPassword": "Show password",
+  "auth.hidePassword": "Hide password"
 }

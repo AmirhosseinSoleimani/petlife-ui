@@ -33,11 +33,11 @@
           [(ngModel)]="mobileNumber"></app-input>
       </div>
       <div class="two-col">
-        <app-input name="password" label="auth.password" type="password" required
+        <app-input name="password" label="auth.password" type="password" [showPasswordToggle]="true" autocomplete="new-password" required
           helper="auth.passwordRules" placeholder="auth.passwordPlaceholder"
           [error]="showErrors && !validPassword ? 'auth.passwordInvalid' : ''"
           [(ngModel)]="password"></app-input>
-        <app-input name="confirmPassword" label="auth.confirmPassword" type="password" required
+        <app-input name="confirmPassword" label="auth.confirmPassword" type="password" [showPasswordToggle]="true" autocomplete="new-password" required
           placeholder="auth.confirmPasswordPlaceholder"
           [error]="showErrors && password !== confirmPassword ? 'auth.passwordMismatch' : ''"
           [(ngModel)]="confirmPassword"></app-input>
