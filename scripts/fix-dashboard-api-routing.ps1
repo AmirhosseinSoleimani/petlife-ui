@@ -16,7 +16,8 @@ $bash = [IO.File]::ReadAllText($scriptPath)
 $bash = $bash.Replace("`r`n","`n").Replace("`r","")
 $payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($bash + "`n"))
 $target = "$SshUser@$Server"
-$remoteCommand = "printf %s '$payload' | base64 -d | bash -s -- '$Server'"
+# Validate the complete script with bash -n BEFORE running any server operations.
+$remoteCommand = "printf %s '$payload' | base64 -d | bash -n && printf %s '$payload' | base64 -d | bash -s -- '$Server'"
 $report = Join-Path ([IO.Path]::GetTempPath()) ('petlife-dashboard-route-fix-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.txt')
 Write-Host "Running targeted Gateway routing repair on $target"
 Write-Host "Report: $report"
