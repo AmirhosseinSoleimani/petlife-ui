@@ -20,15 +20,21 @@ export class ApiErrorService {
     const body = this.body(error);
     if (!body) return error;
 
-    const fieldErrors = this.normalizeFieldErrors(body.fieldErrors);
+    const nested = (body as ApiErrorBody & { error?: ApiErrorBody }).error;
+    const normalizedBody = {
+      ...body,
+      message: body.message || nested?.message,
+      fieldErrors: body.fieldErrors || nested?.fieldErrors
+    };
+    const fieldErrors = this.normalizeFieldErrors(normalizedBody.fieldErrors);
     const flattened = Object.entries(fieldErrors)
       .flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`));
     const errors = flattened.length
       ? flattened
-      : (body.errors || []).filter((item): item is string => !!item?.trim());
+      : (normalizedBody.errors || []).filter((item): item is string => !!item?.trim());
 
     return new HttpErrorResponse({
-      error: { ...body, fieldErrors, errors },
+      error: { ...normalizedBody, fieldErrors, errors },
       headers: error.headers,
       status: error.status,
       statusText: error.statusText,
