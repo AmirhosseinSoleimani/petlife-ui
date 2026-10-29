@@ -123,7 +123,7 @@ for route in "${routes[@]}"; do
   for attempt in 1 2 3; do
     code="$(get "http://127.0.0.1$route")"
     if [ "$code" = 401 ] || [ "$code" = 403 ]; then
-      if tr -d '\r' < "$tmp/headers" | grep -Eiq '^X-PetLife-Route:[[:space:]]*Gateway[[:space:]]*
+      if tr -d '\r' < "$tmp/headers" | grep -Eiq '^X-PetLife-Route:[[:space:]]*Gateway[[:space:]]*$'; then
         good=1
         break
       fi
@@ -134,35 +134,6 @@ for route in "${routes[@]}"; do
   if [ "$good" -ne 1 ]; then
     echo 'DEBUG: Only the non-sensitive routing marker is shown below:'
     tr -d '\r' < "$tmp/headers" | grep -i '^X-PetLife-Route:' || true
-  fi
-  if [ "$good" -ne 1 ]; then
-    echo "FAIL: $route is not routed to Gateway." >&2
-    exit 1
-  fi
-done
-pref_after="$(get 'http://127.0.0.1/api/user-preferences/me')"
-notif_after="$(get 'http://127.0.0.1/api/notifications/unread-count')"
-home="$(get 'http://127.0.0.1/')"
-echo "Legacy preferences after: HTTP $pref_after"
-echo "Legacy notifications after: HTTP $notif_after"
-echo "Frontend homepage: HTTP $home"
-if [ "$pref_before" != "$pref_after" ] || [ "$notif_before" != "$notif_after" ] || [ "$home" != 200 ]; then
-  echo 'FAIL: unrelated routes changed behavior; rolling back.' >&2
-  exit 1
-fi
-changed=0
-echo 'SUCCESS: two dashboard paths now reach Gateway. No Bearer tokens were used.'
-echo 'Note: authenticated data access and remaining APIs must be tested separately.'
-if [ -n "$backup" ]; then echo "Backup: $backup"; fi
-; then
-        good=1
-        break
-      fi
-    fi
-    sleep 1
-  done
-  echo "Nginx $route: HTTP $code; Gateway route header confirmed=$good"
-  if [ "$good" -ne 1 ]; then
     echo "FAIL: $route is not routed to Gateway." >&2
     exit 1
   fi
