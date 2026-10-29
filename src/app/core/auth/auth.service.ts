@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, switchMap, tap, finalize } from 'rxjs';
 
 import { ApiService } from '../api/api.service';
 import { AUTH_TOKEN_KEY } from './auth.constants';
 import {
+  AuthResponseData,
   AuthUser,
   ContactVerificationChannel,
   ContactVerificationStatus,
@@ -30,42 +31,61 @@ export class AuthService {
       identifier: credentials.identifier || credentials.email,
       password: credentials.password
     };
-    return this.apiService.post<LoginResponse>('/auth/login', request).pipe(
+    return this.apiService.post<LoginResponse>('/v1/identity/auth/login', request).pipe(
       tap((response) => this.storeToken(response))
     );
   }
 
   registerCustomer(request: RegisterCustomerRequest): Observable<LoginResponse> {
-    return this.apiService.post<LoginResponse>('/auth/register/customer', request).pipe(
-      tap((response) => this.storeToken(response))
+    return this.apiService.post<unknown>('/v1/identity/auth/register/customer',
+      { ...request, confirmPassword: request.password }).pipe(
+      switchMap(() => this.login({ email: request.email, password: request.password }))
     );
   }
 
   registerCustomerMobile(request: RegisterCustomerMobileRequest): Observable<LoginResponse> {
-    return this.apiService.post<LoginResponse>('/auth/register/customer/mobile', request).pipe(
-      tap((response) => this.storeToken(response))
+    return this.apiService.post<unknown>('/v1/identity/auth/register/customer/mobile',
+      { ...request, confirmPassword: request.password }).pipe(
+      switchMap(() => this.login({ email: request.mobileNumber, identifier: request.mobileNumber, password: request.password }))
     );
   }
 
   getVerificationStatus(): Observable<ApiResponse<ContactVerificationStatus>> {
-    return this.apiService.get<ApiResponse<ContactVerificationStatus>>('/auth/verification/status');
+    return this.apiService.get<ApiResponse<AuthResponseData>>('/v1/identity/profile').pipe(
+      map(response => ({ success: response.success, data: {
+        email: response.data.email, mobileNumber: response.data.mobileNumber,
+        isEmailVerified: response.data.isEmailVerified, isMobileVerified: response.data.isMobileVerified
+      } }))
+    );
   }
 
   sendVerification(channel: ContactVerificationChannel): Observable<ApiResponse<ContactVerificationStatus>> {
-    return this.apiService.post<ApiResponse<ContactVerificationStatus>>('/auth/verification/send', { channel });
+    return this.apiService.post<void>('/v1/identity/contacts/verification/request', { channel }).pipe(
+      switchMap(() => this.getVerificationStatus())
+    );
   }
 
   verifyContact(channel: ContactVerificationChannel, code: string): Observable<ApiResponse<ContactVerificationStatus>> {
-    return this.apiService.post<ApiResponse<ContactVerificationStatus>>('/auth/verification/verify', { channel, code });
+    return this.apiService.post<void>('/v1/identity/contacts/verification/confirm', { channel, code }).pipe(
+      switchMap(() => this.getVerificationStatus())
+    );
   }
 
   logout(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    this.router.navigate(['/login']);
+    this.apiService.post<void>('/v1/identity/logout', {}).pipe(
+      finalize(() => this.endLocalSession())
+    ).subscribe({ error: () => {} });
   }
 
   getToken(): string | null {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) return null;
+    const expiry = this.decodeToken(token)?.['exp'];
+    if (typeof expiry !== 'number' || expiry <= Date.now() / 1000) {
+      this.clearSession();
+      return null;
+    }
+    return token;
   }
 
   isAuthenticated(): boolean {
@@ -79,7 +99,11 @@ export class AuthService {
     const payload = this.decodeToken(token);
     if (!payload) return null;
 
-    const role = payload['role'] || payload['roles'] || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    const saved = localStorage.getItem('petlife_user');
+    let user: AuthResponseData | null = null;
+    try { user = saved ? JSON.parse(saved) as AuthResponseData : null; } catch { /* invalid cache */ }
+    if (!user || user.userId?.toLowerCase() !== String(payload['sub'] || '').toLowerCase()) user = null;
+    const role = user?.role || payload['role'] || payload['roles'] || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
     const firstName = payload['first_name'] || payload['firstName'] || payload['given_name'];
     const lastName = payload['last_name'] || payload['lastName'] || payload['family_name'];
     const fullName = payload['name'] || [firstName, lastName].filter(Boolean).join(' ');
@@ -89,13 +113,13 @@ export class AuthService {
 
     return {
       id,
-      name: fullName || email || mobileNumber,
-      email,
-      mobileNumber,
+      name: user ? [user.firstName, user.lastName].filter(Boolean).join(' ') : fullName || email || mobileNumber,
+      email: user?.email || email,
+      mobileNumber: user?.mobileNumber || mobileNumber,
       role: Array.isArray(role) ? role[0] : role,
-      status: payload['status'],
-      isEmailVerified: payload['email_verified'] === true || payload['email_verified'] === 'true',
-      isMobileVerified: payload['mobile_verified'] === true || payload['mobile_verified'] === 'true'
+      status: user?.status || payload['status'],
+      isEmailVerified: user?.isEmailVerified ?? (payload['email_verified'] === true || payload['email_verified'] === 'true'),
+      isMobileVerified: user?.isMobileVerified ?? (payload['mobile_verified'] === true || payload['mobile_verified'] === 'true')
     };
   }
 
@@ -104,8 +128,21 @@ export class AuthService {
   }
 
   private storeToken(response: LoginResponse): void {
-    const token = response.data?.token;
-    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+    const token = response.data?.accessToken;
+    if (!response.success || !token || !response.data.user?.userId) throw new Error('Invalid authentication response');
+    this.clearSession();
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem('petlife_user', JSON.stringify(response.data.user));
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem('petlife_user');
+  }
+
+  private endLocalSession(): void {
+    this.clearSession();
+    void this.router.navigate(['/login']);
   }
 
   private decodeToken(token: string): Record<string, any> | null {
