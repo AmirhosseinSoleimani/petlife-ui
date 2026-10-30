@@ -74,12 +74,19 @@ export class ApiService {
     return this.postFormWithProgress<T>('/provider-media', formData);
   }
 
-  uploadPetProfileImage<T>(petId: string, file: File): Observable<T> {
-    return this.postFile<T>(`/pets/${petId}/profile-image`, file);
+  uploadPetProfileImage<T>(petId: string, file: File, onProgress?: (percent: number) => void): Observable<T> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.postFormWithProgress<T>(`/v1/pets/${petId}/profile-image`, formData, onProgress);
+  }
+
+  /** GET is owner-protected; return a Blob so AuthInterceptor sends the JWT. */
+  getPetProfileImage(petId: string): Observable<Blob> {
+    return this.http.get(this.buildUrl(`/v1/pets/${petId}/profile-image`), { responseType: 'blob' });
   }
 
   deletePetProfileImage<T>(petId: string): Observable<T> {
-    return this.delete<T>(`/pets/${petId}/profile-image`);
+    return this.delete<T>(`/v1/pets/${petId}/profile-image`);
   }
 
   getHealthRecordAttachments<T>(recordId: string): Observable<T> {
@@ -133,7 +140,11 @@ export class ApiService {
     return this.postFormWithProgress<T>(endpoint, formData);
   }
 
-  private postFormWithProgress<T>(endpoint: string, formData: FormData): Observable<T> {
+  private postFormWithProgress<T>(
+    endpoint: string,
+    formData: FormData,
+    onProgress?: (percent: number) => void
+  ): Observable<T> {
     return defer(() => {
       const uploadId = this.beginTrackedUpload();
 
@@ -142,7 +153,13 @@ export class ApiService {
         reportProgress: true
       }).pipe(
         tap({
-          next: (event) => this.handleUploadEvent(uploadId, event),
+          next: (event) => {
+            this.handleUploadEvent(uploadId, event);
+            if (onProgress && event.type === HttpEventType.UploadProgress && event.total && event.total > 0) {
+              // Reserve 100% for a successful server response, not just sent bytes.
+              onProgress(Math.min(99, Math.max(0, Math.round((event.loaded / event.total) * 100))));
+            }
+          },
           error: () => this.markUploadFailed(uploadId)
         }),
         filter((event): event is HttpResponse<T> => event.type === HttpEventType.Response),

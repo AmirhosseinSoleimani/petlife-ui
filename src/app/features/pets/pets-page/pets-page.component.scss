@@ -56,3 +56,15 @@
 .pet-details-toggle:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 .pet-details-sections { display: grid; gap: 1rem; }
 .pet-image-pending { margin: 0; color: #475467; line-height: 1.55; }
+
+.photo-guidance { color: var(--color-muted); line-height: 1.5; margin: 0 0 var(--space-md); }
+.photo-control { display: grid; gap: var(--space-md); }
+.photo-control app-file-upload { min-width: 0; }
+.pet-upload-progress { position: relative; display: grid; place-items: center; gap: 4px; width: 120px; margin: 14px auto; color: var(--color-text); }
+.pet-upload-ring { width: 100px; height: 100px; transform: rotate(-90deg); grid-row: 1; grid-column: 1; }
+.pet-upload-ring circle { fill: none; stroke-width: 9; }
+.pet-upload-ring .ring-track { stroke: var(--color-border); }
+.pet-upload-ring .ring-fill { stroke: var(--color-primary); stroke-linecap: round; transition: stroke-dashoffset 160ms ease; }
+.pet-upload-percent { grid-row: 1; grid-column: 1; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.pet-upload-label { font-size: var(--font-size-caption); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .pet-upload-ring .ring-fill { transition: none; } }
