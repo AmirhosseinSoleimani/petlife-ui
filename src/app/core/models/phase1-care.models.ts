@@ -60,6 +60,8 @@ export interface CreatePetSharePayload {
   scopes: string[];
   expiresAt: string;
   recipientUserId?: string | null;
+  /** Private share only: contact is resolved to an approved provider by Users on the server. */
+  recipientContact?: string | null;
   recipientLabel?: string | null;
   purpose?: string | null;
 }

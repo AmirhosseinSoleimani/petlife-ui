@@ -13,13 +13,18 @@ export class PublicPetShareComponent implements OnInit {
   data: ScopedPetShare | null = null;
   isLoading = true;
   unavailable = false;
-  private readonly token: string;
+  private readonly shareKey: string;
+  readonly isPrivate: boolean;
 
   constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {
-    this.token = this.route.snapshot.paramMap.get('token') || '';
+    this.isPrivate = this.route.snapshot.data['privateShare'] === true;
+    this.shareKey = this.route.snapshot.paramMap.get(this.isPrivate ? 'shareId' : 'token') || '';
   }
   ngOnInit(): void {
-    this.apiService.get<ApiResponse<ScopedPetShare>>(`/pet-shares/public/${encodeURIComponent(this.token)}`).subscribe({
+    const endpoint = this.isPrivate
+      ? `/v1/pet-shares/${encodeURIComponent(this.shareKey)}`
+      : `/v1/pet-shares/public/${encodeURIComponent(this.shareKey)}`;
+    this.apiService.get<ApiResponse<ScopedPetShare>>(endpoint).subscribe({
       next: response => { this.data = response.data; this.isLoading = false; },
       error: () => { this.unavailable = true; this.isLoading = false; }
     });

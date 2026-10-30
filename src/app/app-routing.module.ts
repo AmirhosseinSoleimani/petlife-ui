@@ -62,6 +62,7 @@ const routes: Routes = [
       { path: 'pets/:petId/health-records', component: PetHealthRecordsComponent },
       { path: 'pets/:petId/health-timeline', component: PetHealthTimelineComponent },
       { path: 'pets/:petId/share', component: PetSharingComponent },
+      { path: 'shared/provider/:shareId', component: PublicPetShareComponent, data: { privateShare: true } },
       { path: 'pets/:petId/expenses', component: PetExpensesComponent },
       { path: 'reminders', component: RemindersPageComponent },
       { path: 'emergency-vets', component: EmergencyVetsPageComponent },
