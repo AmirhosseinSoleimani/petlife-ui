@@ -144,8 +144,9 @@ export class PetSharingComponent implements OnInit {
       scopes: Array.from(this.selectedScopes),
       expiresAt: expires.toISOString(),
       recipientUserId: null,
-      recipientContact: this.activeTab === 'private' ? contact : null,
-      recipientLabel: this.activeTab === 'private' ? contact : this.form.recipientLabel?.trim() || null,
+      // Private sharing fails closed above until Users resolves and verifies recipients.
+      recipientContact: null,
+      recipientLabel: this.form.recipientLabel?.trim() || null,
       purpose: this.form.purpose?.trim() || null
     };
     this.apiService.post<ApiResponse<PetShareGrant>>(`/v1/pets/${this.petId}/shares`, payload).subscribe({
