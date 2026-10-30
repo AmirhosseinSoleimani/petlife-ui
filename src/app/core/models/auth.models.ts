@@ -84,3 +84,22 @@ export interface AuthUser {
   isEmailVerified?: boolean;
   isMobileVerified?: boolean;
 }
+
+
+/** Current Users /v1/identity/profile response (not the legacy Customer location DTO). */
+export interface IdentityProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  mobileNumber: string | null;
+  role: string;
+  status: string;
+  isEmailVerified: boolean;
+  isMobileVerified: boolean;
+}
+
+export interface UpdateIdentityProfileRequest {
+  firstName: string;
+  lastName: string;
+}

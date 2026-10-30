@@ -6,6 +6,7 @@ import { ApiService } from '../api/api.service';
 import { AUTH_TOKEN_KEY } from './auth.constants';
 import {
   AuthResponseData,
+  IdentityProfile,
   AuthUser,
   ContactVerificationChannel,
   ContactVerificationStatus,
@@ -79,6 +80,27 @@ export class AuthService {
     this.apiService.post<void>('/v1/identity/logout', {}).pipe(
       finalize(() => this.endLocalSession())
     ).subscribe({ error: () => {} });
+  }
+
+  /** Update the header identity only after the Users API confirms the saved names. */
+  syncProfile(profile: IdentityProfile): void {
+    if (!this.getToken()) return;
+    const saved = localStorage.getItem('petlife_user');
+    if (!saved) return;
+    try {
+      const user = JSON.parse(saved) as AuthResponseData;
+      if (user.userId?.toLowerCase() !== profile.id.toLowerCase()) return;
+      localStorage.setItem('petlife_user', JSON.stringify({
+        ...user, firstName: profile.firstName, lastName: profile.lastName
+      }));
+    } catch {
+      // Never overwrite a malformed or unrelated identity cache.
+    }
+  }
+
+  /** A successful account closure has already revoked server sessions. */
+  signOutLocally(): void {
+    this.endLocalSession();
   }
 
   getToken(): string | null {

@@ -1,152 +1,139 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subject, Subscription, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
 import { apiErrorMessage } from '../../../core/api/api-error.util';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { CustomerProfile, CustomerProfilePayload } from '../../../core/models/customer-core.models';
-import { GeographyArea } from '../../../core/models/marketplace.models';
-
-const emptyPayload: CustomerProfilePayload = {
-  address: '',
-  country: 'Australia',
-  state: '',
-  city: '',
-  suburb: '',
-  postcode: '',
-  preferredContactMethod: '',
-  notificationByEmail: true,
-  notificationInApp: true,
-  marketingConsent: false
-};
+import { IdentityProfile, UpdateIdentityProfileRequest } from '../../../core/models/auth.models';
 
 @Component({
   selector: 'app-customer-profile',
   templateUrl: './customer-profile.component.html',
   styleUrls: ['./customer-profile.component.scss']
 })
-export class CustomerProfileComponent implements OnInit, OnDestroy {
+export class CustomerProfileComponent implements OnInit {
   readonly contactOptions = ['Email', 'Mobile', 'InApp'];
-  profile: CustomerProfile | null = null;
-  form: CustomerProfilePayload = { ...emptyPayload };
-  geographyMatches: GeographyArea[] = [];
+
+  profile: IdentityProfile | null = null;
+  form: UpdateIdentityProfileRequest = { firstName: '', lastName: '' };
   isLoading = false;
   isSaving = false;
-  isLookingUpGeography = false;
-  errorMessage = '';
-  successMessage = '';
+  isClosing = false;
+  showCloseForm = false;
+  closePassword = '';
+  closeAcknowledged = false;
+  loadError = '';
+  saveError = '';
+  saveSuccess = '';
+  closeError = '';
 
-  private readonly postcodeLookup$ = new Subject<string>();
-  private readonly suburbLookup$ = new Subject<string>();
-  private readonly subscriptions = new Subscription();
-  private applyingGeographyLookup = false;
-
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.bindGeographyLookup();
     this.loadProfile();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+  get profileInitials(): string {
+    if (!this.profile) return '?';
+    return (this.profile.firstName.trim().charAt(0) + this.profile.lastName.trim().charAt(0)).toUpperCase() || '?';
+  }
+
+  get canSaveNames(): boolean {
+    if (!this.profile || this.isSaving) return false;
+    const firstName = this.form.firstName.trim();
+    const lastName = this.form.lastName.trim();
+    return firstName.length > 0 && firstName.length <= 100 &&
+      lastName.length > 0 && lastName.length <= 100 &&
+      (firstName !== this.profile.firstName || lastName !== this.profile.lastName);
+  }
+
+  get canCloseAccount(): boolean {
+    return (this.profile?.role || '').toLowerCase() === 'customer';
   }
 
   loadProfile(): void {
+    if (this.isLoading) return;
     this.isLoading = true;
-    this.errorMessage = '';
-    this.apiService.get<ApiResponse<CustomerProfile>>('/customer/profile').subscribe({
+    this.loadError = '';
+    this.profile = null;
+    // Users is the identity authority. /api/customer/profile belongs to an obsolete contract.
+    this.apiService.get<ApiResponse<IdentityProfile>>('/v1/identity/profile').subscribe({
       next: (response) => {
-        this.profile = response.data;
-        this.form = {
-          address: response.data.address || '', country: response.data.country || 'Australia',
-          state: response.data.state || '', city: response.data.city || '', suburb: response.data.suburb || '',
-          postcode: response.data.postcode || '', preferredContactMethod: response.data.preferredContactMethod || '',
-          notificationByEmail: response.data.notificationByEmail, notificationInApp: response.data.notificationInApp,
-          marketingConsent: response.data.marketingConsent
-        };
         this.isLoading = false;
+        if (!response.success || !response.data?.id) {
+          this.loadError = 'profile.loadError';
+          return;
+        }
+        this.profile = response.data;
+        this.form = { firstName: response.data.firstName, lastName: response.data.lastName };
       },
       error: (error) => {
-        this.errorMessage = apiErrorMessage(error, 'Unable to load customer profile.');
         this.isLoading = false;
+        this.loadError = apiErrorMessage(error, 'profile.loadError');
       }
     });
-  }
-
-  onPostcodeChange(value: string | number | boolean | null): void {
-    const raw = typeof value === 'string' ? value : '';
-    this.form.postcode = raw.replace(/\D/g, '').slice(0, 4);
-    if (this.applyingGeographyLookup) return;
-    this.geographyMatches = [];
-    const postcode = this.form.postcode.trim();
-    if (/^\d{4}$/.test(postcode)) this.postcodeLookup$.next(postcode);
-  }
-
-  onSuburbChange(value: string | number | boolean | null): void {
-    this.form.suburb = typeof value === 'string' ? value : '';
-    if (this.applyingGeographyLookup) return;
-    this.geographyMatches = [];
-    const suburb = this.form.suburb.trim();
-    if (suburb.length >= 2) this.suburbLookup$.next(suburb);
-  }
-
-  applyGeography(area: GeographyArea): void {
-    this.applyingGeographyLookup = true;
-    this.form.suburb = area.suburb || '';
-    this.form.postcode = area.postcode || '';
-    this.form.state = area.state || '';
-    this.form.city = area.city || '';
-    this.form.country = area.country || 'Australia';
-    this.geographyMatches = [];
-    queueMicrotask(() => this.applyingGeographyLookup = false);
   }
 
   save(): void {
+    if (!this.canSaveNames) return;
+    const payload: UpdateIdentityProfileRequest = {
+      firstName: this.form.firstName.trim(),
+      lastName: this.form.lastName.trim()
+    };
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.apiService.put<ApiResponse<CustomerProfile>>('/customer/profile', this.form).subscribe({
+    this.saveError = '';
+    this.saveSuccess = '';
+    // The current Users update contract accepts only firstName and lastName.
+    this.apiService.put<ApiResponse<IdentityProfile>>('/v1/identity/profile', payload).subscribe({
       next: (response) => {
-        this.profile = response.data;
-        this.successMessage = 'Profile saved successfully.';
         this.isSaving = false;
+        if (!response.success || !response.data?.id) {
+          this.saveError = 'profile.saveError';
+          return;
+        }
+        this.profile = response.data;
+        this.form = { firstName: response.data.firstName, lastName: response.data.lastName };
+        this.authService.syncProfile(response.data);
+        this.saveSuccess = 'profile.saveSuccess';
       },
       error: (error) => {
-        this.errorMessage = apiErrorMessage(error, 'Unable to save customer profile.');
         this.isSaving = false;
+        this.saveError = apiErrorMessage(error, 'profile.saveError');
       }
     });
   }
 
-  private bindGeographyLookup(): void {
-    this.subscriptions.add(this.postcodeLookup$.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((postcode) => {
-        this.isLookingUpGeography = true;
-        return this.apiService
-          .get<ApiResponse<GeographyArea[]>>(`/geography/by-postcode/${encodeURIComponent(postcode)}`)
-          .pipe(catchError(() => of({ success: false, data: [] } as ApiResponse<GeographyArea[]>)));
-      })
-    ).subscribe((response) => this.handleGeographyMatches(response.data || [])));
-
-    this.subscriptions.add(this.suburbLookup$.pipe(
-      debounceTime(350),
-      distinctUntilChanged(),
-      switchMap((suburb) => {
-        this.isLookingUpGeography = true;
-        return this.apiService
-          .get<ApiResponse<GeographyArea[]>>(`/geography/by-suburb/${encodeURIComponent(suburb)}`)
-          .pipe(catchError(() => of({ success: false, data: [] } as ApiResponse<GeographyArea[]>)));
-      })
-    ).subscribe((response) => this.handleGeographyMatches(response.data || [])));
+  toggleCloseForm(): void {
+    if (!this.canCloseAccount || this.isClosing) return;
+    this.showCloseForm = !this.showCloseForm;
+    this.closePassword = '';
+    this.closeAcknowledged = false;
+    this.closeError = '';
   }
 
-  private handleGeographyMatches(matches: GeographyArea[]): void {
-    this.isLookingUpGeography = false;
-    this.geographyMatches = matches;
-    if (matches.length === 1) this.applyGeography(matches[0]);
+  closeAccount(): void {
+    if (!this.canCloseAccount || !this.showCloseForm || this.isClosing ||
+        !this.closeAcknowledged || !this.closePassword.trim()) return;
+
+    this.isClosing = true;
+    this.closeError = '';
+    // Account closure is password-gated and revokes sessions. It is not cross-service data erasure.
+    this.apiService.post<void>('/v1/identity/account/close', {
+      currentPassword: this.closePassword
+    }).subscribe({
+      next: () => {
+        this.closePassword = '';
+        this.isClosing = false;
+        this.authService.signOutLocally();
+      },
+      error: (error) => {
+        this.closePassword = '';
+        this.isClosing = false;
+        this.closeError = apiErrorMessage(error, 'profile.closeError');
+      }
+    });
   }
 }
