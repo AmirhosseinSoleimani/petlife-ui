@@ -155,3 +155,8 @@
   .profile-fields { grid-template-columns: minmax(0, 1fr); }
   .form-actions app-button, .close-actions app-button { width: 100%; }
 }
+
+.address-editor { display: grid; gap: 16px; min-width: 0; }
+.location-fields { gap: 16px; }
+.location-actions { gap: 16px; flex-wrap: wrap; }
+.location-actions app-button { min-width: 142px; }

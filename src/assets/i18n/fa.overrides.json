@@ -176,8 +176,8 @@
   "profile.saveSuccess": "نام شما با موفقیت ذخیره شد.",
   "profile.notSet": "ثبت نشده",
   "profile.locationTitle": "آدرس و موقعیت",
-  "profile.locationHelp": "با فعال شدن ذخیره اطلاعات موقعیت در حساب، آدرس و کدپستی اینجا نمایش داده می‌شوند.",
-  "profile.locationUnavailable": "API فعلی کاربران، آدرس و کدپستی را دریافت یا ذخیره نمی‌کند. این فیلدها غیرفعال‌اند تا اطلاعات واردشده از دست نرود.",
+  "profile.locationHelp": "آدرس و اطلاعات موقعیت را تکمیل یا ویرایش کنید. همه فیلدها اختیاری هستند.",
+  "profile.locationUnavailable": "ویرایش آدرس هنوز در این سرور فعال نیست. سرویس کاربران باید هر شش فیلد آدرس را برگرداند.",
   "profile.contactsTitle": "اطلاعات تماس",
   "profile.contactsHelp": "ایمیل و شماره موبایلی که هنگام ثبت‌نام وارد کردید.",
   "profile.manageVerification": "مدیریت تأیید راه‌های ارتباطی",
@@ -193,5 +193,10 @@
   "profile.acknowledgeClose": "متوجه هستم که دسترسی به حساب را از دست می‌دهم و ممکن است برخی اطلاعات نگهداری شوند.",
   "profile.confirmClose": "تأیید بستن حساب",
   "profile.cancel": "انصراف",
-  "profile.closeError": "بستن حساب انجام نشد. رمز عبور را بررسی کرده و دوباره تلاش کنید."
+  "profile.closeError": "بستن حساب انجام نشد. رمز عبور را بررسی کرده و دوباره تلاش کنید.",
+  "profile.saveAddress": "ذخیره آدرس",
+  "profile.savingAddress": "در حال ذخیره آدرس...",
+  "profile.revertAddress": "بازگرداندن تغییرات",
+  "profile.addressSaveSuccess": "آدرس با موفقیت ذخیره شد.",
+  "profile.addressSaveError": "ذخیره آدرس انجام نشد. دوباره تلاش کنید."
 }

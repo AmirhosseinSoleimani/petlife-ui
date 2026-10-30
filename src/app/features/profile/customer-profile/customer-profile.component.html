@@ -49,26 +49,28 @@
         </form>
 
         <section class="profile-panel location-panel" aria-labelledby="location-heading">
-          <div class="panel-heading">
-            <span class="panel-mark" aria-hidden="true">02</span>
-            <div>
-              <h3 id="location-heading">{{ 'profile.locationTitle' | translate }}</h3>
-              <p>{{ 'profile.locationHelp' | translate }}</p>
-            </div>
+          <div class="panel-heading"><span class="panel-mark" aria-hidden="true">02</span>
+            <div><h3 id="location-heading">{{ 'profile.locationTitle' | translate }}</h3><p>{{ 'profile.locationHelp' | translate }}</p></div>
           </div>
-          <p id="location-api-note" class="support-note">{{ 'profile.locationUnavailable' | translate }}</p>
-          <div class="profile-fields location-fields" aria-describedby="location-api-note">
-            <div class="span-full">
-              <app-input name="address" label="Address" [ngModel]="''" [disabled]="true"></app-input>
+          <p *ngIf="!addressSupported" class="support-note" role="status">{{ 'profile.locationUnavailable' | translate }}</p>
+          <form class="address-editor" (ngSubmit)="saveAddress()" #addressNgForm="ngForm">
+            <div class="profile-fields location-fields">
+              <div class="span-full"><app-input name="address" label="Address" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.address" (ngModelChange)="onAddressEdited()"></app-input></div>
+              <app-input name="postcode" label="Postcode" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.postcode" (ngModelChange)="onAddressEdited()"></app-input>
+              <app-input name="suburb" label="Suburb" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.suburb" (ngModelChange)="onAddressEdited()"></app-input>
+              <app-input name="city" label="City" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.city" (ngModelChange)="onAddressEdited()"></app-input>
+              <app-input name="state" label="State" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.state" (ngModelChange)="onAddressEdited()"></app-input>
+              <div class="span-full"><app-input name="country" label="Country" [disabled]="!addressSupported || isSavingAddress" [(ngModel)]="addressForm.country" (ngModelChange)="onAddressEdited()"></app-input></div>
             </div>
-            <app-input name="postcode" label="Postcode" [ngModel]="''" [disabled]="true"></app-input>
-            <app-input name="suburb" label="Suburb" [ngModel]="''" [disabled]="true"></app-input>
-            <app-input name="city" label="City" [ngModel]="''" [disabled]="true"></app-input>
-            <app-input name="state" label="State" [ngModel]="''" [disabled]="true"></app-input>
-            <div class="span-full">
-              <app-input name="country" label="Country" [ngModel]="''" [disabled]="true"></app-input>
+            <div *ngIf="addressError || addressSuccess" class="form-feedback" aria-live="polite">
+              <p *ngIf="addressError" class="error" role="alert">{{ addressError | translate }}</p>
+              <p *ngIf="addressSuccess" class="success" role="status">{{ addressSuccess | translate }}</p>
             </div>
-          </div>
+            <div class="form-actions location-actions">
+              <app-button type="button" variant="secondary" [disabled]="!addressSupported || isSavingAddress || !hasAddressChanges" (buttonClick)="revertAddress()">{{ 'profile.revertAddress' | translate }}</app-button>
+              <app-button type="submit" [loading]="isSavingAddress" [disabled]="addressNgForm.invalid || !canSaveAddress">{{ (isSavingAddress ? 'profile.savingAddress' : 'profile.saveAddress') | translate }}</app-button>
+            </div>
+          </form>
         </section>
       </main>
 

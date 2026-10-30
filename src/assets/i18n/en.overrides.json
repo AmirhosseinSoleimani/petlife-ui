@@ -176,8 +176,8 @@
   "profile.saveSuccess": "Your name has been saved.",
   "profile.notSet": "Not provided",
   "profile.locationTitle": "Address and location",
-  "profile.locationHelp": "Your address and postcode will appear here when account location storage is available.",
-  "profile.locationUnavailable": "Address, postcode and location are not returned or saved by the current Users API. These fields are disabled to prevent losing entered information.",
+  "profile.locationHelp": "Keep your address and location up to date. All fields are optional.",
+  "profile.locationUnavailable": "Address editing is not available on this server yet. Users must return all six address fields.",
   "profile.contactsTitle": "Contact details",
   "profile.contactsHelp": "The email and mobile number you provided at registration.",
   "profile.manageVerification": "Manage contact verification",
@@ -193,5 +193,10 @@
   "profile.acknowledgeClose": "I understand that I will lose access to this account and some records may be retained.",
   "profile.confirmClose": "Confirm account closure",
   "profile.cancel": "Cancel",
-  "profile.closeError": "Unable to close the account. Check your password and try again."
+  "profile.closeError": "Unable to close the account. Check your password and try again.",
+  "profile.saveAddress": "Save address",
+  "profile.savingAddress": "Saving address...",
+  "profile.revertAddress": "Revert changes",
+  "profile.addressSaveSuccess": "Your address has been saved.",
+  "profile.addressSaveError": "Unable to save your address. Please try again."
 }

@@ -4,7 +4,36 @@ import { ApiService } from '../../../core/api/api.service';
 import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { IdentityProfile, UpdateIdentityProfileRequest } from '../../../core/models/auth.models';
+import {
+  IdentityAddressForm,
+  IdentityProfile,
+  UpdateIdentityAddressRequest,
+  UpdateIdentityProfileRequest
+} from '../../../core/models/auth.models';
+
+const ADDRESS_FIELDS: Array<keyof IdentityAddressForm> = [
+  'address', 'suburb', 'postcode', 'city', 'state', 'country'
+];
+
+function emptyAddress(): IdentityAddressForm {
+  return { address: '', suburb: '', postcode: '', city: '', state: '', country: '' };
+}
+
+function addressFromProfile(profile: IdentityProfile): IdentityAddressForm {
+  return {
+    address: profile.address ?? '',
+    suburb: profile.suburb ?? '',
+    postcode: profile.postcode ?? '',
+    city: profile.city ?? '',
+    state: profile.state ?? '',
+    country: profile.country ?? ''
+  };
+}
+
+/** Do not permit address writes while an older Users contract is deployed. */
+function hasAddressContract(profile: IdentityProfile): boolean {
+  return ADDRESS_FIELDS.every(field => Object.prototype.hasOwnProperty.call(profile, field));
+}
 
 @Component({
   selector: 'app-customer-profile',
@@ -16,6 +45,12 @@ export class CustomerProfileComponent implements OnInit {
 
   profile: IdentityProfile | null = null;
   form: UpdateIdentityProfileRequest = { firstName: '', lastName: '' };
+  addressForm: IdentityAddressForm = emptyAddress();
+  private savedAddress: IdentityAddressForm = emptyAddress();
+  addressSupported = false;
+  isSavingAddress = false;
+  addressError = '';
+  addressSuccess = '';
   isLoading = false;
   isSaving = false;
   isClosing = false;
@@ -50,6 +85,27 @@ export class CustomerProfileComponent implements OnInit {
       (firstName !== this.profile.firstName || lastName !== this.profile.lastName);
   }
 
+  get hasAddressChanges(): boolean {
+    return ADDRESS_FIELDS.some(field =>
+      this.addressForm[field].trim() !== this.savedAddress[field].trim());
+  }
+
+  get canSaveAddress(): boolean {
+    return !!this.profile && this.addressSupported && !this.isLoading &&
+      !this.isSavingAddress && this.hasAddressChanges;
+  }
+
+  onAddressEdited(): void {
+    this.addressError = '';
+    this.addressSuccess = '';
+  }
+
+  revertAddress(): void {
+    if (!this.addressSupported || this.isSavingAddress) return;
+    this.addressForm = { ...this.savedAddress };
+    this.onAddressEdited();
+  }
+
   get canCloseAccount(): boolean {
     return (this.profile?.role || '').toLowerCase() === 'customer';
   }
@@ -59,6 +115,11 @@ export class CustomerProfileComponent implements OnInit {
     this.isLoading = true;
     this.loadError = '';
     this.profile = null;
+    this.addressSupported = false;
+    this.addressError = '';
+    this.addressSuccess = '';
+    this.addressForm = emptyAddress();
+    this.savedAddress = emptyAddress();
     // Users is the identity authority. /api/customer/profile belongs to an obsolete contract.
     this.apiService.get<ApiResponse<IdentityProfile>>('/v1/identity/profile').subscribe({
       next: (response) => {
@@ -69,6 +130,9 @@ export class CustomerProfileComponent implements OnInit {
         }
         this.profile = response.data;
         this.form = { firstName: response.data.firstName, lastName: response.data.lastName };
+        this.addressSupported = hasAddressContract(response.data);
+        this.addressForm = addressFromProfile(response.data);
+        this.savedAddress = { ...this.addressForm };
       },
       error: (error) => {
         this.isLoading = false;
@@ -94,7 +158,8 @@ export class CustomerProfileComponent implements OnInit {
           this.saveError = 'profile.saveError';
           return;
         }
-        this.profile = response.data;
+        // Name updates may return a legacy response without the address extension.
+        this.profile = { ...this.profile!, ...response.data };
         this.form = { firstName: response.data.firstName, lastName: response.data.lastName };
         this.authService.syncProfile(response.data);
         this.saveSuccess = 'profile.saveSuccess';
@@ -102,6 +167,54 @@ export class CustomerProfileComponent implements OnInit {
       error: (error) => {
         this.isSaving = false;
         this.saveError = apiErrorMessage(error, 'profile.saveError');
+      }
+    });
+  }
+
+  saveAddress(): void {
+    if (!this.canSaveAddress) return;
+
+    // Submit the entire optional form. Null clears a field; no user ID is client supplied.
+    const payload: UpdateIdentityAddressRequest = {
+      address: this.addressForm.address.trim() || null,
+      suburb: this.addressForm.suburb.trim() || null,
+      postcode: this.addressForm.postcode.trim() || null,
+      city: this.addressForm.city.trim() || null,
+      state: this.addressForm.state.trim() || null,
+      country: this.addressForm.country.trim() || null
+    };
+
+    this.isSavingAddress = true;
+    this.addressError = '';
+    this.addressSuccess = '';
+    // The proposed contract does not fix the response body shape. Handle 200 or 204.
+    this.apiService.put<ApiResponse<IdentityProfile> | null>(
+      '/v1/identity/profile/address', payload
+    ).subscribe({
+      next: response => {
+        this.isSavingAddress = false;
+        if (response && response.success === false) {
+          this.addressError = response.message || 'profile.addressSaveError';
+          return;
+        }
+        const saved: IdentityAddressForm = response?.data && hasAddressContract(response.data)
+          ? addressFromProfile(response.data)
+          : {
+              address: payload.address ?? '',
+              suburb: payload.suburb ?? '',
+              postcode: payload.postcode ?? '',
+              city: payload.city ?? '',
+              state: payload.state ?? '',
+              country: payload.country ?? ''
+            };
+        this.savedAddress = { ...saved };
+        this.addressForm = { ...saved };
+        this.profile = { ...this.profile!, ...payload, ...(response?.data ?? {}) };
+        this.addressSuccess = 'profile.addressSaveSuccess';
+      },
+      error: error => {
+        this.isSavingAddress = false;
+        this.addressError = apiErrorMessage(error, 'profile.addressSaveError');
       }
     });
   }
