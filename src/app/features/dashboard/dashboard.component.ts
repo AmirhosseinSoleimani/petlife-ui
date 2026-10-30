@@ -27,6 +27,18 @@ import {
 } from '../../core/preferences/user-preferences.models';
 import { UserPreferencesService } from '../../core/preferences/user-preferences.service';
 
+/** Dashboard includes overdue, today and future care, but never completed reminders. */
+export function dashboardActiveReminders(reminders: Reminder[], limit = 4): Reminder[] {
+  return reminders.filter(item =>
+    (item.status || '').toLowerCase() !== 'done' &&
+    (item.computedState || '').toLowerCase() !== 'done'
+  ).sort((a, b) => {
+    const left = a.snoozeUntil || a.dueDate || '';
+    const right = b.snoozeUntil || b.dueDate || '';
+    return left.localeCompare(right) || a.title.localeCompare(b.title);
+  }).slice(0, limit);
+}
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -196,9 +208,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   get upcomingCare(): Reminder[] {
-    return [...this.reminders]
-      .sort((a, b) => this.dateValue(a.dueDate, Number.MAX_SAFE_INTEGER) - this.dateValue(b.dueDate, Number.MAX_SAFE_INTEGER))
-      .slice(0, 4);
+    return dashboardActiveReminders(this.reminders);
+  }
+
+  get activeReminderCount(): number {
+    return dashboardActiveReminders(this.reminders, this.reminders.length).length;
+  }
+
+  reminderTone(reminder: Reminder): 'warning' | 'info' {
+    return (reminder.computedState || '').toLowerCase() === 'overdue' ? 'warning' : 'info';
   }
 
   get recentHealthRecords(): HealthRecord[] {
@@ -451,7 +469,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadReminders(): void {
     this.isLoadingReminders = true;
     this.remindersLoadFailed = false;
-    this.apiService.get<ApiResponse<Reminder[]>>('/v1/reminders/upcoming').subscribe({
+    // Center uses the user's date offset and includes due-today and overdue items.
+    // /upcoming is based on the server day and can exclude newly created local reminders.
+    const utcOffsetMinutes = -new Date().getTimezoneOffset();
+    this.apiService.get<ApiResponse<Reminder[]>>(
+      `/v1/reminders/center?bucket=all&utcOffsetMinutes=${utcOffsetMinutes}`).subscribe({
       next: (response) => {
         if (!response?.success || !Array.isArray(response.data)) { this.remindersLoadFailed = true; this.isLoadingReminders = false; return; }
         this.reminders = response.data;

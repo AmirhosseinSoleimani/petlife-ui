@@ -1,22 +1,52 @@
 <section class="page reminders-page">
-  <app-page-header eyebrow="reminders.eyebrow" title="reminders.centerTitle" description="reminders.centerDescription">
-    <div class="header-actions">
-      <app-button type="button" variant="secondary" (buttonClick)="openExpiryEditor()">{{ 'reminders.addExpiry' | translate }}</app-button>
-      <app-button type="button" (buttonClick)="openReminderEditor()">{{ 'reminders.add' | translate }}</app-button>
-    </div>
-  </app-page-header>
+  <app-page-header eyebrow="reminders.eyebrow" title="reminders.centerTitle" description="reminders.centerDescription"></app-page-header>
+
+  <div class="reminder-mode-grid" [attr.aria-label]="'reminders.chooseReminderKind' | translate">
+    <button type="button" class="reminder-mode-card" (click)="openReminderEditor()">
+      <span class="mode-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </span>
+      <span class="mode-text">
+        <strong>{{ 'reminders.add' | translate }}</strong>
+        <small>{{ 'reminders.standardExplainer' | translate }}</small>
+      </span>
+      <span class="mode-arrow" aria-hidden="true">+</span>
+    </button>
+    <button type="button" class="reminder-mode-card expiry-mode-card" (click)="openExpiryEditor()">
+      <span class="mode-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <rect x="3" y="5" width="18" height="16" rx="2"/>
+          <path d="M7 3v4M17 3v4M3 10h18M8 15l2.5 2.5L16 12"/>
+        </svg>
+      </span>
+      <span class="mode-text">
+        <strong>{{ 'reminders.addExpiry' | translate }}</strong>
+        <small>{{ 'reminders.expiryExplainer' | translate }}</small>
+      </span>
+      <span class="mode-arrow" aria-hidden="true">+</span>
+    </button>
+  </div>
 
   <p *ngIf="errorMessage && !isReminderEditorOpen" class="error page-message">{{ errorMessage | translate }}</p>
   <p *ngIf="petsLoadFailed" class="error page-message" role="alert">{{ 'reminders.loadPetsError' | translate }}</p>
   <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
 
   <app-card class="center-toolbar">
+    <div class="center-toolbar-heading">
+      <div>
+        <h2>{{ 'reminders.myRemindersTitle' | translate }}</h2>
+        <p>{{ 'reminders.myRemindersHelp' | translate }}</p>
+      </div>
+      <span class="reminder-count" *ngIf="!isLoading && !loadFailed">{{ reminders.length }}</span>
+    </div>
     <div class="buckets" role="tablist" [attr.aria-label]="'reminders.centerTabs' | translate">
       <button type="button" *ngFor="let item of buckets" [class.active]="bucket === item" (click)="selectBucket(item)">{{ ('reminders.bucket.' + item) | translate }}</button>
     </div>
     <div class="filters">
-      <app-input class="filter-select" name="petFilter" label="reminders.petLabel" type="select" [options]="filterPetOptions" [(ngModel)]="petFilter"></app-input>
-      <app-input class="filter-select" name="typeFilter" label="reminders.typeLabel" type="select" [options]="typeFilterOptions" [(ngModel)]="typeFilter"></app-input>
+      <app-input class="filter-select" name="petFilter" label="reminders.petLabel" type="select" [showSelectChevron]="true" [options]="filterPetOptions" [(ngModel)]="petFilter"></app-input>
+      <app-input class="filter-select" name="typeFilter" label="reminders.typeLabel" type="select" [showSelectChevron]="true" [options]="typeFilterOptions" [(ngModel)]="typeFilter"></app-input>
       <app-button type="button" variant="secondary" (buttonClick)="loadReminders()">{{ 'common.apply' | translate }}</app-button>
     </div>
     <div class="bulk" *ngIf="hasSelection">
@@ -72,29 +102,109 @@
 
   <app-modal [open]="isReminderEditorOpen" [title]="editorMode === 'expiry' ? 'reminders.addExpiry' : (editingId ? 'reminders.edit' : 'reminders.add')" [description]="editorMode === 'expiry' ? 'reminders.expiryEditorDescription' : 'reminders.editorDescription'" [closeOnBackdrop]="false" (closed)="closeReminderEditor()">
     <form class="reminder-editor" *ngIf="editorMode === 'reminder'" (ngSubmit)="saveReminder()" #reminderForm="ngForm">
-      <app-input name="petId" label="reminders.petLabel" type="select" placeholder="reminders.selectPet" [placeholderValue]="null" [options]="petOptions" required [ngModel]="form.petId" (ngModelChange)="onPetFormChange($event)"></app-input>
-      <p *ngIf="templatesLoadFailed" class="form-error" role="alert">{{ 'reminders.templatesUnavailable' | translate }}</p>
-      <app-input name="templateId" label="reminders.template" type="select" [placeholderValue]="null" [options]="templateOptions" [ngModel]="form.templateId" (ngModelChange)="onTemplateChange($event)"></app-input>
+      <p class="editor-hint full-field">{{ 'reminders.standardExplainer' | translate }}</p>
+      <app-input name="petId" label="reminders.petLabel" type="select" [showSelectChevron]="true"
+        placeholder="reminders.selectPet" [placeholderValue]="null" [options]="petOptions" required
+        [ngModel]="form.petId" (ngModelChange)="onPetFormChange($event)"></app-input>
+      <app-input *ngIf="templates.length" name="templateId" label="reminders.template" type="select"
+        [showSelectChevron]="true" [placeholderValue]="null" [options]="templateOptions"
+        [ngModel]="form.templateId" (ngModelChange)="onTemplateChange($event)"></app-input>
       <app-input name="title" label="reminders.titleLabel" required [(ngModel)]="form.title"></app-input>
-      <app-input name="reminderType" label="reminders.typeLabel" type="select" [options]="reminderTypeOptions" required [(ngModel)]="form.reminderType"></app-input>
-      <app-input name="dueDate" label="reminders.dueDateLabel" required type="date" [(ngModel)]="form.dueDate"></app-input>
-      <app-input name="recurrenceType" label="reminders.recurrence" type="select" [options]="recurrenceTypes" [(ngModel)]="form.recurrenceType"></app-input>
-      <app-input *ngIf="form.recurrenceType !== 'None'" name="recurrenceInterval" label="reminders.interval" type="number" min="1" required [(ngModel)]="form.recurrenceInterval"></app-input>
-      <app-input *ngIf="form.recurrenceType !== 'None'" name="recurrenceEndDate" label="reminders.recurrenceEnd" type="date" [(ngModel)]="form.recurrenceEndDate"></app-input>
-      <app-input class="full-field" name="description" label="reminders.notesLabel" type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
-      <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
-      <footer class="drawer-actions"><app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeReminderEditor()">{{ 'common.cancel' | translate }}</app-button><app-button type="submit" [loading]="isSaving" [disabled]="reminderForm.invalid">{{ (editingId ? 'common.save' : 'reminders.create') | translate }}</app-button></footer>
+      <app-input name="reminderType" label="reminders.typeLabel" type="select" [showSelectChevron]="true"
+        [options]="reminderTypeOptions" required [(ngModel)]="form.reminderType"></app-input>
+
+      <div class="date-field">
+        <span class="date-label">{{ 'reminders.dueDateLabel' | translate }}</span>
+        <div class="date-control">
+          <button type="button" class="calendar-trigger" [disabled]="isSaving"
+            [attr.aria-label]="'reminders.chooseDueDate' | translate"
+            aria-haspopup="dialog" (click)="openCalendar(dueDatePicker)">
+            <span>{{ form.dueDate | date:'mediumDate' }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/>
+              <path d="M7 3v4M17 3v4M3 10h18"/></svg>
+          </button>
+          <input #dueDatePicker class="native-date-input" type="date" tabindex="-1" name="dueDate" required
+            [ngModel]="form.dueDate" (ngModelChange)="changeDueDate($event)" />
+        </div>
+        <small>{{ 'reminders.calendarOnlyHint' | translate }}</small>
+      </div>
+
+      <app-input name="recurrenceType" label="reminders.recurrence" type="select"
+        [showSelectChevron]="true" [options]="recurrenceTypes" [(ngModel)]="form.recurrenceType"></app-input>
+      <app-input *ngIf="form.recurrenceType !== 'None'" name="recurrenceInterval"
+        label="reminders.interval" type="number" min="1" required [(ngModel)]="form.recurrenceInterval"></app-input>
+      <div class="date-field" *ngIf="form.recurrenceType !== 'None'">
+        <span class="date-label">{{ 'reminders.recurrenceEnd' | translate }}</span>
+        <div class="date-control">
+          <button type="button" class="calendar-trigger" [disabled]="isSaving"
+            [attr.aria-label]="'reminders.chooseRecurrenceEnd' | translate"
+            aria-haspopup="dialog" (click)="openCalendar(recurrenceEndPicker)">
+            <span>{{ form.recurrenceEndDate ? (form.recurrenceEndDate | date:'mediumDate') : ('reminders.optionalEndDate' | translate) }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/>
+              <path d="M7 3v4M17 3v4M3 10h18"/></svg>
+          </button>
+          <input #recurrenceEndPicker class="native-date-input" type="date" tabindex="-1"
+            name="recurrenceEndDate" [min]="recurrenceEndMin" [ngModel]="form.recurrenceEndDate"
+            (ngModelChange)="changeRecurrenceEndDate($event)" />
+        </div>
+        <small>{{ 'reminders.recurrenceEndHelp' | translate }}</small>
+        <small *ngIf="recurrenceEndInvalid" class="form-error">{{ 'reminders.endMustFollowDue' | translate }}</small>
+      </div>
+      <app-input class="full-field" name="description" label="reminders.notesLabel"
+        type="textarea" [rows]="3" [(ngModel)]="form.description"></app-input>
+      <p class="notification-hint full-field">{{ 'reminders.notificationExpectation' | translate }}</p>
+      <p *ngIf="errorMessage" class="form-error" role="alert">{{ errorMessage | translate }}</p>
+      <footer class="drawer-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving"
+          (buttonClick)="closeReminderEditor()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving"
+          [disabled]="isSaving || reminderForm.invalid || recurrenceEndInvalid">
+          {{ (editingId ? 'common.save' : 'reminders.create') | translate }}
+        </app-button>
+      </footer>
     </form>
 
     <form class="reminder-editor" *ngIf="editorMode === 'expiry'" (ngSubmit)="createExpiryReminder()" #expiryEditor="ngForm">
-      <app-input name="expiryPetId" label="reminders.petLabel" type="select" [options]="petOptions" required [(ngModel)]="expiryForm.petId"></app-input>
-      <app-input name="expiryTitle" label="reminders.expiryTitle" required [(ngModel)]="expiryForm.title"></app-input>
-      <app-input name="expiryDate" label="reminders.expiryDate" type="date" required [(ngModel)]="expiryForm.expiryDate"></app-input>
-      <app-input name="leadDays" label="reminders.leadDays" type="number" min="0" required [(ngModel)]="expiryForm.reminderLeadDays"></app-input>
-      <app-input name="expiryDescription" label="reminders.notesLabel" type="textarea" [rows]="3" [(ngModel)]="expiryForm.description"></app-input>
+      <p class="editor-hint full-field">{{ 'reminders.expiryExplainer' | translate }}</p>
+      <app-input name="expiryPetId" label="reminders.petLabel" type="select" [showSelectChevron]="true"
+        placeholder="reminders.selectPet" [placeholderValue]="null" [options]="petOptions"
+        required [(ngModel)]="expiryForm.petId"></app-input>
+      <app-input name="expiryTitle" label="reminders.expiryTitle"
+        required [(ngModel)]="expiryForm.title"></app-input>
+      <div class="date-field">
+        <span class="date-label">{{ 'reminders.expiryDate' | translate }}</span>
+        <div class="date-control">
+          <button type="button" class="calendar-trigger" [disabled]="isSaving"
+            [attr.aria-label]="'reminders.chooseExpiryDate' | translate"
+            aria-haspopup="dialog" (click)="openCalendar(expiryDatePicker)">
+            <span>{{ expiryForm.expiryDate ? (expiryForm.expiryDate | date:'mediumDate') : ('reminders.chooseExpiryDate' | translate) }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/>
+              <path d="M7 3v4M17 3v4M3 10h18"/></svg>
+          </button>
+          <input #expiryDatePicker class="native-date-input" type="date" tabindex="-1"
+            name="expiryDate" required [ngModel]="expiryForm.expiryDate"
+            (ngModelChange)="changeExpiryDate($event)" />
+        </div>
+      </div>
+      <app-input name="leadDays" label="reminders.leadDays" type="number" min="0"
+        required [(ngModel)]="expiryForm.reminderLeadDays"></app-input>
+      <p class="expiry-preview full-field" *ngIf="expiryNoticeDate">
+        {{ 'reminders.expiryReminderDue' | translate }}:
+        <strong>{{ expiryNoticeDate | date:'mediumDate' }}</strong>
+      </p>
+      <app-input class="full-field" name="expiryDescription" label="reminders.notesLabel"
+        type="textarea" [rows]="3" [(ngModel)]="expiryForm.description"></app-input>
       <p class="privacy-hint">{{ 'reminders.expiryOwnershipCopy' | translate }}</p>
-      <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
-      <footer class="drawer-actions"><app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closeReminderEditor()">{{ 'common.cancel' | translate }}</app-button><app-button type="submit" [loading]="isSaving" [disabled]="expiryEditor.invalid">{{ 'reminders.create' | translate }}</app-button></footer>
+      <p *ngIf="errorMessage" class="form-error" role="alert">{{ errorMessage | translate }}</p>
+      <footer class="drawer-actions">
+        <app-button type="button" variant="secondary" [disabled]="isSaving"
+          (buttonClick)="closeReminderEditor()">{{ 'common.cancel' | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving"
+          [disabled]="isSaving || expiryEditor.invalid">{{ 'reminders.create' | translate }}</app-button>
+      </footer>
     </form>
   </app-modal>
 </section>
