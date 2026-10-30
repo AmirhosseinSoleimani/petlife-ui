@@ -1,45 +1,157 @@
 <section class="page profile-page">
-  <app-page-header title="Customer profile" description="Manage your contact preferences and location details."></app-page-header>
+  <app-page-header title="profile.pageTitle" description="profile.pageSubtitle"></app-page-header>
 
-  <div *ngIf="isLoading" class="state">{{ 'Loading profile...' | translate }}</div>
-  <form *ngIf="!isLoading" class="profile-card" (ngSubmit)="save()" #profileForm="ngForm">
-    <section *ngIf="profile" class="identity">
-      <div><span>{{ 'Name' | translate }}</span><strong>{{ profile.firstName }} {{ profile.lastName }}</strong></div>
-      <div><span>{{ 'Email' | translate }}</span><strong>{{ profile.email || ('Not set' | translate) }} <em>✓ {{ (profile.isEmailVerified ? 'Verified' : 'Pending') | translate }}</em></strong></div>
-      <div><span>{{ 'Mobile' | translate }}</span><strong>{{ profile.mobileNumber || ('Not set' | translate) }} <em>✓ {{ (profile.isMobileVerified ? 'Verified' : 'Pending') | translate }}</em></strong></div>
-      <a routerLink="/verify-contact">{{ 'Manage verification' | translate }}</a>
-    </section>
+  <div *ngIf="isLoading" class="state" role="status">{{ 'Loading profile...' | translate }}</div>
 
-    <h3>{{ 'Location' | translate }}</h3>
-    <p class="geography-help">{{ 'profile.geographyHelp' | translate }}</p>
-    <app-input name="address" label="Address" [(ngModel)]="form.address"></app-input>
-    <div class="grid">
-      <app-input name="postcode" label="Postcode" helper="geographySelector.postcodeHint" [ngModel]="form.postcode" (ngModelChange)="onPostcodeChange($event)"></app-input>
-      <app-input name="suburb" label="Suburb" [ngModel]="form.suburb" (ngModelChange)="onSuburbChange($event)"></app-input>
-      <app-input name="city" label="City" [(ngModel)]="form.city"></app-input>
-      <app-input name="state" label="State" [(ngModel)]="form.state"></app-input>
-      <app-input name="country" label="Country" required [(ngModel)]="form.country"></app-input>
-      <app-input name="preferredContactMethod" label="Preferred contact" type="select" [options]="contactOptions" [(ngModel)]="form.preferredContactMethod"></app-input>
-    </div>
+  <div *ngIf="!isLoading && loadError" class="load-failure">
+    <p class="error" role="alert">{{ loadError | translate }}</p>
+    <app-button type="button" variant="secondary" (buttonClick)="loadProfile()">{{ 'profile.retry' | translate }}</app-button>
+  </div>
 
-    <div *ngIf="isLookingUpGeography" class="lookup-status">{{ 'profile.lookingUpGeography' | translate }}</div>
-    <div *ngIf="!isLookingUpGeography && geographyMatches.length > 1" class="geography-matches">
-      <strong>{{ 'profile.selectGeographyMatch' | translate }}</strong>
-      <div>
-        <button type="button" *ngFor="let area of geographyMatches" (click)="applyGeography(area)">
-          {{ area.displayName || (area.suburb + ' · ' + area.postcode + ' · ' + area.state) }}
-        </button>
+  <ng-container *ngIf="!isLoading && profile as account">
+    <header class="profile-hero">
+      <div class="profile-avatar" aria-hidden="true">{{ profileInitials }}</div>
+      <div class="hero-copy">
+        <p class="hero-eyebrow">{{ 'profile.overview' | translate }}</p>
+        <h2>{{ account.firstName }} {{ account.lastName }}</h2>
+        <p>{{ account.email || account.mobileNumber || ('profile.notSet' | translate) }}</p>
       </div>
-    </div>
+      <span class="role-pill">{{ account.role | translate }}</span>
+    </header>
 
-    <h3>{{ 'Preferences' | translate }}</h3>
-    <div class="checks">
-      <app-input name="notificationByEmail" type="checkbox" label="Email notifications" [(ngModel)]="form.notificationByEmail"></app-input>
-      <app-input name="notificationInApp" type="checkbox" label="In-app notifications" [(ngModel)]="form.notificationInApp"></app-input>
-      <app-input name="marketingConsent" type="checkbox" label="Marketing consent" [(ngModel)]="form.marketingConsent"></app-input>
+    <div class="profile-layout">
+      <main class="profile-main">
+        <form class="profile-panel" (ngSubmit)="save()" #profileForm="ngForm">
+          <div class="panel-heading">
+            <span class="panel-mark" aria-hidden="true">01</span>
+            <div>
+              <h3>{{ 'profile.personalTitle' | translate }}</h3>
+              <p>{{ 'profile.personalHelp' | translate }}</p>
+            </div>
+          </div>
+          <div class="profile-fields">
+            <app-input name="firstName" label="First name" required [disabled]="isSaving"
+              [error]="firstNameCtrl.touched && (!form.firstName.trim() || form.firstName.trim().length > 100) ? 'auth.nameInvalid' : ''"
+              [(ngModel)]="form.firstName" #firstNameCtrl="ngModel"></app-input>
+            <app-input name="lastName" label="Last name" required [disabled]="isSaving"
+              [error]="lastNameCtrl.touched && (!form.lastName.trim() || form.lastName.trim().length > 100) ? 'auth.nameInvalid' : ''"
+              [(ngModel)]="form.lastName" #lastNameCtrl="ngModel"></app-input>
+          </div>
+          <div *ngIf="saveError || saveSuccess" class="form-feedback" aria-live="polite">
+            <p *ngIf="saveError" class="error" role="alert">{{ saveError | translate }}</p>
+            <p *ngIf="saveSuccess" class="success" role="status">{{ saveSuccess | translate }}</p>
+          </div>
+          <div class="form-actions">
+            <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid || !canSaveNames">
+              {{ (isSaving ? 'profile.saving' : 'profile.saveChanges') | translate }}
+            </app-button>
+          </div>
+        </form>
+
+        <section class="profile-panel location-panel" aria-labelledby="location-heading">
+          <div class="panel-heading">
+            <span class="panel-mark" aria-hidden="true">02</span>
+            <div>
+              <h3 id="location-heading">{{ 'profile.locationTitle' | translate }}</h3>
+              <p>{{ 'profile.locationHelp' | translate }}</p>
+            </div>
+          </div>
+          <p id="location-api-note" class="support-note">{{ 'profile.locationUnavailable' | translate }}</p>
+          <div class="profile-fields location-fields" aria-describedby="location-api-note">
+            <div class="span-full">
+              <app-input name="address" label="Address" [ngModel]="''" [disabled]="true"></app-input>
+            </div>
+            <app-input name="postcode" label="Postcode" [ngModel]="''" [disabled]="true"></app-input>
+            <app-input name="suburb" label="Suburb" [ngModel]="''" [disabled]="true"></app-input>
+            <app-input name="city" label="City" [ngModel]="''" [disabled]="true"></app-input>
+            <app-input name="state" label="State" [ngModel]="''" [disabled]="true"></app-input>
+            <div class="span-full">
+              <app-input name="country" label="Country" [ngModel]="''" [disabled]="true"></app-input>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="profile-side">
+        <section class="profile-panel" aria-labelledby="contacts-heading">
+          <div class="panel-heading">
+            <span class="panel-mark" aria-hidden="true">03</span>
+            <div>
+              <h3 id="contacts-heading">{{ 'profile.contactsTitle' | translate }}</h3>
+              <p>{{ 'profile.contactsHelp' | translate }}</p>
+            </div>
+          </div>
+          <div class="contact-list">
+            <div class="contact-item">
+              <div class="contact-copy">
+                <span>{{ 'Email' | translate }}</span>
+                <strong>{{ account.email || ('profile.notSet' | translate) }}</strong>
+              </div>
+              <span class="verification" [class.is-verified]="account.isEmailVerified">
+                {{ (account.isEmailVerified ? 'Verified' : 'Pending') | translate }}
+              </span>
+            </div>
+            <div class="contact-item">
+              <div class="contact-copy">
+                <span>{{ 'Mobile' | translate }}</span>
+                <strong>{{ account.mobileNumber || ('profile.notSet' | translate) }}</strong>
+              </div>
+              <span class="verification" [class.is-verified]="account.isMobileVerified">
+                {{ (account.isMobileVerified ? 'Verified' : 'Pending') | translate }}
+              </span>
+            </div>
+          </div>
+          <a class="profile-link" routerLink="/verify-contact">{{ 'profile.manageVerification' | translate }}</a>
+          <p class="contact-note">{{ 'profile.contactReadOnly' | translate }}</p>
+        </section>
+
+        <section class="profile-panel" aria-labelledby="preferences-heading">
+          <div class="panel-heading">
+            <span class="panel-mark" aria-hidden="true">04</span>
+            <div>
+              <h3 id="preferences-heading">{{ 'profile.communicationTitle' | translate }}</h3>
+              <p>{{ 'profile.communicationHelp' | translate }}</p>
+            </div>
+          </div>
+          <app-input name="preferredContact" label="Preferred contact" type="select"
+            [showSelectChevron]="true" [options]="contactOptions" [ngModel]="''"
+            [disabled]="true"></app-input>
+          <p class="support-note">{{ 'profile.communicationUnavailable' | translate }}</p>
+        </section>
+
+        <section *ngIf="canCloseAccount" class="profile-panel danger-panel" aria-labelledby="danger-heading">
+          <div class="panel-heading">
+            <span class="panel-mark danger-mark" aria-hidden="true">!</span>
+            <div>
+              <h3 id="danger-heading">{{ 'profile.closeTitle' | translate }}</h3>
+              <p>{{ 'profile.closeHelp' | translate }}</p>
+            </div>
+          </div>
+          <p class="close-notice">{{ 'profile.closeNotice' | translate }}</p>
+          <button *ngIf="!showCloseForm" class="close-toggle" type="button" (click)="toggleCloseForm()">
+            {{ 'profile.closeAction' | translate }}
+          </button>
+          <form *ngIf="showCloseForm" class="close-form" (ngSubmit)="closeAccount()" #closeForm="ngForm">
+            <app-input name="closePassword" type="password" label="profile.currentPassword" required
+              autocomplete="current-password" [showPasswordToggle]="true"
+              [disabled]="isClosing" [(ngModel)]="closePassword"></app-input>
+            <label class="acknowledge">
+              <input type="checkbox" name="acknowledge" [disabled]="isClosing" [(ngModel)]="closeAcknowledged">
+              <span>{{ 'profile.acknowledgeClose' | translate }}</span>
+            </label>
+            <p *ngIf="closeError" class="error" role="alert">{{ closeError | translate }}</p>
+            <div class="close-actions">
+              <app-button type="button" variant="secondary" [disabled]="isClosing" (buttonClick)="toggleCloseForm()">
+                {{ 'profile.cancel' | translate }}
+              </app-button>
+              <app-button type="submit" variant="danger" [loading]="isClosing"
+                [disabled]="closeForm.invalid || !closeAcknowledged || !closePassword.trim()">
+                {{ 'profile.confirmClose' | translate }}
+              </app-button>
+            </div>
+          </form>
+        </section>
+      </aside>
     </div>
-    <p *ngIf="errorMessage" class="error">{{ errorMessage | translate }}</p>
-    <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-    <app-button type="submit" [loading]="isSaving" [disabled]="profileForm.invalid">{{ 'Save profile' | translate }}</app-button>
-  </form>
+  </ng-container>
 </section>
