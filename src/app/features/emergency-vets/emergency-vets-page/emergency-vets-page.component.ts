@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { EmergencyVet } from '../../../core/models/customer-core.models';
+import { EmergencyVet, PetTaxonomySpeciesDto } from '../../../core/models/customer-core.models';
+import { environment } from '../../../../environments/environment';
 
 interface EmergencyVetWire extends EmergencyVet {
   emergencyVetId?: string;
@@ -61,6 +62,7 @@ interface EmergencyVetView {
   styleUrls: ['./emergency-vets-page.component.scss']
 })
 export class EmergencyVetsPageComponent implements OnInit {
+  readonly directoryAvailable = environment.emergencyVetsApiEnabled;
   vets: EmergencyVetView[] = [];
   selectedVet: EmergencyVetView | null = null;
   suburbFilter = '';
@@ -82,8 +84,9 @@ export class EmergencyVetsPageComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
+    if (this.directoryAvailable) this.loadVets();
+    else this.errorMessage = 'emergency.directoryUnavailable';
     this.loadSpecies();
-    this.loadVets();
   }
 
   get filteredVets(): EmergencyVetView[] {
@@ -105,6 +108,11 @@ export class EmergencyVetsPageComponent implements OnInit {
   }
 
   loadVets(): void {
+    if (!this.directoryAvailable) {
+      this.vets = [];
+      this.errorMessage = 'emergency.directoryUnavailable';
+      return;
+    }
     this.isLoading = true;
     this.errorMessage = '';
     const params = new URLSearchParams();
@@ -226,9 +234,15 @@ export class EmergencyVetsPageComponent implements OnInit {
   }
 
   private loadSpecies(): void {
-    this.apiService.get<SpeciesResponse>('/pet-species').subscribe({
+    // The independent Pets taxonomy is the sole verified species authority.
+    this.apiService.get<ApiResponse<PetTaxonomySpeciesDto[]>>('/v1/pets/taxonomy/species').subscribe({
       next: (response) => {
-        this.speciesOptions = this.extractSpecies(response);
+        this.speciesOptions = response?.success && Array.isArray(response.data)
+          ? Array.from(new Set(response.data
+              .filter(item => item.isActive && !item.speciesId)
+              .map(item => item.name.trim())
+              .filter(Boolean))).sort((a, b) => a.localeCompare(b))
+          : [];
       },
       error: () => this.speciesOptions = []
     });

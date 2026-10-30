@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -65,11 +66,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   providerRequestsLoadFailed = false;
   visibleQuickActions: QuickActionDefinition[] = [];
   private preferencesSubscription?: Subscription;
+  private readonly imageContentTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  private photoUrls = new Map<string, { objectUrl: string; safeUrl: SafeUrl }>();
+  private photoRequests = new Map<string, Subscription>();
 
   constructor(
     private readonly authService: AuthService,
     private readonly apiService: ApiService,
-    private readonly preferencesService: UserPreferencesService
+    private readonly preferencesService: UserPreferencesService,
+    private readonly sanitizer: DomSanitizer
   ) {
     this.currentUser = this.authService.getCurrentUser();
   }
@@ -99,6 +104,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.preferencesSubscription?.unsubscribe();
+    this.clearPhotoUrls();
   }
 
   get isProvider(): boolean {
@@ -263,8 +269,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       : 'providerRequests.status.unknown';
   }
 
-  profileImageSource(pet: Pet): string | null {
-    return this.apiService.resolvePublicUrl(pet.profileImageUrl);
+  /** Images are private: the bearer-authenticated API returns a Blob, not a public URL. */
+  profileImageSource(pet: Pet): SafeUrl | null {
+    return this.photoUrls.get(pet.id)?.safeUrl || null;
   }
 
   loadAdminDashboard(): void {
@@ -383,19 +390,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadPets(): void {
     this.isLoadingPets = true;
     this.petsLoadFailed = false;
-    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
+    this.apiService.get<ApiResponse<Pet[]>>('/v1/pets').subscribe({
       next: (response) => {
-        if (!response?.success || !Array.isArray(response.data)) { this.petsLoadFailed = true; this.isLoadingPets = false; return; }
+        if (!response?.success || !Array.isArray(response.data)) { this.pets = []; this.clearPhotoUrls(); this.petsLoadFailed = true; this.isLoadingPets = false; return; }
         this.pets = response.data;
+        this.refreshPhotos();
         this.isLoadingPets = false;
         this.loadHealthRecords();
       },
       error: () => {
+        this.pets = [];
+        this.clearPhotoUrls();
         this.petsLoadFailed = true;
         this.healthLoadFailed = true;
         this.isLoadingPets = false;
       }
     });
+  }
+
+  private refreshPhotos(): void {
+    const ids = new Set(this.pets.filter(pet => !!pet.profileImageUrl).map(pet => pet.id));
+    for (const id of Array.from(this.photoUrls.keys())) {
+      if (!ids.has(id)) this.revokePhoto(id);
+    }
+    for (const id of Array.from(this.photoRequests.keys())) {
+      if (!ids.has(id)) { this.photoRequests.get(id)?.unsubscribe(); this.photoRequests.delete(id); }
+    }
+    for (const pet of this.pets) {
+      if (!pet.profileImageUrl || this.photoUrls.has(pet.id) || this.photoRequests.has(pet.id)) continue;
+      const subscription = this.apiService.getPetProfileImage(pet.id).subscribe({
+        next: blob => {
+          this.revokePhoto(pet.id);
+          if (blob.size > 0 && this.imageContentTypes.includes(blob.type.toLowerCase())) {
+            const objectUrl = URL.createObjectURL(blob);
+            this.photoUrls.set(pet.id, {
+              objectUrl,
+              safeUrl: this.sanitizer.bypassSecurityTrustUrl(objectUrl)
+            });
+          }
+          this.photoRequests.delete(pet.id);
+        },
+        error: () => this.photoRequests.delete(pet.id)
+      });
+      if (!subscription.closed) this.photoRequests.set(pet.id, subscription);
+    }
+  }
+
+  private revokePhoto(id: string): void {
+    const photo = this.photoUrls.get(id);
+    if (photo) URL.revokeObjectURL(photo.objectUrl);
+    this.photoUrls.delete(id);
+  }
+
+  private clearPhotoUrls(): void {
+    for (const subscription of this.photoRequests.values()) subscription.unsubscribe();
+    this.photoRequests.clear();
+    for (const id of Array.from(this.photoUrls.keys())) this.revokePhoto(id);
   }
 
   private loadReminders(): void {

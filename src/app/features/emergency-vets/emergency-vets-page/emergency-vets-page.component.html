@@ -3,7 +3,7 @@
 
   <section class="emergency-alert"><span class="alert-icon" aria-hidden="true">!</span><div><strong>{{ 'emergency.alertTitle' | translate }}</strong><p>{{ 'emergency.alertText' | translate }}</p></div></section>
 
-  <section class="filter-toolbar emergency-filters">
+  <section class="filter-toolbar emergency-filters" *ngIf="directoryAvailable">
     <div class="filter-copy"><strong>{{ 'emergency.findNearby' | translate }}</strong><span>{{ filteredVets.length }} {{ 'emergency.results' | translate }}</span></div>
     <div class="filter-fields">
       <app-input name="emergencyCity" label="emergency.cityLabel" placeholder="Sydney" [(ngModel)]="cityFilter"></app-input>

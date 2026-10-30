@@ -80,6 +80,26 @@
 .nav-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .active .nav-icon { color: #fff; background: rgba(255,255,255,.12); }
 .nav-label { min-width: 0; overflow-wrap: anywhere; }
+.nav-submenu {
+  display: grid;
+  gap: 3px;
+  margin-inline-start: 20px;
+  padding-inline-start: 11px;
+  border-inline-start: 1px solid rgba(255,255,255,.18);
+}
+.nav .nav-submenu a {
+  min-height: 42px;
+  grid-template-columns: 13px minmax(0,1fr);
+  font-size: 12px;
+  padding-inline: 8px;
+}
+.nav-sub-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .65;
+}
 .soon { color: #9eb6b8; font-size: 9px; font-weight: 700; }
 
 .workspace { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: stretch; }

@@ -34,7 +34,7 @@ export class NotificationsPageComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     if (!environment.notificationsApiEnabled) {
-      this.errorMessage = 'Notifications service is not available yet.';
+      this.errorMessage = 'notifications.backendNotReady';
       this.isLoading = false;
       return;
     }

@@ -5,6 +5,7 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from '
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { GeographyArea } from '../../../core/models/marketplace.models';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-geography-selector',
@@ -12,6 +13,8 @@ import { GeographyArea } from '../../../core/models/marketplace.models';
   styleUrls: ['./geography-selector.component.scss']
 })
 export class GeographySelectorComponent implements OnInit, OnDestroy {
+  /** No authoritative Geography route exists in the current microservice Gateway. */
+  readonly geographyAvailable = environment.geographyApiEnabled;
   @Input() endpoint = '/geography';
   @Input() label = 'Managed geography';
   @Input() placeholder = 'geographySelector.postcodeFirst';
@@ -42,6 +45,7 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    if (!this.geographyAvailable) return;
     this.subscription = this.search$.pipe(
       debounceTime(220),
       distinctUntilChanged(),
@@ -87,12 +91,13 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
   }
 
   open(): void {
-    if (this.disabled) return;
+    if (this.disabled || !this.geographyAvailable) return;
     this.isOpen = true;
     this.search$.next(this.searchTerm.trim());
   }
 
   onSearch(value: string): void {
+    if (this.disabled || !this.geographyAvailable) return;
     this.searchTerm = value.replace(/[^a-zA-Z0-9\s-]/g, '').slice(0, 120);
     this.isOpen = true;
     this.search$.next(this.searchTerm.trim());
@@ -111,7 +116,7 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
 
   clear(event?: MouseEvent): void {
     event?.stopPropagation();
-    if (this.disabled) return;
+    if (this.disabled || !this.geographyAvailable) return;
     this.selectedId = null;
     this.selectedArea = null;
     this.searchTerm = '';

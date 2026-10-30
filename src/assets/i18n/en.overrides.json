@@ -109,5 +109,10 @@
   "sharing.privateLinkReady": "Private access link created. Only the intended recipient can open it after signing in.",
   "sharing.privateCreated": "Private access granted.",
   "sharing.revokeConfirmTitle": "Revoke shared access?",
-  "sharing.linkShownOnce": "Save this link now. The full access link is shown only once."
+  "sharing.linkShownOnce": "Save this link now. The full access link is shown only once.",
+  "nav.requestsGroup": "Requests",
+  "requests.entryOptions": "Request types",
+  "geographySelector.backendUnavailable": "Location filtering is temporarily unavailable until the Geography API is connected.",
+  "emergency.directoryUnavailable": "The emergency veterinary directory API is not available on this server yet. For urgent care, contact a local emergency veterinary clinic directly.",
+  "notifications.backendNotReady": "Notifications are not active on this server yet. The backend service and Gateway route need to be enabled."
 }

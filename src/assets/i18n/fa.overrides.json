@@ -109,5 +109,10 @@
   "sharing.privateLinkReady": "دسترسی خصوصی ایجاد شد؛ فقط گیرنده بعد از ورود می‌تواند آن را باز کند.",
   "sharing.privateCreated": "دسترسی خصوصی ایجاد شد.",
   "sharing.revokeConfirmTitle": "لغو دسترسی اشتراکی؟",
-  "sharing.linkShownOnce": "این لینک فقط یک‌بار نمایش داده می‌شود؛ آن را ذخیره کنید."
+  "sharing.linkShownOnce": "این لینک فقط یک‌بار نمایش داده می‌شود؛ آن را ذخیره کنید.",
+  "nav.requestsGroup": "درخواست‌ها",
+  "requests.entryOptions": "انواع درخواست",
+  "geographySelector.backendUnavailable": "فیلتر موقعیت مکانی تا زمان اتصال API جغرافیا در دسترس نیست.",
+  "emergency.directoryUnavailable": "API مراکز دامپزشکی اورژانسی هنوز روی سرور فعال نیست. برای موارد فوری مستقیماً با نزدیک‌ترین مرکز دامپزشکی اورژانسی تماس بگیرید.",
+  "notifications.backendNotReady": "اعلان‌ها هنوز روی این سرور فعال نشده‌اند و نیازمند فعال‌سازی سرویس و مسیر Gateway در بک‌اند هستند."
 }

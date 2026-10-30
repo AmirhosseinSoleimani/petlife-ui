@@ -1,4 +1,4 @@
-<div class="geography-field" [class.disabled]="disabled">
+<div class="geography-field" [class.disabled]="disabled || !geographyAvailable">
   <label class="field-label">
     <span>{{ label | translate }}<strong *ngIf="required" aria-hidden="true">*</strong></span>
     <small *ngIf="helper">{{ helper | translate }}</small>
@@ -9,7 +9,7 @@
       *ngIf="selectedId && selectedLabel"
       type="button"
       class="selected-value"
-      [disabled]="disabled"
+      [disabled]="disabled || !geographyAvailable"
       (click)="open()"
     >
       <span class="pin" aria-hidden="true">⌖</span>
@@ -32,13 +32,13 @@
           inputmode="numeric"
           [value]="searchTerm"
           [placeholder]="placeholder | translate"
-          [disabled]="disabled"
+          [disabled]="disabled || !geographyAvailable"
           autocomplete="postal-code"
           (focus)="open()"
           (input)="onSearch($any($event.target).value)"
         />
       </label>
-      <button *ngIf="selectedId" type="button" class="clear-button" [disabled]="disabled" (click)="clear($event)">
+      <button *ngIf="selectedId" type="button" class="clear-button" [disabled]="disabled || !geographyAvailable" (click)="clear($event)">
         {{ 'common.clear' | translate }}
       </button>
     </div>
@@ -70,4 +70,7 @@
       </div>
     </div>
   </div>
+  <p *ngIf="!geographyAvailable" class="geography-unavailable" role="status">
+    {{ 'geographySelector.backendUnavailable' | translate }}
+  </p>
 </div>

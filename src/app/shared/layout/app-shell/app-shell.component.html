@@ -19,8 +19,8 @@
     </div>
 
     <nav class="nav">
+      <ng-container *ngFor="let item of navItems">
       <a
-        *ngFor="let item of navItems"
         [routerLink]="item.enabled ? item.path : null"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
@@ -41,6 +41,16 @@
         <span class="nav-label">{{ item.labelKey | translate }}</span>
         <span *ngIf="!item.enabled" class="soon">{{ 'common.soon' | translate }}</span>
       </a>
+      <div *ngIf="item.children?.length" class="nav-submenu"
+           [attr.aria-label]="item.labelKey | translate">
+        <a *ngFor="let child of item.children" [routerLink]="child.enabled ? child.path : null"
+           routerLinkActive="active" [class.disabled]="!child.enabled"
+           (click)="child.enabled && closeDrawer()">
+          <span class="nav-sub-icon" aria-hidden="true"></span>
+          <span class="nav-label">{{ child.labelKey | translate }}</span>
+        </a>
+      </div>
+      </ng-container>
     </nav>
   </aside>
 

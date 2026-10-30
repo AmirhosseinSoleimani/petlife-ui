@@ -55,3 +55,13 @@
   .replace { grid-column: 2; justify-self: start; }
   .option-panel { max-height: 220px; }
 }
+
+.geography-unavailable {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}

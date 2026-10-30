@@ -3,6 +3,11 @@
     <a class="header-action" routerLink="/services">{{ 'requests.newRequest' | translate }}</a>
   </app-page-header>
 
+  <nav class="request-entry-links" [attr.aria-label]="'requests.entryOptions' | translate">
+    <a routerLink="/services">{{ 'nav.services' | translate }}</a>
+    <a routerLink="/emergency-vets">{{ 'nav.emergencyVets' | translate }}</a>
+  </nav>
+
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
   <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
