@@ -63,6 +63,83 @@ describe('Customer profile / Users identity contract', () => {
     expect(component.profile).toBeNull();
   });
 
+  describe('profile address API', () => {
+    const stored: IdentityProfile = { ...identity, address: '15 Example Street', suburb: 'Richmond',
+      postcode: '3121', city: 'Melbourne', state: 'Victoria', country: 'Australia' };
+
+    it('hydrates all six optional fields and prevents unchanged submissions', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: stored }));
+      component.loadProfile();
+      expect(component.addressSupported).toBeTrue();
+      expect(component.addressForm.address).toBe('15 Example Street');
+      expect(component.addressForm.postcode).toBe('3121');
+      expect(component.addressForm.suburb).toBe('Richmond');
+      expect(component.addressForm.city).toBe('Melbourne');
+      expect(component.addressForm.state).toBe('Victoria');
+      expect(component.addressForm.country).toBe('Australia');
+      component.saveAddress();
+      expect(api.put).not.toHaveBeenCalled();
+    });
+
+    it('disables writes for old backend profiles', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: identity }));
+      component.loadProfile();
+      component.addressForm.address = 'test';
+      component.saveAddress();
+      expect(component.addressSupported).toBeFalse();
+      expect(api.put).not.toHaveBeenCalled();
+    });
+
+    it('accepts null optional address properties as empty inputs', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: { ...stored, address: null } }));
+      component.loadProfile();
+      expect(component.addressForm.address).toBe('');
+    });
+
+    it('saves the exact six-field payload, allowing explicit clearing with null', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: stored }));
+      api.put.and.returnValue(of(null));
+      component.loadProfile();
+      component.addressForm.address = ' 42 New Street ';
+      component.addressForm.postcode = '';
+      component.saveAddress();
+      expect(api.put).toHaveBeenCalledOnceWith('/v1/identity/profile/address', {
+        address: '42 New Street', suburb: 'Richmond', postcode: null,
+        city: 'Melbourne', state: 'Victoria', country: 'Australia'
+      });
+      expect(component.addressSuccess).toBe('profile.addressSaveSuccess');
+      expect(component.canSaveAddress).toBeFalse();
+    });
+
+    it('keeps the dirty form and reports errors when the API fails', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: stored }));
+      api.put.and.returnValue(throwError(() => new Error('Failed')));
+      component.loadProfile();
+      component.addressForm.city = 'Geelong';
+      component.saveAddress();
+      expect(component.addressForm.city).toBe('Geelong');
+      expect(component.addressError).toBe('profile.addressSaveError');
+      expect(component.canSaveAddress).toBeTrue();
+      component.revertAddress();
+      expect(component.addressForm.city).toBe('Melbourne');
+    });
+
+    it('does not lose address state when name-only PUT returns the old DTO', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: stored }));
+      api.put.and.returnValue(of({ success: true, data: { ...identity, firstName: 'New' } }));
+      component.loadProfile();
+      component.form.firstName = 'New';
+      component.save();
+      expect(component.profile?.address).toBe('15 Example Street');
+    });
+  });
+
   it('closes a customer account only after password and explicit acknowledgment', () => {
     const { component, api, auth } = setup();
     api.get.and.returnValue(of({ success: true, data: identity }));

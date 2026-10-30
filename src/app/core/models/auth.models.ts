@@ -97,9 +97,36 @@ export interface IdentityProfile {
   status: string;
   isEmailVerified: boolean;
   isMobileVerified: boolean;
+  // Available after the Users service address extension is deployed.
+  address?: string | null;
+  suburb?: string | null;
+  postcode?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 }
 
 export interface UpdateIdentityProfileRequest {
   firstName: string;
   lastName: string;
+}
+
+/** Editable form values are always strings, even for an empty optional field. */
+export interface IdentityAddressForm {
+  address: string;
+  suburb: string;
+  postcode: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
+/** PUT /v1/identity/profile/address; null clears an optional address field. */
+export interface UpdateIdentityAddressRequest {
+  address?: string | null;
+  suburb?: string | null;
+  postcode?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 }
