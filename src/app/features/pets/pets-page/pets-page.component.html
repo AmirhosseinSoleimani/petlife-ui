@@ -140,16 +140,47 @@
         </div>
       </section>
 
+      </div>
+
       <section class="editor-section image-editor">
         <h3>{{ 'pets.profileImage' | translate }}</h3>
-        <ng-container *ngIf="editingPet as petBeingEdited">
-          <div class="current-profile-image" *ngIf="profileImageSource(petBeingEdited) as currentImage">
-            <img [src]="currentImage" [alt]="'pets.currentProfileImage' | translate" />
+        <p class="photo-guidance">{{ 'pets.imageHint' | translate }}</p>
+        <div class="photo-control">
+          <div *ngIf="editingPet as petBeingEdited" class="current-profile-image">
+            <img *ngIf="profileImageSource(petBeingEdited) as src" [src]="src"
+              [alt]="'pets.currentProfileImage' | translate" />
           </div>
-        </ng-container>
-        <p class="pet-image-pending" role="status">{{ 'pets.photoIntegrationPending' | translate }}</p>
+          <app-file-upload #petImageUpload
+            [accept]="profileImageExtensions.join(',')"
+            [allowedExtensions]="profileImageExtensions"
+            [allowedContentTypes]="profileImageContentTypes"
+            [allowedTypesLabelKey]="'files.petImageTypes'"
+            [maxSizeBytes]="profileImageMaxSize"
+            [loading]="isSaving"
+            [showImagePreview]="true"
+            (filesChange)="onPetImageFilesChange($event)">
+          </app-file-upload>
+        </div>
+        <div *ngIf="isUploadingImage" class="pet-upload-progress"
+          role="progressbar" [attr.aria-valuenow]="uploadProgress" aria-valuemin="0" aria-valuemax="100"
+          [attr.aria-label]="'pets.uploadProgress' | translate">
+          <svg class="pet-upload-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring-track" cx="50" cy="50" r="42" />
+            <circle class="ring-fill" cx="50" cy="50" r="42"
+              [attr.stroke-dasharray]="264"
+              [attr.stroke-dashoffset]="264 * (100 - uploadProgress) / 100" />
+          </svg>
+          <span class="pet-upload-percent">{{ uploadProgress }}%</span>
+          <span class="pet-upload-label">{{ 'pets.uploadingPhoto' | translate }}</span>
+        </div>
+        <p *ngIf="photoUploadFailed" class="form-error" role="alert">
+          {{ 'pets.imageUploadFailed' | translate }}
+        </p>
+        <app-button *ngIf="editingPet?.profileImageUrl" type="button"
+          variant="danger" [disabled]="isSaving" (buttonClick)="removeProfileImage()">
+          {{ 'pets.removeProfileImage' | translate }}
+        </app-button>
       </section>
-      </div>
 
       <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
       <footer class="editor-actions">

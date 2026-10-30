@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
@@ -16,6 +17,7 @@ import {
   mapPetTaxonomySpecies
 } from '../../../core/models/customer-core.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { AppFileUploadComponent } from '../../../shared/components/app-file-upload/app-file-upload.component';
 
 const emptyPetForm = (): PetPayload => ({
   petName: '', species: '', breed: '', speciesId: null, subgroupId: null, breedId: null,
@@ -45,7 +47,17 @@ export function toQuickPetPayload(form: PetPayload): { petName: string; species:
   templateUrl: './pets-page.component.html',
   styleUrls: ['./pets-page.component.scss']
 })
-export class PetsPageComponent implements OnInit {
+export class PetsPageComponent implements OnInit, OnDestroy {
+  @ViewChild('petImageUpload') petImageUpload?: AppFileUploadComponent;
+  readonly profileImageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+  readonly profileImageContentTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  readonly profileImageMaxSize = 5 * 1024 * 1024 - 1;
+  selectedPetImage: File | null = null;
+  uploadProgress = 0;
+  isUploadingImage = false;
+  photoUploadFailed = false;
+  private photoUrls = new Map<string, string>();
+  private photoRequests = new Map<string, Subscription>();
   readonly genderOptions = PET_GENDER_OPTIONS;
   readonly desexedOptions = ['Unknown', 'Not desexed', 'Desexed'];
   readonly reproductiveOptions = ['Unknown', 'Intact', 'Pregnant', 'Breeding', 'Not applicable'];
@@ -65,6 +77,8 @@ export class PetsPageComponent implements OnInit {
   isPetEditorOpen = false;
 
   constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
+
+  ngOnDestroy(): void { this.clearPhotoUrls(); }
 
   ngOnInit(): void {
     this.loadTaxonomy();
@@ -163,6 +177,7 @@ export class PetsPageComponent implements OnInit {
           return;
         }
         this.pets = response.data;
+        this.refreshPhotos();
       },
       error: () => {
         this.pets = [];
@@ -209,8 +224,12 @@ export class PetsPageComponent implements OnInit {
     const editingPetId = this.editingPetId;
     const isEditing = !!editingPetId;
     this.isSaving = true;
+    this.uploadProgress = 0;
+    this.isUploadingImage = false;
+    this.photoUploadFailed = false;
     this.errorMessage = '';
     this.successMessage = '';
+    const imageFile = this.selectedPetImage;
     const request = editingPetId
       ? this.apiService.put<ApiResponse<Pet>>(`/v1/pets/${editingPetId}`, this.form)
       : this.apiService.post<ApiResponse<Pet>>('/v1/pets', toQuickPetPayload(this.form));
@@ -222,7 +241,11 @@ export class PetsPageComponent implements OnInit {
           this.isSaving = false;
           return;
         }
-        this.finishPetSave(isEditing);
+        if (imageFile) {
+          this.uploadPhoto(response.data.id, imageFile, isEditing);
+        } else {
+          this.finishPetSave(isEditing);
+        }
       },
       error: (error: { error?: { message?: string; errors?: string[] } }) => {
         this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Unable to save pet.';
@@ -235,6 +258,7 @@ export class PetsPageComponent implements OnInit {
     this.resetForm();
     this.errorMessage = '';
     this.successMessage = '';
+    this.clearPhotoSelection();
     this.isPetEditorOpen = true;
   }
 
@@ -243,6 +267,7 @@ export class PetsPageComponent implements OnInit {
   }
 
   editPet(pet: Pet): void {
+    this.clearPhotoSelection();
     this.isAdditionalDetailsOpen = false;
     this.editingPetId = pet.id;
     const matchedSpeciesId = pet.speciesId || this.species.find((item) => item.name.toLowerCase() === pet.species.toLowerCase())?.id || null;
@@ -286,7 +311,104 @@ export class PetsPageComponent implements OnInit {
   }
 
   profileImageSource(pet: Pet): string | null {
-    return this.apiService.resolvePublicUrl(pet.profileImageUrl);
+    return this.photoUrls.get(pet.id) || null;
+  }
+
+  onPetImageFilesChange(files: File[]): void {
+    this.selectedPetImage = files[0] || null;
+    this.photoUploadFailed = false;
+    this.uploadProgress = 0;
+  }
+
+  removeProfileImage(): void {
+    const petId = this.editingPetId;
+    if (!petId || this.isSaving) return;
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.apiService.deletePetProfileImage<ApiResponse<unknown>>(petId).subscribe({
+      next: response => {
+        this.isSaving = false;
+        if (!response?.success) { this.errorMessage = response?.message || 'pets.imageRemoveFailed'; return; }
+        this.successMessage = 'pets.imageRemoved';
+        this.revokePhoto(petId);
+        this.loadPets();
+      },
+      error: () => { this.isSaving = false; this.errorMessage = 'pets.imageRemoveFailed'; }
+    });
+  }
+
+  private uploadPhoto(petId: string, file: File, isEditing: boolean): void {
+    this.isUploadingImage = true;
+    this.uploadProgress = 0;
+    this.apiService.uploadPetProfileImage<ApiResponse<{ profileImageUrl: string }>>(
+      petId, file, percent => this.uploadProgress = percent
+    ).subscribe({
+      next: response => {
+        this.isUploadingImage = false;
+        this.isSaving = false;
+        if (!response?.success) {
+          this.photoUploadFailed = true;
+          this.errorMessage = response?.message || 'pets.imageUploadFailed';
+          this.successMessage = isEditing ? 'Pet profile updated.' : 'pets.quickCreateSuccess';
+          this.editingPetId = petId;
+          this.loadPets();
+          return;
+        }
+        this.uploadProgress = 100;
+        this.revokePhoto(petId);
+        this.finishPetSave(isEditing);
+      },
+      error: () => {
+        this.isUploadingImage = false;
+        this.isSaving = false;
+        this.photoUploadFailed = true;
+        this.editingPetId = petId;
+        this.errorMessage = 'pets.imageUploadFailed';
+        this.successMessage = isEditing ? 'Pet profile updated.' : 'pets.quickCreateSuccess';
+        this.loadPets();
+      }
+    });
+  }
+
+  private refreshPhotos(): void {
+    const ids = new Set(this.pets.filter(pet => !!pet.profileImageUrl).map(pet => pet.id));
+    for (const id of Array.from(this.photoUrls.keys())) {
+      if (!ids.has(id)) this.revokePhoto(id);
+    }
+    for (const id of Array.from(this.photoRequests.keys())) {
+      if (!ids.has(id)) { this.photoRequests.get(id)?.unsubscribe(); this.photoRequests.delete(id); }
+    }
+    for (const pet of this.pets) {
+      if (!pet.profileImageUrl || this.photoUrls.has(pet.id) || this.photoRequests.has(pet.id)) continue;
+      const sub = this.apiService.getPetProfileImage(pet.id).subscribe({
+        next: blob => {
+          this.revokePhoto(pet.id);
+          this.photoUrls.set(pet.id, URL.createObjectURL(blob));
+          this.photoRequests.delete(pet.id);
+        },
+        error: () => this.photoRequests.delete(pet.id)
+      });
+      if (!sub.closed) this.photoRequests.set(pet.id, sub);
+    }
+  }
+
+  private revokePhoto(id: string): void {
+    const url = this.photoUrls.get(id);
+    if (url) URL.revokeObjectURL(url);
+    this.photoUrls.delete(id);
+  }
+
+  private clearPhotoUrls(): void {
+    for (const sub of this.photoRequests.values()) sub.unsubscribe();
+    this.photoRequests.clear();
+    for (const id of Array.from(this.photoUrls.keys())) this.revokePhoto(id);
+  }
+
+  private clearPhotoSelection(): void {
+    this.selectedPetImage = null;
+    this.uploadProgress = 0;
+    this.photoUploadFailed = false;
+    this.petImageUpload?.clearSelection();
   }
 
   resetForm(): void {
@@ -294,6 +416,7 @@ export class PetsPageComponent implements OnInit {
     this.form = emptyPetForm();
     this.dynamicFields = [];
     this.isAdditionalDetailsOpen = false;
+    this.clearPhotoSelection();
   }
 
   private finishPetSave(isEditing: boolean): void {

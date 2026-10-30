@@ -71,5 +71,11 @@
   "pets.optionalDetailsHelp": "Medical, behaviour and contact details are optional. Add them whenever you need.",
   "pets.additionalIdentity": "More about your pet",
   "pets.photoIntegrationPending": "Existing photos remain visible. The older Pets API supports image uploads, but photo changes are not yet connected to the independent Pets API. An updated backend route is required.",
-  "pets.quickCreateSuccess": "Pet added. You can complete the profile later using Edit / complete profile."
+  "pets.quickCreateSuccess": "Pet added. You can complete the profile later using Edit / complete profile.",
+  "pets.imageHint": "Choose a JPEG, PNG or WebP image under 5 MB. A preview appears before uploading.",
+  "pets.uploadProgress": "Image upload progress",
+  "pets.uploadingPhoto": "Uploading image",
+  "pets.imageUploadFailed": "Pet details were saved, but image upload failed. You can retry.",
+  "pets.imageRemoveFailed": "Unable to remove pet image.",
+  "pets.imageRemoved": "Pet image removed."
 }
