@@ -242,8 +242,8 @@ export class ApiService {
 
   private buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    if (normalizedEndpoint.startsWith('/v1/')) {
-      const origin = this.baseUrl.endsWith('/api') ? this.baseUrl.slice(0, -4) : this.baseUrl;
+    if (normalizedEndpoint.startsWith('/v1/') || normalizedEndpoint.startsWith('/api/')) {
+      const origin = this.baseUrl.replace(/\/api\/?$/i, '');
       return `${origin}${normalizedEndpoint}`;
     }
     const path = normalizedEndpoint === '/pets' || normalizedEndpoint.startsWith('/pets?') ||

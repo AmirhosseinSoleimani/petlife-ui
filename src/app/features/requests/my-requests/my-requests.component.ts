@@ -131,7 +131,7 @@ export class MyRequestsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.apiService.get<ApiResponse<ServiceRequest[]>>('/service-requests/my').subscribe({
+    this.apiService.get<ApiResponse<ServiceRequest[]>>('/v1/service-requests/my').subscribe({
       next: (response) => {
         this.requests = response.data || [];
         this.isLoading = false;

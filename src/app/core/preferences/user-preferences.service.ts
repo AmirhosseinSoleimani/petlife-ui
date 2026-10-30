@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+import { BehaviorSubject, Observable, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
 
 import { ApiService } from '../api/api.service';
 import { AuthService } from '../auth/auth.service';
 import { ApiResponse } from '../models/api-response.model';
+import { environment } from '../../../environments/environment';
 import {
   CUSTOMER_QUICK_ACTIONS,
   CUSTOMER_DEFAULT_QUICK_ACTIONS,
@@ -46,9 +47,18 @@ export class UserPreferencesService {
       return of(this.current);
     }
 
-    this.loadingRequest = this.apiService.get<ApiResponse<UserPreferences>>('/user-preferences/me').pipe(
-      map((response) => this.normalize(response.data)),
-      catchError(() => of(this.createDefaults())),
+    if (!environment.preferencesApiEnabled) {
+      // Local appearance defaults are not remote persistence.
+      return of(this.current);
+    }
+
+    this.loadingRequest = this.apiService.get<ApiResponse<UserPreferences>>('/v1/identity/preferences/me').pipe(
+      map((response) => {
+        if (!response?.success || !response.data) {
+          throw new Error(response?.message || 'User preferences unavailable.');
+        }
+        return this.normalize(response.data);
+      }),
       tap((preferences) => {
         this.loaded = true;
         this.subject.next(preferences);
@@ -61,14 +71,16 @@ export class UserPreferencesService {
   }
 
   save(request: UpdateUserPreferencesRequest): Observable<UserPreferences> {
-    return this.apiService.put<PreferencesSaveResponse>('/user-preferences/me', request).pipe(
-      map((response) => {
-        if (this.isApiResponse(response) && response.success === false) {
-          throw new Error(response.message || 'Could not save preferences.');
-        }
+    if (!environment.preferencesApiEnabled) {
+      return throwError(() => new Error('User preferences persistence is not enabled.'));
+    }
 
-        const responseData = this.isApiResponse(response) ? response.data : response;
-        return this.mergeSuccessfulSave(request, responseData || undefined);
+    return this.apiService.put<PreferencesSaveResponse>('/v1/identity/preferences/me', request).pipe(
+      map((response) => {
+        if (!this.isApiResponse(response) || response.success !== true || !response.data) {
+          throw new Error(this.isApiResponse(response) ? response.message || 'Could not save preferences.' : 'Invalid preferences response.');
+        }
+        return this.mergeSuccessfulSave(request, response.data);
       }),
       tap((preferences) => {
         this.loaded = true;

@@ -400,7 +400,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadReminders(): void {
     this.isLoadingReminders = true;
     this.remindersLoadFailed = false;
-    this.apiService.get<ApiResponse<Reminder[]>>('/reminders/upcoming').subscribe({
+    this.apiService.get<ApiResponse<Reminder[]>>('/v1/reminders/upcoming').subscribe({
       next: (response) => {
         this.reminders = response.data || [];
         this.isLoadingReminders = false;
@@ -441,7 +441,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadRequests(): void {
     this.isLoadingRequests = true;
     this.requestsLoadFailed = false;
-    this.apiService.get<ApiResponse<ServiceRequest[]>>('/service-requests/my').subscribe({
+    this.apiService.get<ApiResponse<ServiceRequest[]>>('/v1/service-requests/my').subscribe({
       next: (response) => {
         this.requests = response.data || [];
         this.isLoadingRequests = false;

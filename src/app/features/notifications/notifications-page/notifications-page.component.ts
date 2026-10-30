@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { InAppNotification } from '../../../core/models/marketplace.models';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-notifications-page',
@@ -32,10 +33,20 @@ export class NotificationsPageComponent implements OnInit {
   load(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    if (!environment.notificationsApiEnabled) {
+      this.errorMessage = 'Notifications service is not available yet.';
+      this.isLoading = false;
+      return;
+    }
     const query = this.unreadOnly ? '?unreadOnly=true&take=100' : '?take=100';
-    this.api.get<ApiResponse<InAppNotification[]>>(`/notifications${query}`).subscribe({
+    this.api.get<ApiResponse<InAppNotification[]>>(`/v1/notifications${query}`).subscribe({
       next: (response) => {
-        this.notifications = response.data || [];
+        if (!response.success || !Array.isArray(response.data)) {
+          this.errorMessage = response.message || 'Notifications service is unavailable.';
+          this.isLoading = false;
+          return;
+        }
+        this.notifications = response.data;
         this.isLoading = false;
       },
       error: (error) => {
@@ -56,8 +67,12 @@ export class NotificationsPageComponent implements OnInit {
       return;
     }
 
-    this.api.post<ApiResponse<InAppNotification>>(`/notifications/${item.id}/read`, {}).subscribe({
+    this.api.post<ApiResponse<InAppNotification>>(`/v1/notifications/${item.id}/read`, {}).subscribe({
       next: (response) => {
+        if (!response.success || !response.data) {
+          this.errorMessage = response.message || 'Notification update failed.';
+          return;
+        }
         const updated = response.data;
         this.notifications = this.notifications.map((notification) =>
           notification.id === item.id ? (updated || { ...notification, isRead: true, readAt: new Date().toISOString() }) : notification
@@ -73,8 +88,12 @@ export class NotificationsPageComponent implements OnInit {
     if (!this.unreadCount || this.isUpdating) return;
     this.isUpdating = true;
     this.errorMessage = '';
-    this.api.post<ApiResponse<unknown>>('/notifications/read-all', {}).subscribe({
-      next: () => {
+    this.api.post<ApiResponse<unknown>>('/v1/notifications/read-all', {}).subscribe({
+      next: (response) => {
+        if (!response.success) {
+          this.errorMessage = response.message || 'Notification update failed.';
+          return;
+        }
         const now = new Date().toISOString();
         this.notifications = this.notifications.map((item) => ({ ...item, isRead: true, readAt: item.readAt || now }));
         window.dispatchEvent(new CustomEvent('petlife:notifications-changed'));

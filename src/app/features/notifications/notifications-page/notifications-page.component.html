@@ -13,7 +13,7 @@
   <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
   <app-loading-state *ngIf="isLoading" message="notifications.loading"></app-loading-state>
 
-  <div *ngIf="!isLoading && !notifications.length" class="state">
+  <div *ngIf="!isLoading && !errorMessage && !notifications.length" class="state">
     <h3>{{ 'notifications.emptyTitle' | translate }}</h3>
     <p>{{ 'notifications.emptyDescription' | translate }}</p>
   </div>

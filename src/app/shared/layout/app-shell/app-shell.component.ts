@@ -6,6 +6,7 @@ import { AppLanguage, I18nService, SUPPORTED_LANGUAGES } from '../../../core/i18
 import { AuthUser } from '../../../core/models/auth.models';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { UnreadNotificationCount } from '../../../core/models/marketplace.models';
+import { environment } from '../../../../environments/environment';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 interface NavItem {
@@ -114,8 +115,18 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
 
   loadUnreadNotifications(): void {
-    this.apiService.get<ApiResponse<UnreadNotificationCount>>('/notifications/unread-count').subscribe({
-      next: (response) => this.unreadNotificationCount = response.data?.count || 0,
+    if (!environment.notificationsApiEnabled) {
+      this.unreadNotificationCount = 0;
+      return;
+    }
+    this.apiService.get<ApiResponse<UnreadNotificationCount>>('/v1/notifications/unread-count').subscribe({
+      next: (response) => {
+        if (!response.success || typeof response.data?.count !== 'number') {
+          this.unreadNotificationCount = 0;
+          return;
+        }
+        this.unreadNotificationCount = response.data.count;
+      },
       error: () => this.unreadNotificationCount = 0
     });
   }

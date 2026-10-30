@@ -4,7 +4,10 @@
 
 export const environment = {
   production: false,
-  apiBaseUrl: '/api'
+  apiBaseUrl: '/api',
+  // Enable separately only after production Gateway/Host and data-owner verification.
+  notificationsApiEnabled: false,
+  preferencesApiEnabled: false
 };
 
 /*
