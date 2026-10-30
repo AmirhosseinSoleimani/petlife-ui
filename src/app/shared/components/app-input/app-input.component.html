@@ -62,6 +62,7 @@
   
     <select
       *ngIf="isSelect && !isCheckbox"
+      [class.with-chevron]="showSelectChevron"
       [required]="isRequired"
       [disabled]="isDisabled"
       [ngModel]="value"

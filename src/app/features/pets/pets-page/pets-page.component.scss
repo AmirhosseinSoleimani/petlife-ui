@@ -68,3 +68,23 @@
 .pet-upload-percent { grid-row: 1; grid-column: 1; font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .pet-upload-label { font-size: var(--font-size-caption); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .pet-upload-ring .ring-fill { transition: none; } }
+
+/* Neutralize the old global editor footer offsets inside the Pets modal only. */
+:host .pet-editor { min-width: 0; max-width: 100%; }
+:host .pet-editor > .editor-actions {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 3;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-md) 0 calc(var(--space-md) + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+}
+:host .pet-editor > .editor-actions app-button { min-width: 0; max-width: 100%; }
+@media (max-width: 560px) {
+  :host .pet-editor > .editor-actions { flex-direction: column-reverse; align-items: stretch; }
+  :host .pet-editor > .editor-actions app-button { width: 100%; }
+}

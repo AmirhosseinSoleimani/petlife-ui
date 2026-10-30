@@ -81,5 +81,8 @@
   "pets.speciesPlaceholder": "Select a species",
   "pets.speciesLoading": "Loading species...",
   "pets.retrySpecies": "Retry loading species",
-  "pets.speciesRequired": "Choose a species from the list to continue."
+  "pets.speciesRequired": "Choose a species from the list to continue.",
+  "pets.deleteConfirmTitle": "Delete pet?",
+  "pets.deleteConfirmMessage": "Are you sure you want to delete this pet? This action cannot be undone.",
+  "pets.deleteConfirmAction": "Delete pet"
 }

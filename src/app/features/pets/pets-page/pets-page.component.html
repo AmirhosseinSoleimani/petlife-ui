@@ -40,7 +40,7 @@
         <h3>{{ 'Identity' | translate }}</h3>
         <div class="form-grid">
           <app-input name="petName" label="Pet name" required [(ngModel)]="form.petName"></app-input>
-          <app-input name="speciesId" label="Species" type="select"
+          <app-input name="speciesId" label="Species" type="select" [showSelectChevron]="true"
             placeholder="pets.speciesPlaceholder" [placeholderValue]="null" required
             [options]="speciesOptions" [ngModel]="form.speciesId"
             (ngModelChange)="onSpeciesChange($event)"></app-input>

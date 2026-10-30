@@ -1,8 +1,10 @@
 import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 interface SelectedFileView {
   file: File;
-  previewUrl: string | null;
+  previewUrl: SafeUrl | null;
+  objectUrl: string | null;
 }
 
 @Component({
@@ -11,6 +13,7 @@ interface SelectedFileView {
   styleUrls: ['./app-file-upload.component.scss']
 })
 export class AppFileUploadComponent implements OnDestroy {
+  constructor(private readonly sanitizer: DomSanitizer) {}
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   @Input() accept = '';
@@ -52,11 +55,13 @@ export class AppFileUploadComponent implements OnDestroy {
         continue;
       }
 
+      const objectUrl = this.showImagePreview && file.type.startsWith('image/')
+        ? URL.createObjectURL(file)
+        : null;
       this.selectedFileViews.push({
         file,
-        previewUrl: this.showImagePreview && file.type.startsWith('image/')
-          ? URL.createObjectURL(file)
-          : null
+        objectUrl,
+        previewUrl: objectUrl ? this.sanitizer.bypassSecurityTrustUrl(objectUrl) : null
       });
     }
 
@@ -69,7 +74,7 @@ export class AppFileUploadComponent implements OnDestroy {
 
   removeSelectedFile(index: number): void {
     const [removed] = this.selectedFileViews.splice(index, 1);
-    this.revokePreview(removed?.previewUrl);
+    this.revokePreview(removed?.objectUrl);
     this.errorKey = '';
     if (!this.selectedFileViews.length && this.fileInput) {
       this.fileInput.nativeElement.value = '';
@@ -112,7 +117,7 @@ export class AppFileUploadComponent implements OnDestroy {
   }
 
   private clearSelectedFiles(): void {
-    this.selectedFileViews.forEach((item) => this.revokePreview(item.previewUrl));
+    this.selectedFileViews.forEach((item) => this.revokePreview(item.objectUrl));
     this.selectedFileViews = [];
   }
 

@@ -81,5 +81,8 @@
   "pets.speciesPlaceholder": "گونه حیوان را انتخاب کنید",
   "pets.speciesLoading": "در حال بارگذاری گونه‌ها...",
   "pets.retrySpecies": "تلاش مجدد برای دریافت گونه‌ها",
-  "pets.speciesRequired": "برای ادامه، یک گونه از فهرست انتخاب کنید."
+  "pets.speciesRequired": "برای ادامه، یک گونه از فهرست انتخاب کنید.",
+  "pets.deleteConfirmTitle": "حذف حیوان؟",
+  "pets.deleteConfirmMessage": "آیا از حذف این حیوان مطمئن هستید؟ این عمل قابل بازگشت نیست.",
+  "pets.deleteConfirmAction": "حذف حیوان"
 }

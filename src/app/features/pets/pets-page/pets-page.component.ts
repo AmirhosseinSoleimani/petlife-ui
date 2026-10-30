@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
@@ -18,6 +19,7 @@ import {
 } from '../../../core/models/customer-core.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { AppFileUploadComponent } from '../../../shared/components/app-file-upload/app-file-upload.component';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 const emptyPetForm = (): PetPayload => ({
   petName: '', species: '', breed: '', speciesId: null, subgroupId: null, breedId: null,
@@ -61,7 +63,7 @@ export class PetsPageComponent implements OnInit, OnDestroy {
   uploadProgress = 0;
   isUploadingImage = false;
   photoUploadFailed = false;
-  private photoUrls = new Map<string, string>();
+  private photoUrls = new Map<string, { objectUrl: string; safeUrl: SafeUrl }>();
   private photoRequests = new Map<string, Subscription>();
   readonly genderOptions = PET_GENDER_OPTIONS;
   readonly desexedOptions = ['Unknown', 'Not desexed', 'Desexed'];
@@ -81,7 +83,8 @@ export class PetsPageComponent implements OnInit, OnDestroy {
   successMessage = '';
   isPetEditorOpen = false;
 
-  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
+  constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute,
+    private readonly sanitizer: DomSanitizer, private readonly dialogService: AppDialogService) {}
 
   ngOnDestroy(): void { this.clearPhotoUrls(); }
 
@@ -312,7 +315,15 @@ export class PetsPageComponent implements OnInit, OnDestroy {
     this.resetForm();
   }
 
-  deletePet(pet: Pet): void {
+  async deletePet(pet: Pet): Promise<void> {
+    const confirmed = await this.dialogService.confirm({
+      title: 'pets.deleteConfirmTitle',
+      message: 'pets.deleteConfirmMessage',
+      confirmLabel: 'pets.deleteConfirmAction',
+      cancelLabel: 'common.cancel',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
     this.errorMessage = '';
     this.successMessage = '';
     this.apiService.delete<ApiResponse<unknown>>(`/v1/pets/${pet.id}`).subscribe({
@@ -325,8 +336,8 @@ export class PetsPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  profileImageSource(pet: Pet): string | null {
-    return this.photoUrls.get(pet.id) || null;
+  profileImageSource(pet: Pet): SafeUrl | null {
+    return this.photoUrls.get(pet.id)?.safeUrl || null;
   }
 
   onPetImageFilesChange(files: File[]): void {
@@ -398,7 +409,10 @@ export class PetsPageComponent implements OnInit, OnDestroy {
       const sub = this.apiService.getPetProfileImage(pet.id).subscribe({
         next: blob => {
           this.revokePhoto(pet.id);
-          this.photoUrls.set(pet.id, URL.createObjectURL(blob));
+          if (blob.size > 0 && this.profileImageContentTypes.includes(blob.type.toLowerCase())) {
+            const objectUrl = URL.createObjectURL(blob);
+            this.photoUrls.set(pet.id, { objectUrl, safeUrl: this.sanitizer.bypassSecurityTrustUrl(objectUrl) });
+          }
           this.photoRequests.delete(pet.id);
         },
         error: () => this.photoRequests.delete(pet.id)
@@ -409,7 +423,7 @@ export class PetsPageComponent implements OnInit, OnDestroy {
 
   private revokePhoto(id: string): void {
     const url = this.photoUrls.get(id);
-    if (url) URL.revokeObjectURL(url);
+    if (url) URL.revokeObjectURL(url.objectUrl);
     this.photoUrls.delete(id);
   }
 

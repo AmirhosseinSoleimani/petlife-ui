@@ -28,6 +28,7 @@ export class AppInputComponent implements ControlValueAccessor {
   @Input() error = '';
   @Input() type = 'text';
   @Input() showPasswordToggle = false;
+  @Input() showSelectChevron = false;
   @Input() autocomplete = '';
   @Input() placeholder = '';
   @Input() required: boolean | string = false;

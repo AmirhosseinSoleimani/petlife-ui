@@ -1,5 +1,11 @@
+import { ActivatedRoute } from '@angular/router';
+import { DomSanitizer } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import { ApiService } from '../../../core/api/api.service';
+import { Pet } from '../../../core/models/customer-core.models';
+import { AppDialogService } from '../../../shared/services/app-dialog.service';
 import { PetPayload } from '../../../core/models/customer-core.models';
-import { isActiveSpeciesSelection, toQuickPetPayload } from './pets-page.component';
+import { PetsPageComponent, isActiveSpeciesSelection, toQuickPetPayload } from './pets-page.component';
 
 describe('Pets quick registration', () => {
   it('only sends the required name and species for a new pet', () => {
@@ -46,5 +52,33 @@ describe('Pets species selection', () => {
 
   it('blocks submission when the taxonomy has no options', () => {
     expect(isActiveSpeciesSelection([], 'dog-id')).toBeFalse();
+  });
+});
+
+describe('Pet delete confirmation', () => {
+  const pet = { id: 'b5dffbae-c9a5-4a0f-b292-5a6c74b61fc3', petName: 'Peter' } as Pet;
+  function setup() {
+    const api = jasmine.createSpyObj<ApiService>('ApiService', ['delete']);
+    const dialog = jasmine.createSpyObj<AppDialogService>('AppDialogService', ['confirm']);
+    const component = new PetsPageComponent(api, {} as ActivatedRoute, {} as DomSanitizer, dialog);
+    return { api, dialog, component };
+  }
+
+  it('does not delete when the confirmation is cancelled', async () => {
+    const { api, dialog, component } = setup();
+    dialog.confirm.and.returnValue(Promise.resolve(false));
+    await component.deletePet(pet);
+    expect(dialog.confirm).toHaveBeenCalledWith(jasmine.objectContaining({ tone: 'danger' }));
+    expect(api.delete).not.toHaveBeenCalled();
+  });
+
+  it('deletes only after confirmation', async () => {
+    const { api, dialog, component } = setup();
+    dialog.confirm.and.returnValue(Promise.resolve(true));
+    api.delete.and.returnValue(of({ success: true, data: null }));
+    spyOn(component, 'loadPets');
+    await component.deletePet(pet);
+    expect(api.delete).toHaveBeenCalledWith(`/v1/pets/${pet.id}`);
+    expect(component.loadPets).toHaveBeenCalledTimes(1);
   });
 });
