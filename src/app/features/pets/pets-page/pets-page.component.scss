@@ -17,3 +17,42 @@
 .current-profile-image img { width: 92px; height: 92px; border-radius: 14px; object-fit: cover; margin-bottom: .8rem; }
 .state { padding: 2rem; text-align: center; color: #667085; } .form-error { color: #b42318; } .form-success { color: #067647; }
 @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Keep registration short; reveal optional profile details on demand. */
+.pet-quick-note {
+  margin: 0;
+  padding: .9rem 1rem;
+  border: 1px solid #dbe5f4;
+  border-radius: 12px;
+  background: #f7f9fd;
+  color: #475467;
+  line-height: 1.6;
+}
+.pet-details-disclosure { display: grid; gap: .45rem; }
+.pet-details-disclosure p {
+  margin: 0 .25rem;
+  color: #667085;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.pet-details-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  width: 100%;
+  padding: .75rem 1rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #344054;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.pet-details-toggle:hover { background: #eef2f6; }
+.pet-details-toggle:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.pet-details-sections { display: grid; gap: 1rem; }
+.pet-image-pending { margin: 0; color: #475467; line-height: 1.55; }

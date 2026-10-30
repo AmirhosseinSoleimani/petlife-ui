@@ -61,5 +61,15 @@
   "pets.taxonomyUnavailable": "Pet taxonomy is currently unavailable. You can enter the species name manually.",
   "pets.identityRequired": "Pet name and species are required.",
   "pets.profileImageUnavailable": "Profile image changes are not supported by the current Pets API.",
-  "reminders.templatesUnavailable": "Reminder templates are unavailable. You can create a reminder without a template."
+  "reminders.templatesUnavailable": "Reminder templates are unavailable. You can create a reminder without a template.",
+  "pets.addPetDescription": "Start with the essentials. You can complete your pet's profile later.",
+  "pets.editPetDescription": "Update the basics or expand to add more details.",
+  "pets.quickCreateHint": "Only your pet's name and species are needed now. You can add age, health information, care notes and contacts later using Edit / complete profile.",
+  "pets.editCompleteProfile": "Edit / complete profile",
+  "pets.showMoreDetails": "Add or edit optional details",
+  "pets.hideMoreDetails": "Hide optional details",
+  "pets.optionalDetailsHelp": "Medical, behaviour and contact details are optional. Add them whenever you need.",
+  "pets.additionalIdentity": "More about your pet",
+  "pets.photoIntegrationPending": "Existing photos remain visible. The older Pets API supports image uploads, but photo changes are not yet connected to the independent Pets API. An updated backend route is required.",
+  "pets.quickCreateSuccess": "Pet added. You can complete the profile later using Edit / complete profile."
 }

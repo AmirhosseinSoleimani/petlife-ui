@@ -1,10 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
-  FileAsset,
   PET_GENDER_OPTIONS,
   Pet,
   PetBreed,
@@ -17,7 +16,6 @@ import {
   mapPetTaxonomySpecies
 } from '../../../core/models/customer-core.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
-import { AppFileUploadComponent } from '../../../shared/components/app-file-upload/app-file-upload.component';
 
 const emptyPetForm = (): PetPayload => ({
   petName: '', species: '', breed: '', speciesId: null, subgroupId: null, breedId: null,
@@ -28,21 +26,29 @@ const emptyPetForm = (): PetPayload => ({
   emergencyContactName: '', emergencyContactPhone: '', dynamicValues: {}
 });
 
+/**
+ * Quick registration intentionally submits only the two required fields and
+ * the optional taxonomy identifier. Medical/behavioral/contact fields are
+ * collected later through profile editing, never transmitted as blank fields.
+ */
+export function toQuickPetPayload(form: PetPayload): { petName: string; species: string; speciesId?: string } {
+  const payload: { petName: string; species: string; speciesId?: string } = {
+    petName: form.petName.trim(),
+    species: form.species.trim()
+  };
+  if (form.speciesId) payload.speciesId = form.speciesId;
+  return payload;
+}
+
 @Component({
   selector: 'app-pets-page',
   templateUrl: './pets-page.component.html',
   styleUrls: ['./pets-page.component.scss']
 })
 export class PetsPageComponent implements OnInit {
-  @ViewChild('petImageUpload') petImageUpload?: AppFileUploadComponent;
-
   readonly genderOptions = PET_GENDER_OPTIONS;
   readonly desexedOptions = ['Unknown', 'Not desexed', 'Desexed'];
   readonly reproductiveOptions = ['Unknown', 'Intact', 'Pregnant', 'Breeding', 'Not applicable'];
-  readonly profileImageExtensions = ['.jpg', '.jpeg', '.jfif', '.png', '.webp'];
-  readonly profileImageContentTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  readonly profileImageMaxSize = 5 * 1024 * 1024;
-
   pets: Pet[] = [];
   species: PetSpecies[] = [];
   dynamicFields: PetDynamicFieldDefinition[] = [];
@@ -52,14 +58,10 @@ export class PetsPageComponent implements OnInit {
   isTaxonomyLoading = false;
   taxonomyLoadFailed = false;
   petsLoadFailed = false;
-  // No /v1/pets/{id}/profile-image write endpoint is published by Pets/Gateway.
-  readonly supportsProfileImageWrites = false;
   isSaving = false;
+  isAdditionalDetailsOpen = false;
   errorMessage = '';
   successMessage = '';
-  removingImagePetId: string | null = null;
-  selectedPetImageFileForCreate: File | null = null;
-  selectedPetImageFileForEdit: File | null = null;
   isPetEditorOpen = false;
 
   constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute) {}
@@ -206,17 +208,12 @@ export class PetsPageComponent implements OnInit {
     }
     const editingPetId = this.editingPetId;
     const isEditing = !!editingPetId;
-    const selectedImage = isEditing ? this.selectedPetImageFileForEdit : this.selectedPetImageFileForCreate;
-    if (selectedImage && !this.supportsProfileImageWrites) {
-      this.errorMessage = 'pets.profileImageUnavailable';
-      return;
-    }
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
     const request = editingPetId
       ? this.apiService.put<ApiResponse<Pet>>(`/v1/pets/${editingPetId}`, this.form)
-      : this.apiService.post<ApiResponse<Pet>>('/v1/pets', this.form);
+      : this.apiService.post<ApiResponse<Pet>>('/v1/pets', toQuickPetPayload(this.form));
 
     request.subscribe({
       next: response => {
@@ -237,11 +234,16 @@ export class PetsPageComponent implements OnInit {
   openCreatePet(): void {
     this.resetForm();
     this.errorMessage = '';
+    this.successMessage = '';
     this.isPetEditorOpen = true;
   }
 
+  toggleAdditionalDetails(): void {
+    if (this.editingPetId) this.isAdditionalDetailsOpen = !this.isAdditionalDetailsOpen;
+  }
+
   editPet(pet: Pet): void {
-    this.clearImageSelection();
+    this.isAdditionalDetailsOpen = false;
     this.editingPetId = pet.id;
     const matchedSpeciesId = pet.speciesId || this.species.find((item) => item.name.toLowerCase() === pet.species.toLowerCase())?.id || null;
     this.form = {
@@ -283,27 +285,6 @@ export class PetsPageComponent implements OnInit {
     });
   }
 
-  onPetImageFilesChange(files: File[]): void {
-    const file = files[0] || null;
-    if (this.editingPetId) this.selectedPetImageFileForEdit = file;
-    else this.selectedPetImageFileForCreate = file;
-  }
-
-  removeProfileImage(): void {
-    if (!this.supportsProfileImageWrites) {
-      this.errorMessage = 'pets.profileImageUnavailable';
-      return;
-    }
-    const pet = this.editingPet;
-    if (!pet) return;
-    this.removingImagePetId = pet.id;
-    this.apiService.deletePetProfileImage<ApiResponse<unknown>>(pet.id).subscribe({
-      next: () => { pet.profileImageUrl = null; this.successMessage = 'pets.profileImageRemoved'; this.loadPets(); },
-      error: () => { this.errorMessage = 'files.deleteFailed'; },
-      complete: () => { this.removingImagePetId = null; }
-    });
-  }
-
   profileImageSource(pet: Pet): string | null {
     return this.apiService.resolvePublicUrl(pet.profileImageUrl);
   }
@@ -312,22 +293,16 @@ export class PetsPageComponent implements OnInit {
     this.editingPetId = null;
     this.form = emptyPetForm();
     this.dynamicFields = [];
-    this.clearImageSelection();
+    this.isAdditionalDetailsOpen = false;
   }
 
   private finishPetSave(isEditing: boolean): void {
     this.isSaving = false;
     this.isPetEditorOpen = false;
     this.resetForm();
-    this.successMessage = isEditing ? 'Pet profile updated.' : 'Pet profile created.';
+    this.successMessage = isEditing ? 'Pet profile updated.' : 'pets.quickCreateSuccess';
     this.loadPets();
     this.errorMessage = '';
-  }
-
-  private clearImageSelection(): void {
-    this.selectedPetImageFileForCreate = null;
-    this.selectedPetImageFileForEdit = null;
-    this.petImageUpload?.clearSelection();
   }
 
   private toDateInput(value?: string | null): string {
