@@ -1,88 +1,358 @@
 <section class="page expense-page">
-  <app-page-header title="expenses.title" description="expenses.description" [backLink]="isExpensesHub ? '/dashboard' : '/pets'" backLabel="common.back"></app-page-header>
+  <app-page-header title="expenses.title" description="expenses.description"
+    [backLink]="isExpensesHub ? '/dashboard' : '/pets'" backLabel="common.back"></app-page-header>
 
-  <app-card *ngIf="isExpensesHub">
-    <app-input name="selectedPet" label="expenses.selectPet" type="select"
-      placeholder="expenses.selectPetPlaceholder" [placeholderValue]="''"
-      [options]="petOptions" [ngModel]="petId"
-      (ngModelChange)="onPetChange($event)"></app-input>
+  <app-card class="pet-selection-card" *ngIf="isExpensesHub">
+    <div class="pet-selection-topline">
+      <span class="pet-selection-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M8 10c-1.1 0-1.8-1-1.8-2.2S6.9 5.6 8 5.6s1.8 1 1.8 2.2S9.1 10 8 10Zm8 0c-1.1 0-1.8-1-1.8-2.2s.7-2.2 1.8-2.2 1.8 1 1.8 2.2S17.1 10 16 10ZM12 12.4c-2.9 0-5.2 2.4-5.2 4.6 0 1.3 1 2 2.2 1.6.9-.4 1.8-.6 3-.6s2.1.2 3 .6c1.2.4 2.2-.3 2.2-1.6 0-2.2-2.3-4.6-5.2-4.6Z"/>
+        </svg>
+      </span>
+      <div>
+        <h2>{{ 'expenses.petSelectionTitle' | translate }}</h2>
+        <p>{{ 'expenses.petSelectionDescription' | translate }}</p>
+      </div>
+    </div>
+    <div class="pet-select-control">
+      <app-input name="selectedPet" label="expenses.selectPet" type="select"
+        [showSelectChevron]="true"
+        placeholder="expenses.selectPetPlaceholder" [placeholderValue]="''"
+        [options]="petOptions" [ngModel]="petId"
+        (ngModelChange)="onPetChange($event)"></app-input>
+      <p *ngIf="!isLoadingPets && !petsLoadFailed && pets.length" class="pet-select-help">
+        {{ 'expenses.selectPetHelp' | translate }}
+      </p>
+    </div>
     <p *ngIf="isLoadingPets" class="state">{{ 'expenses.loading' | translate }}</p>
     <p *ngIf="petsLoadFailed" class="error" role="alert">{{ 'expenses.petsLoadError' | translate }}</p>
     <p *ngIf="!isLoadingPets && !petsLoadFailed && !pets.length" class="state">
       {{ 'expenses.noPets' | translate }}
       <a routerLink="/pets">{{ 'expenses.openPets' | translate }}</a>
     </p>
-    <p *ngIf="!isLoadingPets && !petsLoadFailed && pets.length" class="currency-note">{{ 'expenses.selectPetHelp' | translate }}</p>
   </app-card>
 
-  <app-card class="report-panel">
-    <div class="report-controls">
-      <app-input name="reportPeriod" label="expenses.reportPeriod" type="select" [options]="['monthly', 'yearly']" [(ngModel)]="reportPeriod"></app-input>
-      <app-input name="reportYear" label="expenses.year" type="select" [options]="yearOptions" [(ngModel)]="reportYear"></app-input>
-      <app-input *ngIf="reportPeriod === 'monthly'" name="reportMonth" label="expenses.month" type="select" [options]="monthOptions" [(ngModel)]="reportMonth"></app-input>
-      <app-button type="button" variant="secondary" (buttonClick)="loadReport()">{{ 'expenses.refreshReport' | translate }}</app-button>
+  <nav class="expense-section-tabs" role="tablist" [attr.aria-label]="'expenses.sectionsLabel' | translate"
+    (keydown)="navigateSectionTabs($event)">
+    <button type="button" id="expense-manage-tab" role="tab" aria-controls="expense-manage-panel"
+      [attr.aria-selected]="activeSection === 'manage'" [attr.tabindex]="activeSection === 'manage' ? 0 : -1"
+      (click)="showSection('manage')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
+      </svg>
+      {{ 'expenses.entryTab' | translate }}
+    </button>
+    <button type="button" id="expense-report-tab" role="tab" aria-controls="expense-report-panel"
+      [attr.aria-selected]="activeSection === 'report'" [attr.tabindex]="activeSection === 'report' ? 0 : -1"
+      (click)="showSection('report')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M4 20V13M10 20V8M16 20V11M22 20V4" stroke-linecap="round"/>
+      </svg>
+      {{ 'expenses.reportsTab' | translate }}
+    </button>
+  </nav>
+
+  <section *ngIf="activeSection === 'manage'" class="expense-section"
+    id="expense-manage-panel" role="tabpanel" aria-labelledby="expense-manage-tab">
+    <div class="section-heading">
+      <div>
+        <span class="section-eyebrow">{{ 'expenses.managementEyebrow' | translate }}</span>
+        <h2>{{ 'expenses.managementTitle' | translate }}</h2>
+        <p>{{ 'expenses.managementDescription' | translate }}</p>
+      </div>
+      <span *ngIf="petId" class="scope-chip">{{ selectedPetName }}</span>
     </div>
-    <div *ngIf="isReportLoading" class="state">{{ 'expenses.loadingReport' | translate }}</div>
-    <p *ngIf="reportLoadFailed && !isReportLoading" class="error" role="alert">{{ 'expenses.reportLoadError' | translate }}</p>
-    <ng-container *ngIf="report && !isReportLoading">
-      <div class="currency-totals">
-        <div *ngFor="let total of report.totals"><span>{{ total.currency }}</span><strong>{{ total.amount | currency:total.currency }}</strong></div>
-      </div>
-      <p class="currency-note">{{ 'expenses.currencyNotice' | translate }}</p>
-      <div class="breakdowns">
-        <div><h4>{{ 'expenses.byCategory' | translate }}</h4><div class="breakdown-row" *ngFor="let row of report.byCategory"><span>{{ row.label }}</span><span *ngFor="let total of row.totals">{{ total.amount | currency:total.currency }}</span></div></div>
-        <div><h4>{{ 'expenses.byPet' | translate }}</h4><div class="breakdown-row" *ngFor="let row of report.byPet"><span>{{ row.label }}</span><span *ngFor="let total of row.totals">{{ total.amount | currency:total.currency }}</span></div></div>
-      </div>
-    </ng-container>
-  </app-card>
 
-  <p *ngIf="isExpensesHub && !petId && !isLoadingPets && !petsLoadFailed && pets.length" class="state">{{ 'expenses.selectPetBeforeManaging' | translate }}</p>
+    <div *ngIf="isExpensesHub && !petId && !isLoadingPets && !petsLoadFailed && pets.length"
+      class="empty-selection" role="status">{{ 'expenses.selectPetBeforeManaging' | translate }}</div>
 
-  <div *ngIf="!!petId" class="layout">
-    <form class="panel" (ngSubmit)="saveExpense()" #expenseForm="ngForm">
-      <h3>{{ (editingId ? 'expenses.edit' : 'expenses.add') | translate }}</h3>
-      <app-input name="description" label="expenses.descriptionLabel" [(ngModel)]="form.description"></app-input>
-      <app-input name="categoryId" label="expenses.category" type="select" placeholder="expenses.selectCategory" [placeholderValue]="null" [options]="categoryOptions" [ngModel]="form.categoryId" (ngModelChange)="onCategoryChange($event)"></app-input>
-      <p *ngIf="categoriesLoadFailed" class="error" role="alert">{{ 'expenses.categoriesLoadError' | translate }}</p>
-      <app-input name="amount" label="expenses.amount" type="number" min="0.01" step="0.01" required [(ngModel)]="form.amount"></app-input>
-      <app-input name="expenseDate" label="expenses.date" type="date" required [(ngModel)]="form.expenseDate"></app-input>
-      <app-input name="currency" label="expenses.currency" required [(ngModel)]="form.currency"></app-input>
-      <app-input name="vendorName" label="expenses.vendor" [(ngModel)]="form.vendorName"></app-input>
-      <app-input name="paymentMethod" label="expenses.paymentMethod" [(ngModel)]="form.paymentMethod"></app-input>
-      <app-input name="isRecurring" label="expenses.recurring" type="checkbox" [(ngModel)]="form.isRecurring"></app-input>
-      <app-input name="sharedExpense" label="expenses.sharedCost" type="checkbox" [ngModel]="sharedExpense" (ngModelChange)="onSharedChange($event)"></app-input>
-
-      <fieldset class="allocations" *ngIf="sharedExpense">
-        <legend>{{ 'expenses.allocations' | translate }}</legend>
-        <p>{{ 'expenses.allocationHelp' | translate }}</p>
-        <div class="allocation-row" *ngFor="let allocation of allocations">
-          <label><input type="checkbox" [(ngModel)]="allocation.selected" [name]="'allocate-' + allocation.petId" /> {{ allocation.petName }}</label>
-          <input type="number" min="0.01" step="0.01" [disabled]="!allocation.selected" [(ngModel)]="allocation.amount" [name]="'amount-' + allocation.petId" [attr.aria-label]="allocationAmountAria(allocation.petName)" />
+    <div *ngIf="!!petId" class="layout">
+      <form class="entry-panel" (ngSubmit)="saveExpense()" #expenseForm="ngForm">
+        <div class="form-heading">
+          <div class="form-heading-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>{{ (editingId ? 'expenses.edit' : 'expenses.add') | translate }}</h3>
+            <p>{{ 'expenses.entryHelp' | translate }}</p>
+          </div>
         </div>
-        <div class="allocation-total"><span>{{ 'expenses.allocated' | translate }}</span><strong>{{ selectedAllocationTotal | number:'1.2-2' }} / {{ form.amount || 0 | number:'1.2-2' }} {{ form.currency }}</strong></div>
-      </fieldset>
 
-      <div class="receipt-picker">
-        <label>{{ 'expenses.receipt' | translate }}</label>
-        <app-file-upload accept="image/jpeg,image/png,image/webp,application/pdf" [allowedExtensions]="['.jpg','.jpeg','.jfif','.png','.webp','.pdf']" [allowedContentTypes]="['image/jpeg','image/png','image/webp','application/pdf']" allowedTypesLabelKey="expenses.receiptTypes" [maxSizeBytes]="10485760" (filesChange)="onReceiptFiles($event)"></app-file-upload>
-        <small *ngIf="editingId">{{ 'expenses.receiptReplaceHelp' | translate }}</small>
+        <div class="entry-fields">
+          <div class="field-span-2">
+            <app-input name="description" label="expenses.descriptionLabel"
+              [(ngModel)]="form.description"></app-input>
+          </div>
+          <app-input name="categoryId" label="expenses.category" type="select"
+            [showSelectChevron]="true" placeholder="expenses.selectCategory"
+            [placeholderValue]="null" [options]="categoryOptions"
+            [ngModel]="form.categoryId" (ngModelChange)="onCategoryChange($event)"></app-input>
+          <app-input name="amount" label="expenses.amount" type="number" min="0.01"
+            step="0.01" required [(ngModel)]="form.amount"></app-input>
+          <p *ngIf="categoriesLoadFailed" class="error field-span-2" role="alert">
+            {{ 'expenses.categoriesLoadError' | translate }}
+          </p>
+
+          <div class="date-field">
+            <span class="date-label">{{ 'expenses.date' | translate }}</span>
+            <div class="date-control">
+              <button type="button" class="calendar-trigger"
+                [attr.aria-label]="('expenses.chooseDate' | translate) + ': ' + form.expenseDate"
+                aria-haspopup="dialog" (click)="openExpenseCalendar(expenseDatePicker)">
+                <span>{{ form.expenseDate | date:'mediumDate' }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="16" rx="2"/>
+                  <path d="M7 3v4M17 3v4M3 10h18"/>
+                </svg>
+              </button>
+              <input #expenseDatePicker class="native-date-input" type="date" tabindex="-1"
+                [value]="form.expenseDate"
+                [attr.aria-label]="'expenses.date' | translate"
+                (change)="changeExpenseDate($any($event.target).value)" />
+            </div>
+            <small>{{ 'expenses.datePickerHelp' | translate }}</small>
+          </div>
+
+          <app-input name="currency" label="expenses.currency" type="select"
+            [showSelectChevron]="true" [options]="availableCurrencyOptions"
+            [(ngModel)]="form.currency" required></app-input>
+          <app-input name="vendorName" label="expenses.vendor" [(ngModel)]="form.vendorName"></app-input>
+          <app-input name="paymentMethod" label="expenses.paymentMethod" type="select"
+            [showSelectChevron]="true" [options]="availablePaymentOptions"
+            placeholder="expenses.selectPayment" [placeholderValue]="''"
+            [(ngModel)]="form.paymentMethod"></app-input>
+          <p *ngIf="form.currency === 'IRT'" class="currency-tip field-span-2">
+            {{ 'expenses.irtNotice' | translate }}
+          </p>
+          <div class="field-span-2 toggle-options">
+            <app-input name="isRecurring" label="expenses.recurring" type="checkbox"
+              [(ngModel)]="form.isRecurring"></app-input>
+            <app-input name="sharedExpense" label="expenses.sharedCost" type="checkbox"
+              [ngModel]="sharedExpense" (ngModelChange)="onSharedChange($event)"></app-input>
+          </div>
+        </div>
+
+        <fieldset class="allocations" *ngIf="sharedExpense">
+          <legend>{{ 'expenses.allocations' | translate }}</legend>
+          <p>{{ 'expenses.allocationHelp' | translate }}</p>
+          <div class="allocation-row" *ngFor="let allocation of allocations">
+            <label><input type="checkbox" [(ngModel)]="allocation.selected"
+                [name]="'allocate-' + allocation.petId" /> {{ allocation.petName }}</label>
+            <input type="number" min="0.01" step="0.01" [disabled]="!allocation.selected"
+              [(ngModel)]="allocation.amount" [name]="'amount-' + allocation.petId"
+              [attr.aria-label]="allocationAmountAria(allocation.petName)" />
+          </div>
+          <div class="allocation-total">
+            <span>{{ 'expenses.allocated' | translate }}</span>
+            <strong>{{ selectedAllocationTotal | number:'1.2-2' }} /
+              {{ form.amount || 0 | number:'1.2-2' }} {{ form.currency }}</strong>
+          </div>
+        </fieldset>
+
+        <div class="receipt-picker">
+          <label>{{ 'expenses.receipt' | translate }}</label>
+          <app-file-upload accept="image/jpeg,image/png,image/webp,application/pdf"
+            [allowedExtensions]="['.jpg','.jpeg','.jfif','.png','.webp','.pdf']"
+            [allowedContentTypes]="['image/jpeg','image/png','image/webp','application/pdf']"
+            allowedTypesLabelKey="expenses.receiptTypes" [maxSizeBytes]="10485760"
+            (filesChange)="onReceiptFiles($event)"></app-file-upload>
+          <small *ngIf="editingId">{{ 'expenses.receiptReplaceHelp' | translate }}</small>
+        </div>
+
+        <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
+        <p *ngIf="successMessage" class="success" role="status">{{ successMessage | translate }}</p>
+        <div class="actions form-actions">
+          <app-button type="submit" [loading]="isSaving" [disabled]="isSaving || expenseForm.invalid">
+            {{ (editingId ? 'expenses.saveChanges' : 'expenses.saveExpense') | translate }}
+          </app-button>
+          <app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">
+            {{ 'common.cancel' | translate }}
+          </app-button>
+        </div>
+      </form>
+
+      <section class="history-panel">
+        <div class="history-heading">
+          <div>
+            <h3>{{ 'expenses.historyTitle' | translate }}</h3>
+            <p>{{ 'expenses.historyHelp' | translate }}</p>
+          </div>
+          <span class="history-count">{{ expenses.length }}</span>
+        </div>
+        <div class="history-list">
+          <div *ngIf="isLoading" class="state">{{ 'expenses.loading' | translate }}</div>
+          <div *ngIf="!isLoading && !expenses.length" class="state">
+            {{ 'expenses.empty' | translate }}
+          </div>
+          <app-card class="expense" *ngFor="let expense of expenses">
+            <div class="expense-heading">
+              <div>
+                <h3>{{ expense.description || expense.category || ('expenses.expense' | translate) }}</h3>
+                <p>{{ expense.category || ('expenses.uncategorized' | translate) }}
+                  <span *ngIf="expense.expenseDate"> · {{ expense.expenseDate | date:'mediumDate' }}</span></p>
+              </div>
+              <strong>{{ expense.amount | currency:(expense.currency || 'AUD'):'code' }}</strong>
+            </div>
+            <p *ngIf="expense.vendorName"><strong>{{ 'expenses.vendor' | translate }}:</strong> {{ expense.vendorName }}</p>
+            <div class="allocation-chips" *ngIf="expense.allocations?.length">
+              <span *ngFor="let allocation of expense.allocations">
+                {{ allocation.petName }}: {{ allocation.amount | currency:(expense.currency || 'AUD'):'code' }}
+              </span>
+            </div>
+            <div class="receipt-actions" *ngIf="expense.receiptFileId">
+              <span>{{ expense.receiptFileName || ('expenses.receipt' | translate) }}</span>
+              <button type="button" (click)="downloadReceipt(expense)">{{ 'expenses.downloadReceipt' | translate }}</button>
+              <button type="button" class="danger-link" (click)="deleteReceipt(expense)">{{ 'common.delete' | translate }}</button>
+            </div>
+            <div class="actions history-actions">
+              <app-button type="button" variant="secondary" (buttonClick)="editExpense(expense)">
+                {{ 'common.edit' | translate }}
+              </app-button>
+              <app-button type="button" variant="danger" (buttonClick)="deleteExpense(expense)">
+                {{ 'common.delete' | translate }}
+              </app-button>
+            </div>
+          </app-card>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section *ngIf="activeSection === 'report'" class="expense-section"
+    id="expense-report-panel" role="tabpanel" aria-labelledby="expense-report-tab">
+    <div class="section-heading">
+      <div>
+        <span class="section-eyebrow">{{ 'expenses.insightsEyebrow' | translate }}</span>
+        <h2>{{ 'expenses.insightsTitle' | translate }}</h2>
+        <p>{{ 'expenses.insightsDescription' | translate }}</p>
+      </div>
+      <span class="scope-chip">{{ selectedPetName }}</span>
+    </div>
+
+    <app-card class="report-panel">
+      <div class="report-controls">
+        <div class="report-period-field">
+          <span class="field-caption">{{ 'expenses.reportPeriod' | translate }}</span>
+          <div class="period-switch" role="group" [attr.aria-label]="'expenses.reportPeriod' | translate">
+            <button type="button" [class.selected]="reportPeriod === 'monthly'"
+              [attr.aria-pressed]="reportPeriod === 'monthly'"
+              (click)="changeReportPeriod('monthly')">{{ 'expenses.monthly' | translate }}</button>
+            <button type="button" [class.selected]="reportPeriod === 'yearly'"
+              [attr.aria-pressed]="reportPeriod === 'yearly'"
+              (click)="changeReportPeriod('yearly')">{{ 'expenses.yearly' | translate }}</button>
+          </div>
+        </div>
+        <app-input name="reportYear" label="expenses.year" type="select"
+          [showSelectChevron]="true" [options]="yearOptions" [ngModel]="reportYear"
+          (ngModelChange)="changeReportYear($event)"></app-input>
+        <app-input *ngIf="reportPeriod === 'monthly'" name="reportMonth" label="expenses.month" type="select"
+          [showSelectChevron]="true" [options]="monthOptions" [ngModel]="reportMonth"
+          (ngModelChange)="changeReportMonth($event)"></app-input>
+        <app-button type="button" variant="secondary" (buttonClick)="loadReport()">
+          {{ 'expenses.refreshReport' | translate }}
+        </app-button>
       </div>
 
-      <p *ngIf="errorMessage" class="error" role="alert">{{ errorMessage | translate }}</p>
-      <p *ngIf="successMessage" class="success">{{ successMessage | translate }}</p>
-      <div class="actions"><app-button type="submit" [loading]="isSaving" [disabled]="expenseForm.invalid">{{ 'common.save' | translate }}</app-button><app-button type="button" variant="secondary" *ngIf="editingId" (buttonClick)="resetForm()">{{ 'common.cancel' | translate }}</app-button></div>
-    </form>
+      <div *ngIf="isReportLoading" class="state">{{ 'expenses.loadingReport' | translate }}</div>
+      <div *ngIf="reportLoadFailed && !isReportLoading" class="report-error" role="alert">
+        <strong>{{ 'expenses.reportLoadError' | translate }}</strong>
+        <p>{{ 'expenses.reportUnavailableHelp' | translate }}</p>
+        <app-button type="button" variant="secondary" (buttonClick)="loadReport()">
+          {{ 'expenses.tryAgain' | translate }}
+        </app-button>
+      </div>
 
-    <div class="list">
-      <div *ngIf="isLoading" class="state">{{ 'expenses.loading' | translate }}</div>
-      <div *ngIf="!isLoading && !errorMessage && !expenses.length" class="state">{{ 'expenses.empty' | translate }}</div>
-      <app-card class="expense" *ngFor="let expense of expenses">
-        <div class="expense-heading"><div><h3>{{ expense.description || expense.category || ('expenses.expense' | translate) }}</h3><p>{{ expense.category || ('expenses.uncategorized' | translate) }} · {{ expense.expenseDate | date }}</p></div><strong>{{ expense.amount | currency:(expense.currency || 'AUD') }}</strong></div>
-        <p *ngIf="expense.vendorName"><strong>{{ 'expenses.vendor' | translate }}:</strong> {{ expense.vendorName }}</p>
-        <div class="allocation-chips" *ngIf="expense.allocations?.length"><span *ngFor="let allocation of expense.allocations">{{ allocation.petName }}: {{ allocation.amount | currency:(expense.currency || 'AUD') }}</span></div>
-        <div class="receipt-actions" *ngIf="expense.receiptFileId"><span>📎 {{ expense.receiptFileName || ('expenses.receipt' | translate) }}</span><button type="button" (click)="downloadReceipt(expense)">{{ 'expenses.downloadReceipt' | translate }}</button><button type="button" class="danger-link" (click)="deleteReceipt(expense)">{{ 'common.delete' | translate }}</button></div>
-        <div class="actions"><app-button type="button" variant="secondary" (buttonClick)="editExpense(expense)">{{ 'common.edit' | translate }}</app-button><app-button type="button" variant="danger" (buttonClick)="deleteExpense(expense)">{{ 'common.delete' | translate }}</app-button></div>
-      </app-card>
-    </div>
-  </div>
+      <ng-container *ngIf="report && !isReportLoading">
+        <p class="report-note">{{ 'expenses.currencyNotice' | translate }}</p>
+        <div *ngIf="!report.totals.length" class="state">{{ 'expenses.noReportData' | translate }}</div>
+
+        <ng-container *ngIf="report.totals.length">
+          <div class="currency-totals" [attr.aria-label]="'expenses.totalByCurrency' | translate">
+            <div class="currency-total" *ngFor="let total of report.totals">
+              <span>{{ 'expenses.totalSpent' | translate }} · {{ total.currency }}</span>
+              <strong>{{ total.amount | currency:total.currency:'code' }}</strong>
+            </div>
+          </div>
+
+          <div class="report-toolbar">
+            <div>
+              <h3>{{ 'expenses.reportVisualizations' | translate }}</h3>
+              <p>{{ 'expenses.currencyChartHelp' | translate }}</p>
+            </div>
+            <app-input *ngIf="report.totals.length > 1" name="chartCurrency"
+              label="expenses.chartCurrency" type="select" [showSelectChevron]="true"
+              [options]="chartCurrencyOptions" [(ngModel)]="reportChartCurrency"></app-input>
+            <span *ngIf="report.totals.length === 1" class="scope-chip">{{ activeChartCurrency }}</span>
+          </div>
+
+          <div class="report-chart-grid">
+            <section class="chart-card distribution-card">
+              <div class="chart-heading">
+                <h4>{{ 'expenses.spendingDistribution' | translate }}</h4>
+                <p>{{ 'expenses.categoryDistributionHelp' | translate }}</p>
+              </div>
+              <div *ngIf="donutSlices.length" class="distribution-body">
+                <div class="donut" [style.background]="donutBackground"
+                  role="img" [attr.aria-label]="'expenses.spendingDistribution' | translate">
+                  <div class="donut-center">
+                    <strong>{{ chartTotal | currency:activeChartCurrency:'code' }}</strong>
+                    <span>{{ 'expenses.totalSpent' | translate }}</span>
+                  </div>
+                </div>
+                <ol class="distribution-legend">
+                  <li *ngFor="let slice of donutSlices; let index = index">
+                    <span class="legend-swatch" [attr.data-index]="index" aria-hidden="true"></span>
+                    <span>{{ slice.label }}</span>
+                    <strong>{{ slice.percent | number:'1.0-1' }}%</strong>
+                  </li>
+                </ol>
+              </div>
+              <p *ngIf="!donutSlices.length" class="chart-empty">{{ 'expenses.noChartData' | translate }}</p>
+            </section>
+
+            <section class="chart-card">
+              <div class="chart-heading">
+                <h4>{{ 'expenses.byCategory' | translate }}</h4>
+                <p>{{ 'expenses.categoryChartHelp' | translate }}</p>
+              </div>
+              <ol *ngIf="categoryChartRows.length" class="chart-bars">
+                <li *ngFor="let row of categoryChartRows">
+                  <div class="chart-row-label">
+                    <span>{{ row.label }}</span>
+                    <strong>{{ row.amount | currency:activeChartCurrency:'code' }}</strong>
+                  </div>
+                  <div class="chart-track" aria-hidden="true">
+                    <span class="chart-fill" [style.width.%]="row.widthPercent"></span>
+                  </div>
+                </li>
+              </ol>
+              <p *ngIf="!categoryChartRows.length" class="chart-empty">{{ 'expenses.noChartData' | translate }}</p>
+            </section>
+
+            <section class="chart-card">
+              <div class="chart-heading">
+                <h4>{{ 'expenses.byPet' | translate }}</h4>
+                <p>{{ 'expenses.petChartHelp' | translate }}</p>
+              </div>
+              <ol *ngIf="petChartRows.length" class="chart-bars pet-chart-bars">
+                <li *ngFor="let row of petChartRows">
+                  <div class="chart-row-label">
+                    <span>{{ row.label }}</span>
+                    <strong>{{ row.amount | currency:activeChartCurrency:'code' }}</strong>
+                  </div>
+                  <div class="chart-track" aria-hidden="true">
+                    <span class="chart-fill" [style.width.%]="row.widthPercent"></span>
+                  </div>
+                </li>
+              </ol>
+              <p *ngIf="!petChartRows.length" class="chart-empty">{{ 'expenses.noChartData' | translate }}</p>
+            </section>
+          </div>
+        </ng-container>
+      </ng-container>
+    </app-card>
+  </section>
 </section>

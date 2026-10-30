@@ -5,11 +5,40 @@ import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Expense, ExpensePayload, Pet } from '../../../core/models/customer-core.models';
-import { ExpenseCategory, ExpenseReport } from '../../../core/models/phase1-care.models';
+import { ExpenseBreakdown, ExpenseCategory, ExpenseReport } from '../../../core/models/phase1-care.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
 interface AllocationRow { petId: string; petName: string; selected: boolean; amount: number | null; }
+
+export interface ExpenseChartRow {
+  key: string;
+  label: string;
+  amount: number;
+  widthPercent: number;
+}
+
+/** Chart values must never sum or compare amounts from different currencies. */
+export function buildExpenseChartRows(items: ExpenseBreakdown[], currency: string): ExpenseChartRow[] {
+  const rows = items.map(item => ({
+    key: item.key,
+    label: item.label,
+    amount: Number(item.totals.find(total => total.currency === currency)?.amount || 0)
+  })).filter(item => Number.isFinite(item.amount) && item.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+  const largest = rows[0]?.amount || 0;
+  return rows.map(item => ({
+    ...item,
+    widthPercent: largest > 0 ? Math.max(0, Math.min(100, item.amount / largest * 100)) : 0
+  }));
+}
+
+export function localExpenseDate(now = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 const emptyForm: ExpensePayload = {
   category: '', categoryId: null, amount: null, expenseDate: '', currency: 'AUD', vendorName: '', description: '', paymentMethod: '', isRecurring: false, allocations: []
@@ -34,12 +63,27 @@ export class PetExpensesComponent implements OnInit {
   expenses: Expense[] = [];
   categories: ExpenseCategory[] = [];
   report: ExpenseReport | null = null;
-  form: ExpensePayload = { ...emptyForm };
+  form: ExpensePayload = { ...emptyForm, expenseDate: localExpenseDate() };
+  activeSection: 'manage' | 'report' = 'manage';
+  reportChartCurrency = '';
+  readonly currencyOptions: AppInputOption[] = [
+    { label: 'expenses.currencyAUD', value: 'AUD' },
+    { label: 'expenses.currencyUSD', value: 'USD' },
+    { label: 'expenses.currencyIRT', value: 'IRT' }
+  ];
+  readonly paymentOptions: AppInputOption[] = [
+    { label: 'expenses.paymentCash', value: 'Cash' },
+    { label: 'expenses.paymentDebitCard', value: 'DebitCard' },
+    { label: 'expenses.paymentCreditCard', value: 'CreditCard' },
+    { label: 'expenses.paymentBankTransfer', value: 'BankTransfer' },
+    { label: 'expenses.paymentDigitalWallet', value: 'DigitalWallet' },
+    { label: 'expenses.paymentOther', value: 'Other' }
+  ];
   allocations: AllocationRow[] = [];
   sharedExpense = false;
   editingId: string | null = null;
   selectedReceipt: File | null = null;
-  reportPeriod = 'monthly';
+  reportPeriod: 'monthly' | 'yearly' = 'monthly';
   reportYear = new Date().getFullYear();
   reportMonth = new Date().getMonth() + 1;
   isLoading = false;
@@ -55,6 +99,58 @@ export class PetExpensesComponent implements OnInit {
 
   get petOptions(): AppInputOption[] { return this.pets.map(pet => ({ label: pet.petName, value: pet.id })); }
   get categoryOptions(): AppInputOption[] { return this.categories.map(category => ({ label: category.name, value: category.id })); }
+  get availableCurrencyOptions(): AppInputOption[] {
+    return this.form.currency && !this.currencyOptions.some(option => option.value === this.form.currency)
+      ? [...this.currencyOptions, { label: this.form.currency, value: this.form.currency }]
+      : this.currencyOptions;
+  }
+  get availablePaymentOptions(): AppInputOption[] {
+    return this.form.paymentMethod && !this.paymentOptions.some(option => option.value === this.form.paymentMethod)
+      ? [...this.paymentOptions, { label: this.form.paymentMethod, value: this.form.paymentMethod }]
+      : this.paymentOptions;
+  }
+  get chartCurrencyOptions(): AppInputOption[] {
+    return (this.report?.totals || []).map(total => ({ label: total.currency, value: total.currency }));
+  }
+  get activeChartCurrency(): string {
+    const totals = this.report?.totals || [];
+    return totals.some(total => total.currency === this.reportChartCurrency)
+      ? this.reportChartCurrency : (totals[0]?.currency || 'AUD');
+  }
+  get chartTotal(): number {
+    return Number(this.report?.totals.find(total => total.currency === this.activeChartCurrency)?.amount || 0);
+  }
+  get categoryChartRows(): ExpenseChartRow[] {
+    return buildExpenseChartRows(this.report?.byCategory || [], this.activeChartCurrency);
+  }
+  get petChartRows(): ExpenseChartRow[] {
+    return buildExpenseChartRows(this.report?.byPet || [], this.activeChartCurrency);
+  }
+  get donutSlices(): Array<{ label: string; amount: number; percent: number }> {
+    const rows = this.categoryChartRows;
+    const top = rows.slice(0, 4).map(row => ({ label: row.label, amount: row.amount }));
+    const remainder = rows.slice(4).reduce((sum, row) => sum + row.amount, 0);
+    if (remainder > 0) top.push({ label: this.i18nService.translate('expenses.otherCategories'), amount: remainder });
+    const total = top.reduce((sum, row) => sum + row.amount, 0);
+    return top.map(row => ({ ...row, percent: total ? row.amount / total * 100 : 0 }));
+  }
+  get donutBackground(): string {
+    const slices = this.donutSlices;
+    if (!slices.length) return 'var(--color-surface-soft)';
+    const palette = ['var(--color-primary)', 'var(--color-info)', 'var(--color-accent)',
+      'var(--color-warning)', 'var(--color-success)'];
+    let start = 0;
+    const stops = slices.map((slice, index) => {
+      const end = start + slice.percent;
+      const segment = `${palette[index]} ${start.toFixed(3)}% ${end.toFixed(3)}%`;
+      start = end;
+      return segment;
+    });
+    return `conic-gradient(${stops.join(', ')})`;
+  }
+  get selectedPetName(): string {
+    return this.pets.find(pet => pet.id === this.petId)?.petName || this.i18nService.translate('expenses.allPets');
+  }
   get monthOptions(): AppInputOption[] { return Array.from({ length: 12 }, (_, index) => ({ label: new Date(2000, index, 1).toLocaleString(undefined, { month: 'long' }), value: index + 1 })); }
   get yearOptions(): AppInputOption[] { const current = new Date().getFullYear(); return Array.from({ length: 7 }, (_, index) => ({ label: String(current - index), value: current - index })); }
   get selectedAllocationTotal(): number { return this.allocations.filter(item => item.selected).reduce((sum, item) => sum + Number(item.amount || 0), 0); }
@@ -89,6 +185,67 @@ export class PetExpensesComponent implements OnInit {
         this.loadCategories(null);
       }
     });
+  }
+
+  showSection(section: 'manage' | 'report'): void {
+    this.activeSection = section;
+  }
+
+  navigateSectionTabs(event: KeyboardEvent): void {
+    const rtl = document.documentElement.dir === 'rtl';
+    let section: 'manage' | 'report' | null = null;
+    if (event.key === 'Home') section = 'manage';
+    if (event.key === 'End') section = 'report';
+    if (event.key === 'ArrowRight') section = rtl ? 'manage' : 'report';
+    if (event.key === 'ArrowLeft') section = rtl ? 'report' : 'manage';
+    if (!section) return;
+
+    event.preventDefault();
+    this.showSection(section);
+    const group = event.currentTarget as HTMLElement | null;
+    const tabs = group?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const selected = section === 'manage' ? 0 : 1;
+    tabs?.item(selected)?.focus();
+  }
+
+  changeReportPeriod(period: 'monthly' | 'yearly'): void {
+    if (this.reportPeriod === period) return;
+    this.reportPeriod = period;
+    this.loadReport();
+  }
+
+  changeReportYear(value: string | number | boolean | null): void {
+    const year = Number(value);
+    if (!Number.isInteger(year) || year < 2000 || year > new Date().getFullYear() || year === this.reportYear) return;
+    this.reportYear = year;
+    this.loadReport();
+  }
+
+  changeReportMonth(value: string | number | boolean | null): void {
+    const month = Number(value);
+    if (!Number.isInteger(month) || month < 1 || month > 12 || month === this.reportMonth) return;
+    this.reportMonth = month;
+    this.loadReport();
+  }
+
+  openExpenseCalendar(input: HTMLInputElement): void {
+    // Invoked directly by a button click. The visible control cannot accept manual typing.
+    const native = input as HTMLInputElement & { showPicker?: () => void };
+    try {
+      if (typeof native.showPicker === 'function') {
+        native.showPicker();
+        return;
+      }
+    } catch { /* Older browsers may restrict native pickers. */ }
+    input.focus();
+    input.click();
+  }
+
+  changeExpenseDate(value: string): void {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value) &&
+        !Number.isNaN(new Date(`${value}T12:00:00`).getTime())) {
+      this.form.expenseDate = value;
+    }
   }
 
   onPetChange(value: string | number | boolean | null): void {
@@ -176,6 +333,9 @@ export class PetExpensesComponent implements OnInit {
           this.reportLoadFailed = true;
         } else {
           this.report = response.data;
+          if (!this.report.totals.some(total => total.currency === this.reportChartCurrency)) {
+            this.reportChartCurrency = this.report.totals[0]?.currency || '';
+          }
         }
         this.isReportLoading = false;
       },
@@ -208,6 +368,9 @@ export class PetExpensesComponent implements OnInit {
     if (!this.petId) { this.errorMessage = 'expenses.selectPetBeforeManaging'; return; }
     if (!this.form.amount || this.form.amount <= 0) { this.errorMessage = 'expenses.amountInvalid'; return; }
     if (!this.form.category.trim()) { this.errorMessage = 'expenses.categoryRequired'; return; }
+    if (!this.form.expenseDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.form.expenseDate)) {
+      this.errorMessage = 'expenses.dateRequired'; return;
+    }
     const allocations = this.sharedExpense
       ? this.allocations.filter(item => item.selected).map(item => ({ petId: item.petId, amount: Number(item.amount || 0) }))
       : [{ petId: this.petId, amount: Number(this.form.amount) }];
@@ -256,7 +419,7 @@ export class PetExpensesComponent implements OnInit {
     this.selectedReceipt = null;
     this.form = {
       category: expense.category || '', categoryId: expense.categoryId || null, amount: expense.amount,
-      expenseDate: expense.expenseDate ? expense.expenseDate.substring(0, 10) : '', currency: expense.currency || 'AUD',
+      expenseDate: expense.expenseDate ? expense.expenseDate.substring(0, 10) : localExpenseDate(), currency: expense.currency || 'AUD',
       vendorName: expense.vendorName || '', description: expense.description || '', paymentMethod: expense.paymentMethod || '',
       isRecurring: !!expense.isRecurring, allocations: []
     };
@@ -308,7 +471,7 @@ export class PetExpensesComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.editingId = null; this.form = { ...emptyForm }; this.selectedReceipt = null; this.sharedExpense = false; this.resetAllocations();
+    this.editingId = null; this.form = { ...emptyForm, expenseDate: localExpenseDate() }; this.selectedReceipt = null; this.sharedExpense = false; this.resetAllocations();
   }
 
   private resetAllocations(): void {
