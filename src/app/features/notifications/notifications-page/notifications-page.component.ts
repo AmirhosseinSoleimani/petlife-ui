@@ -74,11 +74,11 @@ export class NotificationsPageComponent implements OnInit {
           return;
         }
         const updated = response.data;
-        this.notifications = this.notifications.map((notification) =>
-          notification.id === item.id ? (updated || { ...notification, isRead: true, readAt: new Date().toISOString() }) : notification
-        );
+        this.notifications = this.notifications
+          .map(notification => notification.id === item.id ? updated : notification)
+          .filter(notification => !this.unreadOnly || !notification.isRead);
         window.dispatchEvent(new CustomEvent('petlife:notifications-changed'));
-        if (navigate) this.openAction(updated || item);
+        if (navigate) this.openAction(updated);
       },
       error: (error) => this.errorMessage = apiErrorMessage(error, 'notifications.markReadError')
     });
@@ -95,7 +95,8 @@ export class NotificationsPageComponent implements OnInit {
           return;
         }
         const now = new Date().toISOString();
-        this.notifications = this.notifications.map((item) => ({ ...item, isRead: true, readAt: item.readAt || now }));
+        this.notifications = this.unreadOnly ? [] :
+          this.notifications.map(item => ({ ...item, isRead: true, readAt: item.readAt || now }));
         window.dispatchEvent(new CustomEvent('petlife:notifications-changed'));
       },
       error: (error) => { this.errorMessage = apiErrorMessage(error, 'notifications.markAllError'); this.isUpdating = false; },
