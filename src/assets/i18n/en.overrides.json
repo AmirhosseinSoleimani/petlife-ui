@@ -57,5 +57,9 @@
   "expenses.openPets": "Manage pets",
   "expenses.petsLoadError": "Unable to load pets. Expense management requires an available Pets service.",
   "expenses.categoriesLoadError": "Unable to load expense categories.",
-  "expenses.reportLoadError": "Unable to load expense report."
+  "expenses.reportLoadError": "Unable to load expense report.",
+  "pets.taxonomyUnavailable": "Pet taxonomy is currently unavailable. You can enter the species name manually.",
+  "pets.identityRequired": "Pet name and species are required.",
+  "pets.profileImageUnavailable": "Profile image changes are not supported by the current Pets API.",
+  "reminders.templatesUnavailable": "Reminder templates are unavailable. You can create a reminder without a template."
 }

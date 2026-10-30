@@ -24,7 +24,7 @@ export class AdminReminderTemplatesComponent implements OnInit {
 
   load(): void {
     this.isLoading = true;
-    this.apiService.get<ApiResponse<ReminderTemplate[]>>('/v1/reminders/admin/templates').subscribe({ next: r => { this.templates = r.data || []; this.isLoading = false; }, error: () => { this.errorMessage = 'reminderTemplates.loadError'; this.isLoading = false; } });
+    this.apiService.get<ApiResponse<ReminderTemplate[]>>('/v1/reminders/admin/templates').subscribe({ next: r => { if (!r?.success || !Array.isArray(r.data)) { this.errorMessage = 'reminderTemplates.loadError'; this.isLoading = false; return; } this.templates = r.data; this.isLoading = false; }, error: () => { this.errorMessage = 'reminderTemplates.loadError'; this.isLoading = false; } });
     this.apiService.get<ApiResponse<PetTaxonomy>>('/admin/pet-taxonomy').subscribe({ next: r => this.taxonomy = r.data || { species: [] }, error: () => this.taxonomy = { species: [] } });
   }
 
@@ -39,7 +39,7 @@ export class AdminReminderTemplatesComponent implements OnInit {
     this.isSaving = true; this.errorMessage = ''; this.successMessage = '';
     const payload: ReminderTemplatePayload = { ...this.form, defaultRecurrenceInterval: Number(this.form.defaultRecurrenceInterval) || 1, suggestedOffsetDays: this.form.suggestedOffsetDays === null || this.form.suggestedOffsetDays === undefined ? null : Number(this.form.suggestedOffsetDays) };
     const request = this.editingId ? this.apiService.put<ApiResponse<ReminderTemplate>>(`/v1/reminders/admin/templates/${this.editingId}`, payload) : this.apiService.post<ApiResponse<ReminderTemplate>>('/v1/reminders/admin/templates', payload);
-    request.subscribe({ next: () => { this.successMessage = this.editingId ? 'reminderTemplates.updated' : 'reminderTemplates.created'; this.reset(); this.load(); }, error: () => { this.errorMessage = 'reminderTemplates.saveError'; this.isSaving = false; } });
+    request.subscribe({ next: response => { if (!response?.success) { this.errorMessage = 'reminderTemplates.saveError'; this.isSaving = false; return; } this.successMessage = this.editingId ? 'reminderTemplates.updated' : 'reminderTemplates.created'; this.reset(); this.load(); }, error: () => { this.errorMessage = 'reminderTemplates.saveError'; this.isSaving = false; } });
   }
 
   edit(item: ReminderTemplate): void {
@@ -50,7 +50,7 @@ export class AdminReminderTemplatesComponent implements OnInit {
   remove(item: ReminderTemplate): void {
     this.dialogService.confirm({ title: 'Delete reminder template?', message: 'reminderTemplates.deleteConfirm', confirmLabel: 'Delete template', tone: 'danger' }).then((confirmed) => {
       if (!confirmed) return;
-      this.apiService.delete<ApiResponse<unknown>>(`/v1/reminders/admin/templates/${item.id}`).subscribe({ next: () => { this.successMessage = 'reminderTemplates.deleted'; this.load(); }, error: () => this.errorMessage = 'reminderTemplates.deleteError' });
+      this.apiService.delete<ApiResponse<unknown>>(`/v1/reminders/admin/templates/${item.id}`).subscribe({ next: response => { if (!response?.success) { this.errorMessage = 'reminderTemplates.deleteError'; return; } this.successMessage = 'reminderTemplates.deleted'; this.load(); }, error: () => this.errorMessage = 'reminderTemplates.deleteError' });
     });
   }
 

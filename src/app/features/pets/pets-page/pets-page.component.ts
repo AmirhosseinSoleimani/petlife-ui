@@ -12,7 +12,9 @@ import {
   PetPayload,
   PetSpecies,
   PetSubgroup,
-  PetTaxonomy
+  PetTaxonomy,
+  PetTaxonomySpeciesDto,
+  mapPetTaxonomySpecies
 } from '../../../core/models/customer-core.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { AppFileUploadComponent } from '../../../shared/components/app-file-upload/app-file-upload.component';
@@ -48,7 +50,10 @@ export class PetsPageComponent implements OnInit {
   editingPetId: string | null = null;
   isLoading = false;
   isTaxonomyLoading = false;
+  taxonomyLoadFailed = false;
   petsLoadFailed = false;
+  // No /v1/pets/{id}/profile-image write endpoint is published by Pets/Gateway.
+  readonly supportsProfileImageWrites = false;
   isSaving = false;
   errorMessage = '';
   successMessage = '';
@@ -81,6 +86,10 @@ export class PetsPageComponent implements OnInit {
 
   get speciesOptions(): AppInputOption[] {
     return this.species.filter((item) => item.isActive).map((item) => ({ label: item.name, value: item.id }));
+  }
+
+  get showSpeciesSelect(): boolean {
+    return this.speciesOptions.length > 0 && (!this.editingPetId || !!this.form.speciesId);
   }
 
   get selectedSpecies(): PetSpecies | null {
@@ -120,13 +129,21 @@ export class PetsPageComponent implements OnInit {
 
   loadTaxonomy(): void {
     this.isTaxonomyLoading = true;
-    this.apiService.get<ApiResponse<PetTaxonomy>>('/pet-taxonomy').subscribe({
-      next: (response) => {
-        this.species = (response.data?.species || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+    this.taxonomyLoadFailed = false;
+    this.apiService.get<ApiResponse<PetTaxonomySpeciesDto[]>>('/v1/pets/taxonomy/species').subscribe({
+      next: response => {
         this.isTaxonomyLoading = false;
+        if (!response?.success || !Array.isArray(response.data) ||
+            response.data.some(item => !item || typeof item.id !== 'string' || typeof item.name !== 'string')) {
+          this.species = [];
+          this.taxonomyLoadFailed = true;
+          return;
+        }
+        this.species = mapPetTaxonomySpecies(response.data);
       },
       error: () => {
-        this.errorMessage = 'Unable to load pet taxonomy.';
+        this.species = [];
+        this.taxonomyLoadFailed = true;
         this.isTaxonomyLoading = false;
       }
     });
@@ -135,14 +152,19 @@ export class PetsPageComponent implements OnInit {
   loadPets(): void {
     this.isLoading = true;
     this.petsLoadFailed = false;
-    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
-      next: (response) => {
-        this.pets = response.data || [];
+    this.apiService.get<ApiResponse<Pet[]>>('/v1/pets').subscribe({
+      next: response => {
         this.isLoading = false;
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.petsLoadFailed = true;
+          this.pets = [];
+          return;
+        }
+        this.pets = response.data;
       },
       error: () => {
+        this.pets = [];
         this.petsLoadFailed = true;
-        this.errorMessage = 'Unable to load pets.';
         this.isLoading = false;
       }
     });
@@ -158,7 +180,8 @@ export class PetsPageComponent implements OnInit {
     this.form.breed = '';
     if (!preserveValues) this.form.dynamicValues = {};
     this.dynamicFields = [];
-    if (id) this.loadSchema(id, preserveValues);
+    // The standalone Pets public API exposes species only. There is no reviewed
+    // subgroup/breed/dynamic-schema read endpoint to call with a Users JWT.
   }
 
   onSubgroupChange(subgroupId: string | number | boolean | null): void {
@@ -177,31 +200,32 @@ export class PetsPageComponent implements OnInit {
   }
 
   savePet(): void {
-    if (!this.form.speciesId) {
-      this.errorMessage = 'Please select a species.';
+    if (!this.form.petName.trim() || !this.form.species.trim()) {
+      this.errorMessage = 'pets.identityRequired';
+      return;
+    }
+    const editingPetId = this.editingPetId;
+    const isEditing = !!editingPetId;
+    const selectedImage = isEditing ? this.selectedPetImageFileForEdit : this.selectedPetImageFileForCreate;
+    if (selectedImage && !this.supportsProfileImageWrites) {
+      this.errorMessage = 'pets.profileImageUnavailable';
       return;
     }
     this.isSaving = true;
     this.errorMessage = '';
     this.successMessage = '';
-    const editingPetId = this.editingPetId;
-    const isEditing = !!editingPetId;
-    const selectedImage = isEditing ? this.selectedPetImageFileForEdit : this.selectedPetImageFileForCreate;
     const request = editingPetId
-      ? this.apiService.put<ApiResponse<Pet>>(`/pets/${editingPetId}`, this.form)
-      : this.apiService.post<ApiResponse<Pet>>('/pets', this.form);
+      ? this.apiService.put<ApiResponse<Pet>>(`/v1/pets/${editingPetId}`, this.form)
+      : this.apiService.post<ApiResponse<Pet>>('/v1/pets', this.form);
 
     request.subscribe({
-      next: (response) => {
-        const savedPetId = editingPetId || response.data?.id;
-        if (!selectedImage || !savedPetId) {
-          this.finishPetSave(isEditing, selectedImage && !savedPetId ? 'files.uploadAfterSaveWarning' : '');
+      next: response => {
+        if (!response?.success || !response.data?.id) {
+          this.errorMessage = response?.message || 'Unable to save pet.';
+          this.isSaving = false;
           return;
         }
-        this.apiService.uploadPetProfileImage<ApiResponse<FileAsset>>(savedPetId, selectedImage).subscribe({
-          next: () => this.finishPetSave(isEditing),
-          error: () => this.finishPetSave(isEditing, 'files.uploadAfterSaveWarning')
-        });
+        this.finishPetSave(isEditing);
       },
       error: (error: { error?: { message?: string; errors?: string[] } }) => {
         this.errorMessage = error.error?.errors?.[0] || error.error?.message || 'Unable to save pet.';
@@ -234,7 +258,8 @@ export class PetsPageComponent implements OnInit {
       dynamicValues: { ...(pet.dynamicValues || {}) }
     };
     this.dynamicFields = [];
-    if (matchedSpeciesId) this.loadSchema(matchedSpeciesId, true);
+    // Preserve existing dynamic values on update. The new public Pets API does
+    // not expose the legacy species-specific schema required to edit them.
     this.errorMessage = '';
     this.isPetEditorOpen = true;
   }
@@ -248,8 +273,12 @@ export class PetsPageComponent implements OnInit {
   deletePet(pet: Pet): void {
     this.errorMessage = '';
     this.successMessage = '';
-    this.apiService.delete<ApiResponse<unknown>>(`/pets/${pet.id}`).subscribe({
-      next: () => { this.successMessage = 'Pet profile deleted.'; this.loadPets(); },
+    this.apiService.delete<ApiResponse<unknown>>(`/v1/pets/${pet.id}`).subscribe({
+      next: response => {
+        if (!response?.success) { this.errorMessage = response?.message || 'Unable to delete pet.'; return; }
+        this.successMessage = 'Pet profile deleted.';
+        this.loadPets();
+      },
       error: () => { this.errorMessage = 'Unable to delete pet.'; }
     });
   }
@@ -261,6 +290,10 @@ export class PetsPageComponent implements OnInit {
   }
 
   removeProfileImage(): void {
+    if (!this.supportsProfileImageWrites) {
+      this.errorMessage = 'pets.profileImageUnavailable';
+      return;
+    }
     const pet = this.editingPet;
     if (!pet) return;
     this.removingImagePetId = pet.id;
@@ -282,23 +315,13 @@ export class PetsPageComponent implements OnInit {
     this.clearImageSelection();
   }
 
-  private loadSchema(speciesId: string, preserveValues: boolean): void {
-    this.apiService.get<ApiResponse<PetDynamicFieldDefinition[]>>(`/pet-taxonomy/species/${speciesId}/schema`).subscribe({
-      next: (response) => {
-        this.dynamicFields = (response.data || []).filter((field) => field.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
-        if (!preserveValues) this.form.dynamicValues = {};
-      },
-      error: () => { this.errorMessage = 'Unable to load species-specific fields.'; }
-    });
-  }
-
-  private finishPetSave(isEditing: boolean, uploadErrorKey = ''): void {
+  private finishPetSave(isEditing: boolean): void {
     this.isSaving = false;
     this.isPetEditorOpen = false;
     this.resetForm();
     this.successMessage = isEditing ? 'Pet profile updated.' : 'Pet profile created.';
     this.loadPets();
-    this.errorMessage = uploadErrorKey;
+    this.errorMessage = '';
   }
 
   private clearImageSelection(): void {

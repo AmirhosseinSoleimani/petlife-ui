@@ -41,6 +41,8 @@ export class RemindersPageComponent implements OnInit {
   successMessage = '';
   isReminderEditorOpen = false;
   loadFailed = false;
+  petsLoadFailed = false;
+  templatesLoadFailed = false;
 
   constructor(private readonly apiService: ApiService, private readonly dialogService: AppDialogService) {}
 
@@ -78,8 +80,16 @@ export class RemindersPageComponent implements OnInit {
 
   loadPets(): void {
     this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
-      next: response => this.pets = response.data || [],
-      error: () => this.errorMessage = 'reminders.loadPetsError'
+      next: response => {
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.petsLoadFailed = true;
+          this.errorMessage = 'reminders.loadPetsError';
+          return;
+        }
+        this.petsLoadFailed = false;
+        this.pets = response.data;
+      },
+      error: () => { this.petsLoadFailed = true; this.errorMessage = 'reminders.loadPetsError'; }
     });
   }
 
@@ -92,7 +102,13 @@ export class RemindersPageComponent implements OnInit {
     if (this.typeFilter) params.push(`reminderType=${encodeURIComponent(this.typeFilter)}`);
     this.apiService.get<ApiResponse<Reminder[]>>(`/v1/reminders/center?${params.join('&')}`).subscribe({
       next: response => {
-        this.reminders = response.data || [];
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.loadFailed = true;
+          this.errorMessage = 'reminders.loadError';
+          this.isLoading = false;
+          return;
+        }
+        this.reminders = response.data;
         this.selectedIds.clear();
         this.loadFailed = false;
         this.isLoading = false;
@@ -109,11 +125,16 @@ export class RemindersPageComponent implements OnInit {
 
   onPetFormChange(petId: string | null): void {
     this.form.petId = petId;
+    this.templates = [];
+    this.templatesLoadFailed = false;
     const pet = this.pets.find(item => item.id === petId);
     const species = pet?.speciesId ? `?speciesId=${pet.speciesId}` : '';
     this.apiService.get<ApiResponse<ReminderTemplate[]>>(`/v1/reminders/templates${species}`).subscribe({
-      next: response => this.templates = response.data || [],
-      error: () => this.templates = []
+      next: response => {
+        this.templatesLoadFailed = !response?.success || !Array.isArray(response.data);
+        this.templates = this.templatesLoadFailed ? [] : response.data;
+      },
+      error: () => { this.templates = []; this.templatesLoadFailed = true; }
     });
   }
 
@@ -143,7 +164,8 @@ export class RemindersPageComponent implements OnInit {
       ? this.apiService.put<ApiResponse<Reminder>>(`/v1/reminders/${this.editingId}`, payload)
       : this.apiService.post<ApiResponse<Reminder>>('/v1/reminders', payload);
     request.subscribe({
-      next: () => {
+      next: response => {
+        if (!response?.success || !response.data) { this.errorMessage = 'reminders.createError'; this.isSaving = false; return; }
         this.successMessage = this.editingId ? 'reminders.updateSuccess' : 'reminders.createSuccess';
         this.closeReminderEditor(true);
         this.loadReminders();
@@ -166,7 +188,7 @@ export class RemindersPageComponent implements OnInit {
       reminderLeadDays: Number(this.expiryForm.reminderLeadDays),
       notificationChannel: 'InApp'
     }).subscribe({
-      next: () => { this.successMessage = 'reminders.expiryCreated'; this.closeReminderEditor(true); this.loadReminders(); },
+      next: response => { if (!response?.success || !response.data) { this.errorMessage = 'reminders.expiryCreateError'; this.isSaving = false; return; } this.successMessage = 'reminders.expiryCreated'; this.closeReminderEditor(true); this.loadReminders(); },
       error: () => { this.errorMessage = 'reminders.expiryCreateError'; this.isSaving = false; }
     });
   }
@@ -225,7 +247,7 @@ export class RemindersPageComponent implements OnInit {
   bulkDone(): void {
     if (!this.hasSelection) return;
     this.apiService.post<ApiResponse<Reminder[]>>(`/v1/reminders/bulk/done?utcOffsetMinutes=${this.utcOffsetMinutes()}`, { reminderIds: Array.from(this.selectedIds) }).subscribe({
-      next: () => { this.successMessage = 'reminders.bulkDoneSuccess'; this.loadReminders(); },
+      next: response => { if (!response?.success) { this.errorMessage = 'reminders.bulkError'; return; } this.successMessage = 'reminders.bulkDoneSuccess'; this.loadReminders(); },
       error: () => this.errorMessage = 'reminders.bulkError'
     });
   }
@@ -233,21 +255,21 @@ export class RemindersPageComponent implements OnInit {
   bulkSnooze(): void {
     if (!this.hasSelection) return;
     this.apiService.post<ApiResponse<Reminder[]>>(`/v1/reminders/bulk/snooze?utcOffsetMinutes=${this.utcOffsetMinutes()}`, { reminderIds: Array.from(this.selectedIds), snoozeUntil: this.getTomorrowDate() }).subscribe({
-      next: () => { this.successMessage = 'reminders.bulkSnoozeSuccess'; this.loadReminders(); },
+      next: response => { if (!response?.success) { this.errorMessage = 'reminders.bulkError'; return; } this.successMessage = 'reminders.bulkSnoozeSuccess'; this.loadReminders(); },
       error: () => this.errorMessage = 'reminders.bulkError'
     });
   }
 
   markDone(reminder: Reminder): void {
     this.apiService.post<ApiResponse<Reminder>>(`/v1/reminders/${reminder.id}/done?utcOffsetMinutes=${this.utcOffsetMinutes()}`, {}).subscribe({
-      next: () => { this.successMessage = 'reminders.doneSuccess'; this.loadReminders(); },
+      next: response => { if (!response?.success) { this.errorMessage = 'reminders.doneError'; return; } this.successMessage = 'reminders.doneSuccess'; this.loadReminders(); },
       error: () => this.errorMessage = 'reminders.doneError'
     });
   }
 
   snooze(reminder: Reminder): void {
     this.apiService.post<ApiResponse<Reminder>>(`/v1/reminders/${reminder.id}/snooze?utcOffsetMinutes=${this.utcOffsetMinutes()}`, { snoozeUntil: this.getTomorrowDate() }).subscribe({
-      next: () => { this.successMessage = 'reminders.snoozeSuccess'; this.loadReminders(); },
+      next: response => { if (!response?.success) { this.errorMessage = 'reminders.snoozeError'; return; } this.successMessage = 'reminders.snoozeSuccess'; this.loadReminders(); },
       error: () => this.errorMessage = 'reminders.snoozeError'
     });
   }
@@ -256,7 +278,7 @@ export class RemindersPageComponent implements OnInit {
     this.dialogService.confirm({ title: 'Delete reminder?', message: 'reminders.deleteConfirm', confirmLabel: 'Delete reminder', tone: 'danger' }).then((confirmed) => {
       if (!confirmed) return;
       this.apiService.delete<ApiResponse<unknown>>(`/v1/reminders/${reminder.id}`).subscribe({
-        next: () => { this.successMessage = 'reminders.deleteSuccess'; this.loadReminders(); },
+        next: response => { if (!response?.success) { this.errorMessage = 'reminders.deleteError'; return; } this.successMessage = 'reminders.deleteSuccess'; this.loadReminders(); },
         error: () => this.errorMessage = 'reminders.deleteError'
       });
     });

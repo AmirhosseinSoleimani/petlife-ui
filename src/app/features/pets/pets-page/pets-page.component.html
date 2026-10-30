@@ -4,9 +4,10 @@
   </app-page-header>
 
   <p *ngIf="errorMessage && !isPetEditorOpen" class="form-error">{{ errorMessage | translate }}</p>
+  <p *ngIf="taxonomyLoadFailed && !isPetEditorOpen" class="form-error" role="alert">{{ 'pets.taxonomyUnavailable' | translate }}</p>
   <p *ngIf="successMessage" class="form-success">{{ successMessage | translate }}</p>
   <div *ngIf="isLoading" class="state">{{ 'Loading pets...' | translate }}</div>
-  <div *ngIf="!isLoading && !pets.length" class="state">{{ 'No pets yet.' | translate }}</div>
+  <div *ngIf="!isLoading && !petsLoadFailed && !pets.length" class="state">{{ 'No pets yet.' | translate }}</div>
 
   <div class="pet-grid" *ngIf="pets.length">
     <app-card *ngFor="let pet of pets" [interactive]="true">
@@ -39,9 +40,11 @@
         <h3>{{ 'Identity' | translate }}</h3>
         <div class="form-grid">
           <app-input name="petName" label="Pet name" required [(ngModel)]="form.petName"></app-input>
-          <app-input name="speciesId" label="Species" type="select" placeholder="Select species" required [options]="speciesOptions" [ngModel]="form.speciesId" (ngModelChange)="onSpeciesChange($event)"></app-input>
+          <app-input *ngIf="showSpeciesSelect" name="speciesId" label="Species" type="select" placeholder="Select species" required [options]="speciesOptions" [ngModel]="form.speciesId" (ngModelChange)="onSpeciesChange($event)"></app-input>
+          <app-input *ngIf="!showSpeciesSelect" name="species" label="Species" required [(ngModel)]="form.species"></app-input>
           <app-input *ngIf="subgroupOptions.length" name="subgroupId" label="Subgroup" type="select" [options]="subgroupOptions" [ngModel]="form.subgroupId" (ngModelChange)="onSubgroupChange($event)"></app-input>
           <app-input *ngIf="breedOptions.length" name="breedId" label="Breed / Morph" type="select" [options]="breedOptions" [ngModel]="form.breedId" (ngModelChange)="onBreedChange($event)"></app-input>
+          <app-input *ngIf="!breedOptions.length" name="breed" label="Breed / Morph" [(ngModel)]="form.breed"></app-input>
           <app-input name="gender" label="Gender" type="select" [options]="genderOptions" [(ngModel)]="form.gender"></app-input>
           <app-input name="dateOfBirth" label="Date of birth" type="date" [(ngModel)]="form.dateOfBirth"></app-input>
           <app-input name="approxAge" label="Approximate age" [(ngModel)]="form.approxAge"></app-input>
@@ -117,17 +120,19 @@
 
       <section class="editor-section image-editor">
         <h3>{{ 'pets.profileImage' | translate }}</h3>
+        <p *ngIf="!supportsProfileImageWrites" class="form-error">{{ 'pets.profileImageUnavailable' | translate }}</p>
         <ng-container *ngIf="editingPet as petBeingEdited">
           <div class="current-profile-image" *ngIf="profileImageSource(petBeingEdited) as currentImage"><img [src]="currentImage" [alt]="'pets.currentProfileImage' | translate" /></div>
         </ng-container>
-        <app-file-upload #petImageUpload [accept]="profileImageExtensions.join(',')" [allowedExtensions]="profileImageExtensions" [allowedContentTypes]="profileImageContentTypes" allowedTypesLabelKey="files.petImageTypes" [maxSizeBytes]="profileImageMaxSize" [showImagePreview]="true" [loading]="isSaving" (filesChange)="onPetImageFilesChange($event)"></app-file-upload>
-        <app-button *ngIf="editingPet?.profileImageUrl" type="button" variant="danger" [loading]="removingImagePetId === editingPetId" (buttonClick)="removeProfileImage()">{{ 'pets.removeProfileImage' | translate }}</app-button>
+        <app-file-upload *ngIf="supportsProfileImageWrites" #petImageUpload [accept]="profileImageExtensions.join(',')" [allowedExtensions]="profileImageExtensions" [allowedContentTypes]="profileImageContentTypes" allowedTypesLabelKey="files.petImageTypes" [maxSizeBytes]="profileImageMaxSize" [showImagePreview]="true" [loading]="isSaving" (filesChange)="onPetImageFilesChange($event)"></app-file-upload>
+        <app-button *ngIf="supportsProfileImageWrites && editingPet?.profileImageUrl" type="button" variant="danger" [loading]="removingImagePetId === editingPetId" (buttonClick)="removeProfileImage()">{{ 'pets.removeProfileImage' | translate }}</app-button>
       </section>
 
+      <p *ngIf="taxonomyLoadFailed" class="form-error">{{ 'pets.taxonomyUnavailable' | translate }}</p>
       <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
       <footer class="editor-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closePetEditor()">{{ 'common.cancel' | translate }}</app-button>
-        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid || !form.speciesId">{{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid || !form.species.trim()">{{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}</app-button>
       </footer>
     </form>
   </app-modal>

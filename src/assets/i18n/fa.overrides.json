@@ -57,5 +57,9 @@
   "expenses.openPets": "مدیریت حیوانات",
   "expenses.petsLoadError": "بارگذاری حیوانات ناموفق بود. مدیریت هزینه‌ها به سرویس فعال حیوانات نیاز دارد.",
   "expenses.categoriesLoadError": "بارگذاری دسته‌بندی‌های هزینه ناموفق بود.",
-  "expenses.reportLoadError": "بارگذاری گزارش هزینه‌ها ناموفق بود."
+  "expenses.reportLoadError": "بارگذاری گزارش هزینه‌ها ناموفق بود.",
+  "pets.taxonomyUnavailable": "فهرست گونه‌ها در دسترس نیست؛ می‌توانید نام گونه را دستی وارد کنید.",
+  "pets.identityRequired": "نام حیوان و گونه الزامی است.",
+  "pets.profileImageUnavailable": "ثبت یا حذف تصویر در API فعلی حیوانات پشتیبانی نمی‌شود.",
+  "reminders.templatesUnavailable": "قالب‌های یادآور در دسترس نیستند. می‌توانید یادآور را بدون قالب ثبت کنید."
 }

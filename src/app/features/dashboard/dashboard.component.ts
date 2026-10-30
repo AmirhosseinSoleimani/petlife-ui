@@ -385,7 +385,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.petsLoadFailed = false;
     this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
       next: (response) => {
-        this.pets = response.data || [];
+        if (!response?.success || !Array.isArray(response.data)) { this.petsLoadFailed = true; this.isLoadingPets = false; return; }
+        this.pets = response.data;
         this.isLoadingPets = false;
         this.loadHealthRecords();
       },
@@ -402,7 +403,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.remindersLoadFailed = false;
     this.apiService.get<ApiResponse<Reminder[]>>('/v1/reminders/upcoming').subscribe({
       next: (response) => {
-        this.reminders = response.data || [];
+        if (!response?.success || !Array.isArray(response.data)) { this.remindersLoadFailed = true; this.isLoadingReminders = false; return; }
+        this.reminders = response.data;
         this.isLoadingReminders = false;
       },
       error: () => {

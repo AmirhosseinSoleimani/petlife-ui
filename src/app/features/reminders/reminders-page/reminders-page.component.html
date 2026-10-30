@@ -7,6 +7,7 @@
   </app-page-header>
 
   <p *ngIf="errorMessage && !isReminderEditorOpen" class="error page-message">{{ errorMessage | translate }}</p>
+  <p *ngIf="petsLoadFailed" class="error page-message" role="alert">{{ 'reminders.loadPetsError' | translate }}</p>
   <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
 
   <app-card class="center-toolbar">
@@ -33,7 +34,7 @@
     <p>{{ 'reminders.emptyCenterDescription' | translate }}</p>
   </section>
 
-  <div class="reminder-list" *ngIf="!isLoading && reminders.length">
+  <div class="reminder-list" *ngIf="!isLoading && !loadFailed && reminders.length">
     <app-card
       class="reminder-card"
       *ngFor="let reminder of reminders"
@@ -72,6 +73,7 @@
   <app-modal [open]="isReminderEditorOpen" [title]="editorMode === 'expiry' ? 'reminders.addExpiry' : (editingId ? 'reminders.edit' : 'reminders.add')" [description]="editorMode === 'expiry' ? 'reminders.expiryEditorDescription' : 'reminders.editorDescription'" [closeOnBackdrop]="false" (closed)="closeReminderEditor()">
     <form class="reminder-editor" *ngIf="editorMode === 'reminder'" (ngSubmit)="saveReminder()" #reminderForm="ngForm">
       <app-input name="petId" label="reminders.petLabel" type="select" placeholder="reminders.selectPet" [placeholderValue]="null" [options]="petOptions" required [ngModel]="form.petId" (ngModelChange)="onPetFormChange($event)"></app-input>
+      <p *ngIf="templatesLoadFailed" class="form-error" role="alert">{{ 'reminders.templatesUnavailable' | translate }}</p>
       <app-input name="templateId" label="reminders.template" type="select" [placeholderValue]="null" [options]="templateOptions" [ngModel]="form.templateId" (ngModelChange)="onTemplateChange($event)"></app-input>
       <app-input name="title" label="reminders.titleLabel" required [(ngModel)]="form.title"></app-input>
       <app-input name="reminderType" label="reminders.typeLabel" type="select" [options]="reminderTypeOptions" required [(ngModel)]="form.reminderType"></app-input>

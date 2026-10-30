@@ -45,6 +45,30 @@ export interface PetTaxonomy {
   species: PetSpecies[];
 }
 
+export interface PetTaxonomySpeciesDto {
+  id: string;
+  speciesId?: string | null;
+  subgroupId?: string | null;
+  code: string;
+  name: string;
+  isActive: boolean;
+  version: number;
+}
+
+/** The independent Pets endpoint currently exposes species, not the legacy nested taxonomy. */
+export function mapPetTaxonomySpecies(items: PetTaxonomySpeciesDto[]): PetSpecies[] {
+  return items.filter(item => item.isActive && !item.speciesId).map(item => ({
+    id: item.id,
+    code: item.code,
+    name: item.name,
+    isActive: item.isActive,
+    sortOrder: 0,
+    subgroups: [],
+    breeds: []
+  })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+
 export interface Pet {
   id: string;
   petName: string;
@@ -82,6 +106,7 @@ export interface Pet {
   dynamicValues: Record<string, string | null>;
   profileImageUrl?: string | null;
   createdAt?: string;
+  version?: number;
 }
 
 export interface PetPayload {
