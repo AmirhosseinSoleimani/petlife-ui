@@ -22,7 +22,15 @@ const emptyForm: ExpensePayload = {
 })
 export class PetExpensesComponent implements OnInit {
   petId = '';
+  readonly isExpensesHub: boolean;
   pets: Pet[] = [];
+  isLoadingPets = false;
+  petsLoadFailed = false;
+  categoriesLoadFailed = false;
+  reportLoadFailed = false;
+  private expensesRequestId = 0;
+  private categoriesRequestId = 0;
+  private reportRequestId = 0;
   expenses: Expense[] = [];
   categories: ExpenseCategory[] = [];
   report: ExpenseReport | null = null;
@@ -42,49 +50,140 @@ export class PetExpensesComponent implements OnInit {
 
   constructor(private readonly apiService: ApiService, private readonly route: ActivatedRoute, private readonly i18nService: I18nService, private readonly dialogService: AppDialogService) {
     this.petId = this.route.snapshot.paramMap.get('petId') || '';
+    this.isExpensesHub = !this.route.snapshot.paramMap.has('petId');
   }
 
+  get petOptions(): AppInputOption[] { return this.pets.map(pet => ({ label: pet.petName, value: pet.id })); }
   get categoryOptions(): AppInputOption[] { return this.categories.map(category => ({ label: category.name, value: category.id })); }
   get monthOptions(): AppInputOption[] { return Array.from({ length: 12 }, (_, index) => ({ label: new Date(2000, index, 1).toLocaleString(undefined, { month: 'long' }), value: index + 1 })); }
   get yearOptions(): AppInputOption[] { const current = new Date().getFullYear(); return Array.from({ length: 7 }, (_, index) => ({ label: String(current - index), value: current - index })); }
   get selectedAllocationTotal(): number { return this.allocations.filter(item => item.selected).reduce((sum, item) => sum + Number(item.amount || 0), 0); }
 
-  ngOnInit(): void { this.loadPets(); this.loadPage(); this.loadReport(); }
+  ngOnInit(): void {
+    this.loadPets();
+    if (this.petId) this.loadPage();
+    this.loadReport();
+  }
 
   loadPets(): void {
+    this.isLoadingPets = true;
+    this.petsLoadFailed = false;
     this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
       next: response => {
-        this.pets = response.data || [];
+        this.isLoadingPets = false;
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.pets = [];
+          this.petsLoadFailed = true;
+          this.loadCategories(null);
+          return;
+        }
+        this.pets = response.data;
         this.resetAllocations();
         const current = this.pets.find(pet => pet.id === this.petId);
         this.loadCategories(current?.speciesId || null);
       },
-      error: () => this.loadCategories(null)
+      error: () => {
+        this.isLoadingPets = false;
+        this.petsLoadFailed = true;
+        this.pets = [];
+        this.loadCategories(null);
+      }
     });
   }
 
+  onPetChange(value: string | number | boolean | null): void {
+    const selectedId = typeof value === 'string' ? value : '';
+    if (!this.isExpensesHub || this.isSaving || selectedId === this.petId ||
+        (selectedId && !this.pets.some(pet => pet.id === selectedId))) return;
+
+    this.petId = selectedId;
+    this.expensesRequestId++;
+    this.expenses = [];
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.resetForm();
+    const current = this.pets.find(pet => pet.id === selectedId);
+    this.loadCategories(current?.speciesId || null);
+    if (selectedId) this.loadPage();
+    else this.isLoading = false;
+    this.report = null;
+    this.loadReport();
+  }
+
   loadCategories(speciesId: string | null): void {
-    const query = speciesId ? `?speciesId=${speciesId}` : '';
-    this.apiService.get<ApiResponse<ExpenseCategory[]>>(`/expense-categories${query}`).subscribe({
-      next: response => this.categories = response.data || [],
-      error: () => { this.categories = []; }
+    const requestId = ++this.categoriesRequestId;
+    this.categoriesLoadFailed = false;
+    this.categories = [];
+    const query = speciesId ? '?speciesId=' + encodeURIComponent(speciesId) : '';
+    this.apiService.get<ApiResponse<ExpenseCategory[]>>('/expense-categories' + query).subscribe({
+      next: response => {
+        if (requestId !== this.categoriesRequestId) return;
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.categoriesLoadFailed = true;
+          return;
+        }
+        this.categories = response.data;
+      },
+      error: () => {
+        if (requestId !== this.categoriesRequestId) return;
+        this.categoriesLoadFailed = true;
+      }
     });
   }
 
   loadPage(): void {
-    this.isLoading = true; this.errorMessage = '';
-    this.apiService.get<ApiResponse<Expense[]>>(`/pets/${this.petId}/expenses`).subscribe({
-      next: response => { this.expenses = response.data || []; this.isLoading = false; },
-      error: () => { this.errorMessage = 'expenses.loadError'; this.isLoading = false; }
+    if (!this.petId) {
+      this.expenses = [];
+      this.isLoading = false;
+      return;
+    }
+    const requestId = ++this.expensesRequestId;
+    const requestedPetId = this.petId;
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.expenses = [];
+    this.apiService.get<ApiResponse<Expense[]>>('/pets/' + requestedPetId + '/expenses').subscribe({
+      next: response => {
+        if (requestId !== this.expensesRequestId) return;
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.errorMessage = 'expenses.loadError';
+        } else {
+          this.expenses = response.data;
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        if (requestId !== this.expensesRequestId) return;
+        this.errorMessage = 'expenses.loadError';
+        this.isLoading = false;
+      }
     });
   }
 
   loadReport(): void {
+    const requestId = ++this.reportRequestId;
     this.isReportLoading = true;
-    const month = this.reportPeriod === 'monthly' ? `&month=${this.reportMonth}` : '';
-    this.apiService.get<ApiResponse<ExpenseReport>>(`/expenses/reports?period=${this.reportPeriod}&year=${this.reportYear}${month}&petId=${this.petId}`).subscribe({
-      next: response => { this.report = response.data; this.isReportLoading = false; },
-      error: () => { this.report = null; this.isReportLoading = false; }
+    this.reportLoadFailed = false;
+    this.report = null;
+    const month = this.reportPeriod === 'monthly' ? '&month=' + this.reportMonth : '';
+    const pet = this.petId ? '&petId=' + encodeURIComponent(this.petId) : '';
+    const query = '?period=' + encodeURIComponent(this.reportPeriod) +
+      '&year=' + this.reportYear + month + pet;
+    this.apiService.get<ApiResponse<ExpenseReport>>('/expenses/reports' + query).subscribe({
+      next: response => {
+        if (requestId !== this.reportRequestId) return;
+        if (!response?.success || !response.data) {
+          this.reportLoadFailed = true;
+        } else {
+          this.report = response.data;
+        }
+        this.isReportLoading = false;
+      },
+      error: () => {
+        if (requestId !== this.reportRequestId) return;
+        this.reportLoadFailed = true;
+        this.isReportLoading = false;
+      }
     });
   }
 
@@ -106,6 +205,7 @@ export class PetExpensesComponent implements OnInit {
 
   saveExpense(): void {
     this.errorMessage = ''; this.successMessage = '';
+    if (!this.petId) { this.errorMessage = 'expenses.selectPetBeforeManaging'; return; }
     if (!this.form.amount || this.form.amount <= 0) { this.errorMessage = 'expenses.amountInvalid'; return; }
     if (!this.form.category.trim()) { this.errorMessage = 'expenses.categoryRequired'; return; }
     const allocations = this.sharedExpense
@@ -123,11 +223,24 @@ export class PetExpensesComponent implements OnInit {
       : this.apiService.post<ApiResponse<Expense>>(`/pets/${this.petId}/expenses`, payload);
     request.subscribe({
       next: response => {
+        if (!response?.success || !response.data?.id) {
+          this.errorMessage = 'expenses.saveError';
+          this.isSaving = false;
+          return;
+        }
         const expense = response.data;
-        if (expense && this.selectedReceipt) {
+        if (this.selectedReceipt) {
           if (!this.editingId) this.editingId = expense.id;
           this.apiService.uploadExpenseReceipt<ApiResponse<unknown>>(expense.id, this.selectedReceipt).subscribe({
-            next: () => this.finishSave(wasEditing),
+            next: receiptResponse => {
+              if (!receiptResponse?.success) {
+                this.errorMessage = 'expenses.receiptUploadError';
+                this.isSaving = false;
+                this.loadPage();
+                return;
+              }
+              this.finishSave(wasEditing);
+            },
             error: () => { this.errorMessage = 'expenses.receiptUploadError'; this.isSaving = false; this.loadPage(); }
           });
         } else {
@@ -160,7 +273,10 @@ export class PetExpensesComponent implements OnInit {
     this.dialogService.confirm({ title: 'Delete expense?', message: 'expenses.deleteConfirm', confirmLabel: 'Delete expense', tone: 'danger' }).then((confirmed) => {
       if (!confirmed) return;
       this.apiService.delete<ApiResponse<unknown>>(`/expenses/${expense.id}`).subscribe({
-        next: () => { this.successMessage = 'expenses.deleteSuccess'; this.loadPage(); this.loadReport(); },
+        next: response => {
+          if (!response?.success) { this.errorMessage = 'expenses.deleteError'; return; }
+          this.successMessage = 'expenses.deleteSuccess'; this.loadPage(); this.loadReport();
+        },
         error: () => this.errorMessage = 'expenses.deleteError'
       });
     });
@@ -182,7 +298,10 @@ export class PetExpensesComponent implements OnInit {
     this.dialogService.confirm({ title: 'Delete receipt?', message: 'expenses.receiptDeleteConfirm', confirmLabel: 'Delete receipt', tone: 'danger' }).then((confirmed) => {
       if (!confirmed) return;
       this.apiService.deleteExpenseReceipt<ApiResponse<unknown>>(expense.id).subscribe({
-        next: () => { this.successMessage = 'expenses.receiptDeleted'; this.loadPage(); },
+        next: response => {
+          if (!response?.success) { this.errorMessage = 'expenses.receiptDeleteError'; return; }
+          this.successMessage = 'expenses.receiptDeleted'; this.loadPage();
+        },
         error: () => this.errorMessage = 'expenses.receiptDeleteError'
       });
     });

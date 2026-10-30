@@ -46,5 +46,16 @@
   "auth.registerError": "ایجاد حساب انجام نشد.",
   "auth.recoveryError": "بازیابی رمز عبور ناموفق بود.",
   "auth.showPassword": "نمایش رمز عبور",
-  "auth.hidePassword": "پنهان کردن رمز عبور"
+  "auth.hidePassword": "پنهان کردن رمز عبور",
+  "nav.expenses": "مدیریت هزینه‌ها",
+  "expenses.description": "ثبت و مدیریت هزینه‌ها، رسیدها و گزارش هزینه‌های حیوانات.",
+  "expenses.selectPet": "حیوان",
+  "expenses.selectPetPlaceholder": "انتخاب حیوان",
+  "expenses.selectPetHelp": "برای مشاهده، ثبت، ویرایش و حذف هزینه‌ها یک حیوان انتخاب کنید.",
+  "expenses.selectPetBeforeManaging": "برای مدیریت هزینه‌ها ابتدا یک حیوان از بالا انتخاب کنید.",
+  "expenses.noPets": "هنوز حیوانی ثبت نکرده‌اید. برای ثبت هزینه ابتدا حیوان خود را اضافه کنید.",
+  "expenses.openPets": "مدیریت حیوانات",
+  "expenses.petsLoadError": "بارگذاری حیوانات ناموفق بود. مدیریت هزینه‌ها به سرویس فعال حیوانات نیاز دارد.",
+  "expenses.categoriesLoadError": "بارگذاری دسته‌بندی‌های هزینه ناموفق بود.",
+  "expenses.reportLoadError": "بارگذاری گزارش هزینه‌ها ناموفق بود."
 }

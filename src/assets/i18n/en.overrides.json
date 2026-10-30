@@ -46,5 +46,16 @@
   "auth.registerError": "Unable to create account.",
   "auth.recoveryError": "Password recovery failed. Please try again.",
   "auth.showPassword": "Show password",
-  "auth.hidePassword": "Hide password"
+  "auth.hidePassword": "Hide password",
+  "nav.expenses": "Expenses",
+  "expenses.description": "Track spending, manage receipts, and review expenses for your pets.",
+  "expenses.selectPet": "Pet",
+  "expenses.selectPetPlaceholder": "Select a pet",
+  "expenses.selectPetHelp": "Choose a pet to view, add, edit and delete expenses.",
+  "expenses.selectPetBeforeManaging": "Select a pet above to manage expenses.",
+  "expenses.noPets": "You don't have any pets yet. Add a pet before recording expenses.",
+  "expenses.openPets": "Manage pets",
+  "expenses.petsLoadError": "Unable to load pets. Expense management requires an available Pets service.",
+  "expenses.categoriesLoadError": "Unable to load expense categories.",
+  "expenses.reportLoadError": "Unable to load expense report."
 }

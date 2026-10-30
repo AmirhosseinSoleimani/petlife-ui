@@ -56,6 +56,7 @@ const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'profile', component: CustomerProfileComponent },
       { path: 'pets', component: PetsPageComponent },
+      { path: 'expenses', component: PetExpensesComponent },
       { path: 'pet-transfer', component: PetTransferComponent },
       { path: 'notifications', component: NotificationsPageComponent },
       { path: 'pets/:petId/health-records', component: PetHealthRecordsComponent },
