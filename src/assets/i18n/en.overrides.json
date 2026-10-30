@@ -58,7 +58,7 @@
   "expenses.petsLoadError": "Unable to load pets. Expense management requires an available Pets service.",
   "expenses.categoriesLoadError": "Unable to load expense categories.",
   "expenses.reportLoadError": "Unable to load expense report.",
-  "pets.taxonomyUnavailable": "Pet taxonomy is currently unavailable. You can enter the species name manually.",
+  "pets.taxonomyUnavailable": "Species list is unavailable or empty. Please retry after the starter species have been added.",
   "pets.identityRequired": "Pet name and species are required.",
   "pets.profileImageUnavailable": "Profile image changes are not supported by the current Pets API.",
   "reminders.templatesUnavailable": "Reminder templates are unavailable. You can create a reminder without a template.",
@@ -77,5 +77,9 @@
   "pets.uploadingPhoto": "Uploading image",
   "pets.imageUploadFailed": "Pet details were saved, but image upload failed. You can retry.",
   "pets.imageRemoveFailed": "Unable to remove pet image.",
-  "pets.imageRemoved": "Pet image removed."
+  "pets.imageRemoved": "Pet image removed.",
+  "pets.speciesPlaceholder": "Select a species",
+  "pets.speciesLoading": "Loading species...",
+  "pets.retrySpecies": "Retry loading species",
+  "pets.speciesRequired": "Choose a species from the list to continue."
 }

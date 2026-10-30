@@ -42,6 +42,11 @@ export function toQuickPetPayload(form: PetPayload): { petName: string; species:
   return payload;
 }
 
+/** A species must come from the active backend taxonomy, never from free text. */
+export function isActiveSpeciesSelection(species: PetSpecies[], id: string | null | undefined): boolean {
+  return !!id && species.some(item => item.isActive && item.id === id);
+}
+
 @Component({
   selector: 'app-pets-page',
   templateUrl: './pets-page.component.html',
@@ -104,8 +109,8 @@ export class PetsPageComponent implements OnInit, OnDestroy {
     return this.species.filter((item) => item.isActive).map((item) => ({ label: item.name, value: item.id }));
   }
 
-  get showSpeciesSelect(): boolean {
-    return this.speciesOptions.length > 0 && (!this.editingPetId || !!this.form.speciesId);
+  get hasValidSpeciesSelection(): boolean {
+    return isActiveSpeciesSelection(this.species, this.form.speciesId);
   }
 
   get selectedSpecies(): PetSpecies | null {
@@ -156,6 +161,12 @@ export class PetsPageComponent implements OnInit, OnDestroy {
           return;
         }
         this.species = mapPetTaxonomySpecies(response.data);
+        this.taxonomyLoadFailed = this.species.length === 0;
+        if (this.editingPetId && !this.form.speciesId && this.form.species) {
+          const matched = this.species.find(item =>
+            item.name.toLocaleLowerCase() === this.form.species.toLocaleLowerCase());
+          if (matched) this.form.speciesId = matched.id;
+        }
       },
       error: () => {
         this.species = [];
@@ -217,8 +228,12 @@ export class PetsPageComponent implements OnInit, OnDestroy {
   }
 
   savePet(): void {
-    if (!this.form.petName.trim() || !this.form.species.trim()) {
+    if (!this.form.petName.trim()) {
       this.errorMessage = 'pets.identityRequired';
+      return;
+    }
+    if (!this.hasValidSpeciesSelection) {
+      this.errorMessage = 'pets.speciesRequired';
       return;
     }
     const editingPetId = this.editingPetId;

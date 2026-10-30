@@ -58,7 +58,7 @@
   "expenses.petsLoadError": "بارگذاری حیوانات ناموفق بود. مدیریت هزینه‌ها به سرویس فعال حیوانات نیاز دارد.",
   "expenses.categoriesLoadError": "بارگذاری دسته‌بندی‌های هزینه ناموفق بود.",
   "expenses.reportLoadError": "بارگذاری گزارش هزینه‌ها ناموفق بود.",
-  "pets.taxonomyUnavailable": "فهرست گونه‌ها در دسترس نیست؛ می‌توانید نام گونه را دستی وارد کنید.",
+  "pets.taxonomyUnavailable": "فهرست گونه‌ها در دسترس نیست یا هنوز خالی است. بعد از افزودن گونه‌های اولیه دوباره تلاش کنید.",
   "pets.identityRequired": "نام حیوان و گونه الزامی است.",
   "pets.profileImageUnavailable": "ثبت یا حذف تصویر در API فعلی حیوانات پشتیبانی نمی‌شود.",
   "reminders.templatesUnavailable": "قالب‌های یادآور در دسترس نیستند. می‌توانید یادآور را بدون قالب ثبت کنید.",
@@ -77,5 +77,9 @@
   "pets.uploadingPhoto": "در حال آپلود تصویر",
   "pets.imageUploadFailed": "پروفایل حیوان ذخیره شد، اما آپلود تصویر موفق نبود. می‌توانید دوباره امتحان کنید.",
   "pets.imageRemoveFailed": "حذف تصویر ناموفق بود.",
-  "pets.imageRemoved": "تصویر حیوان حذف شد."
+  "pets.imageRemoved": "تصویر حیوان حذف شد.",
+  "pets.speciesPlaceholder": "گونه حیوان را انتخاب کنید",
+  "pets.speciesLoading": "در حال بارگذاری گونه‌ها...",
+  "pets.retrySpecies": "تلاش مجدد برای دریافت گونه‌ها",
+  "pets.speciesRequired": "برای ادامه، یک گونه از فهرست انتخاب کنید."
 }

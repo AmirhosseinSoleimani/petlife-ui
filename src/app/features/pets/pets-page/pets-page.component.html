@@ -40,8 +40,17 @@
         <h3>{{ 'Identity' | translate }}</h3>
         <div class="form-grid">
           <app-input name="petName" label="Pet name" required [(ngModel)]="form.petName"></app-input>
-          <app-input *ngIf="showSpeciesSelect" name="speciesId" label="Species" type="select" placeholder="Select species" required [options]="speciesOptions" [ngModel]="form.speciesId" (ngModelChange)="onSpeciesChange($event)"></app-input>
-          <app-input *ngIf="!showSpeciesSelect" name="species" label="Species" required [(ngModel)]="form.species"></app-input>
+          <app-input name="speciesId" label="Species" type="select"
+            placeholder="pets.speciesPlaceholder" [placeholderValue]="null" required
+            [options]="speciesOptions" [ngModel]="form.speciesId"
+            (ngModelChange)="onSpeciesChange($event)"></app-input>
+          <p *ngIf="isTaxonomyLoading" class="form-info" role="status">{{ 'pets.speciesLoading' | translate }}</p>
+          <div *ngIf="taxonomyLoadFailed && !isTaxonomyLoading" class="species-error" role="alert">
+            <p class="form-error">{{ 'pets.taxonomyUnavailable' | translate }}</p>
+            <app-button type="button" variant="secondary" (buttonClick)="loadTaxonomy()">
+              {{ 'pets.retrySpecies' | translate }}
+            </app-button>
+          </div>
 
         </div>
       </section>
@@ -185,7 +194,7 @@
       <p *ngIf="errorMessage" class="form-error">{{ errorMessage | translate }}</p>
       <footer class="editor-actions">
         <app-button type="button" variant="secondary" [disabled]="isSaving" (buttonClick)="closePetEditor()">{{ 'common.cancel' | translate }}</app-button>
-        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid || !form.species.trim()">{{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}</app-button>
+        <app-button type="submit" [loading]="isSaving" [disabled]="petForm.invalid || isTaxonomyLoading || taxonomyLoadFailed || !hasValidSpeciesSelection">{{ (isSaving ? 'pets.saving' : editingPetId ? 'pets.saveChanges' : 'pets.createPet') | translate }}</app-button>
       </footer>
     </form>
   </app-modal>
