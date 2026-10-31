@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ServiceRequest } from '../../../core/models/marketplace.models';
-import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
 @Component({
   selector: 'app-my-requests',
@@ -17,6 +17,7 @@ export class MyRequestsComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   isUpdating = false;
+  readonly isHistoryPage: boolean;
   statusFilter: 'all' | 'active' | 'completed' | 'rejected' = 'all';
 
   readonly statusFilters: Array<{ value: 'all' | 'active' | 'completed' | 'rejected'; label: string }> = [
@@ -28,17 +29,13 @@ export class MyRequestsComponent implements OnInit {
 
   constructor(
     private readonly apiService: ApiService,
-    private readonly preferencesService: UserPreferencesService
-  ) {}
+    private readonly route: ActivatedRoute
+  ) {
+    this.isHistoryPage = this.route.snapshot.data['view'] === 'history';
+  }
 
   ngOnInit(): void {
-    this.preferencesService.load().subscribe((preferences) => {
-      const filter = (preferences.customerDefaultRequestFilter || 'All').toLowerCase();
-      if (['all', 'active', 'completed', 'rejected'].includes(filter)) {
-        this.statusFilter = filter as typeof this.statusFilter;
-      }
-      this.loadRequests();
-    });
+    this.loadRequests();
   }
 
   getPetName(request: ServiceRequest): string {
@@ -83,17 +80,27 @@ export class MyRequestsComponent implements OnInit {
     }
   }
 
+  get activeRequests(): ServiceRequest[] {
+    return this.requests.filter(request => this.isActiveRequest(request));
+  }
+
+  get completedRequestsCount(): number {
+    return this.requests.filter(request => !this.isActiveRequest(request)).length;
+  }
+
   get filteredRequests(): ServiceRequest[] {
-    if (this.statusFilter === 'all') {
-      return this.requests;
-    }
-    return this.requests.filter((request) => {
+    // The Requests landing page always shows active work regardless of saved preferences.
+    if (!this.isHistoryPage) return this.activeRequests;
+    if (this.statusFilter === 'all') return this.requests;
+    return this.requests.filter(request => {
       const status = this.getStatus(request).toLowerCase();
-      if (this.statusFilter === 'active') {
-        return status !== 'completed' && status !== 'rejected';
-      }
-      return status === this.statusFilter;
+      return this.statusFilter === 'active' ? this.isActiveRequest(request) : status === this.statusFilter;
     });
+  }
+
+  private isActiveRequest(request: ServiceRequest): boolean {
+    const status = this.getStatus(request).toLowerCase();
+    return !['completed', 'rejected', 'cancelled', 'canceled', 'withdrawn'].includes(status);
   }
 
   getFilterCount(filter: 'all' | 'active' | 'completed' | 'rejected'): number {
@@ -102,7 +109,7 @@ export class MyRequestsComponent implements OnInit {
     }
     return this.requests.filter((request) => {
       const status = this.getStatus(request).toLowerCase();
-      return filter === 'active' ? status !== 'completed' && status !== 'rejected' : status === filter;
+      return filter === 'active' ? this.isActiveRequest(request) : status === filter;
     }).length;
   }
 
@@ -133,7 +140,10 @@ export class MyRequestsComponent implements OnInit {
 
     this.apiService.get<ApiResponse<ServiceRequest[]>>('/v1/service-requests/my').subscribe({
       next: (response) => {
-        this.requests = response.data || [];
+        this.requests = response?.success && Array.isArray(response.data) ? response.data : [];
+        this.selectedRequest = this.selectedRequest && this.filteredRequests.some(item => item.id === this.selectedRequest?.id)
+          ? this.selectedRequest : null;
+        if (!response?.success) this.errorMessage = 'requests.loadError';
         this.isLoading = false;
       },
       error: (error: { error?: { message?: string; errors?: string[] } }) => {

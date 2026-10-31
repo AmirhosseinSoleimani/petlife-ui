@@ -1,0 +1,43 @@
+<section class="page request-chooser">
+  <app-page-header eyebrow="requests.eyebrow" title="requests.chooseTypeTitle"
+    description="requests.chooseTypeSubtitle" backLink="/service-requests/my"
+    backLabel="requests.backToActive"></app-page-header>
+
+  <div class="request-type-grid">
+    <a class="request-type-card" routerLink="/service-requests/new/care">
+      <span class="type-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+          <path d="M3 8h18v12H3zM7 8V5h10v3M7 13h10M12 10v6" stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="type-content">
+        <strong>{{ 'requests.careTypeTitle' | translate }}</strong>
+        <span>{{ 'requests.careTypeDescription' | translate }}</span>
+        <small>{{ 'requests.careTypeHint' | translate }}</small>
+      </span>
+      <svg class="type-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+    </a>
+
+    <a class="request-type-card emergency-type" routerLink="/service-requests/new/emergency">
+      <span class="type-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+          <path d="M12 21s-7-4.2-9-9a5.7 5.7 0 0 1 9-6.1A5.7 5.7 0 0 1 21 12c-2 4.8-9 9-9 9z"/>
+          <path d="M12 9v6M9 12h6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="type-content">
+        <strong>{{ 'requests.emergencyTypeTitle' | translate }}</strong>
+        <span>{{ 'requests.emergencyTypeDescription' | translate }}</span>
+        <small>{{ 'requests.emergencyTypeHint' | translate }}</small>
+      </span>
+      <svg class="type-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <p class="emergency-notice" role="note">
+    <strong>{{ 'requests.emergencyNoticeTitle' | translate }}</strong>
+    {{ 'requests.emergencyNotice' | translate }}
+  </p>
+</section>

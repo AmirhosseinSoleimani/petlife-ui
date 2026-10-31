@@ -1,0 +1,56 @@
+:host { display: block; min-width: 0; }
+.request-chooser { display: grid; gap: var(--space-xl); min-width: 0; }
+.request-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-lg); }
+.request-type-card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) 20px;
+  align-items: start;
+  gap: var(--space-lg);
+  min-width: 0;
+  padding: var(--space-2xl);
+  min-height: 180px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.request-type-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-medium); }
+.request-type-card:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.type-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-lg);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+}
+.type-icon svg { width: 27px; height: 27px; }
+.emergency-type .type-icon { color: var(--color-danger); background: var(--color-surface-soft); }
+.type-arrow { width: 20px; height: 20px; color: var(--color-primary-dark); align-self: center; }
+.type-content { display: grid; gap: var(--space-md); min-width: 0; }
+.type-content strong { font-size: var(--font-size-card-title); color: var(--color-text); }
+.type-content span { font-size: var(--font-size-body); color: var(--color-muted); line-height: 1.5; }
+.type-content small { font-size: var(--font-size-caption); line-height: 1.5; color: var(--color-primary-dark); font-weight: 700; }
+.emergency-notice {
+  margin: 0;
+  padding: var(--space-lg);
+  border-inline-start: 3px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+.emergency-notice strong { display: block; }
+@media (max-width: 840px) {
+  .request-type-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 500px) {
+  .request-type-card { grid-template-columns: 43px minmax(0, 1fr) 16px; padding: var(--space-lg); gap: var(--space-md); min-height: 0; }
+  .type-icon { width: 43px; height: 43px; }
+  .type-icon svg { width: 23px; height: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { .request-type-card { transition: none; } }

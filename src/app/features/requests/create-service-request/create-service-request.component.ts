@@ -50,7 +50,7 @@ export class CreateServiceRequestComponent implements OnInit {
   ngOnInit(): void {
     const serviceId = this.route.snapshot.paramMap.get('serviceId');
     if (!serviceId) {
-      this.router.navigate(['/services']);
+      this.router.navigate(['/service-requests/new']);
       return;
     }
 

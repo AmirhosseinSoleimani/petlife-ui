@@ -34,10 +34,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { labelKey: 'nav.expenses', path: '/expenses', icon: 'expenses', enabled: true },
     { labelKey: 'nav.petTransfer', path: '/pet-transfer', icon: 'requests', enabled: true },
     { labelKey: 'nav.reminders', path: '/reminders', icon: 'reminders', enabled: true },
-    { labelKey: 'nav.requestsGroup', path: '/service-requests/my', icon: 'requests', enabled: true, children: [
-      { labelKey: 'nav.services', path: '/services', icon: 'services', enabled: true },
-      { labelKey: 'nav.emergencyVets', path: '/emergency-vets', icon: 'emergency', enabled: true }
-    ] },
+    { labelKey: 'nav.requestsGroup', path: '/service-requests/my', icon: 'requests', enabled: true },
     { labelKey: 'nav.aiAssistant', path: '/ai', icon: 'ai', enabled: true },
     { labelKey: 'nav.feedback', path: '/feedback', icon: 'requests', enabled: true }
   ];

@@ -37,6 +37,7 @@ import { ProviderServicesManagementComponent } from './features/provider-panel/p
 import { ProvidersPageComponent } from './features/providers/providers-page/providers-page.component';
 import { CreateServiceRequestComponent } from './features/requests/create-service-request/create-service-request.component';
 import { MyRequestsComponent } from './features/requests/my-requests/my-requests.component';
+import { RequestTypeChooserComponent } from './features/requests/request-type-chooser/request-type-chooser.component';
 import { RemindersPageComponent } from './features/reminders/reminders-page/reminders-page.component';
 import { ProviderServicesPageComponent } from './features/services/provider-services-page/provider-services-page.component';
 import { AppShellComponent } from './shared/layout/app-shell/app-shell.component';
@@ -75,8 +76,11 @@ const routes: Routes = [
       { path: 'provider/requests', component: ProviderRequestsComponent },
       { path: 'providers/:providerId/services', component: ProviderServicesPageComponent },
       { path: 'services', component: ProviderServicesPageComponent },
+      { path: 'service-requests/new', component: RequestTypeChooserComponent },
+      { path: 'service-requests/new/care', component: ProviderServicesPageComponent, data: { requestKind: 'care' } },
+      { path: 'service-requests/new/emergency', component: ProviderServicesPageComponent, data: { requestKind: 'emergency' } },
       { path: 'service-requests/new/:serviceId', component: CreateServiceRequestComponent },
-      { path: 'service-requests/new', pathMatch: 'full', redirectTo: 'services' },
+      { path: 'service-requests/history', component: MyRequestsComponent, data: { view: 'history' } },
       { path: 'service-requests/my', component: MyRequestsComponent },
       { path: 'admin/users', component: AdminUsersComponent, canActivate: [AdminGuard] },
       { path: 'admin/provider-verification', component: AdminProviderVerificationComponent, canActivate: [AdminGuard] },

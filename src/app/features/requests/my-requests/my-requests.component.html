@@ -1,29 +1,67 @@
 <section class="requests-page customer-requests-page">
-  <app-page-header eyebrow="requests.eyebrow" title="requests.title" description="requests.subtitle">
-    <a class="header-action" routerLink="/services">{{ 'requests.newRequest' | translate }}</a>
+  <app-page-header eyebrow="requests.eyebrow"
+    [title]="isHistoryPage ? 'requests.historyTitle' : 'requests.activeTitle'"
+    [description]="isHistoryPage ? 'requests.historySubtitle' : 'requests.activeSubtitle'">
+    <div class="request-header-actions">
+      <a class="header-action" routerLink="/service-requests/new">{{ 'requests.newRequest' | translate }}</a>
+      <a class="request-secondary-action" *ngIf="!isHistoryPage"
+        routerLink="/service-requests/history">{{ 'requests.viewHistory' | translate }}</a>
+      <a class="request-secondary-action" *ngIf="isHistoryPage"
+        routerLink="/service-requests/my">{{ 'requests.backToActive' | translate }}</a>
+    </div>
   </app-page-header>
 
-  <nav class="request-entry-links" [attr.aria-label]="'requests.entryOptions' | translate">
-    <a routerLink="/services">{{ 'nav.services' | translate }}</a>
-    <a routerLink="/emergency-vets">{{ 'nav.emergencyVets' | translate }}</a>
+  <div class="request-overview" *ngIf="!isLoading && !isHistoryPage">
+    <div class="overview-stat">
+      <span>{{ 'requests.activeTitle' | translate }}</span>
+      <strong>{{ activeRequests.length }}</strong>
+      <small>{{ 'requests.activeCountHelp' | translate }}</small>
+    </div>
+    <a class="overview-stat history-stat" routerLink="/service-requests/history">
+      <span>{{ 'requests.historyTitle' | translate }}</span>
+      <strong>{{ requests.length }}</strong>
+      <small>{{ 'requests.viewHistory' | translate }}</small>
+    </a>
+  </div>
+
+  <p *ngIf="errorMessage" class="error page-message" role="alert">{{ errorMessage | translate }}</p>
+  <p *ngIf="successMessage" class="success page-message" role="status">{{ successMessage | translate }}</p>
+  <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
+
+  <nav class="status-tabs" *ngIf="isHistoryPage && !isLoading && requests.length"
+    [attr.aria-label]="'requests.filterLabel' | translate">
+    <button type="button" *ngFor="let filter of statusFilters"
+      [class.active]="statusFilter === filter.value"
+      [attr.aria-pressed]="statusFilter === filter.value"
+      (click)="statusFilter = filter.value">
+      {{ filter.label | translate }} <span>{{ getFilterCount(filter.value) }}</span>
+    </button>
   </nav>
 
-  <p *ngIf="errorMessage" class="error page-message">{{ errorMessage | translate }}</p>
-  <p *ngIf="successMessage" class="success page-message">{{ successMessage | translate }}</p>
-  <div *ngIf="isLoading" class="state">{{ 'requests.loading' | translate }}</div>
-  <section *ngIf="!isLoading && !requests.length" class="request-empty">
-    <span aria-hidden="true">↗</span><h3>{{ 'requests.emptyTitle' | translate }}</h3><p>{{ 'requests.emptyDescription' | translate }}</p><a routerLink="/services">{{ 'requests.startRequest' | translate }}</a>
+  <section *ngIf="!isLoading && !errorMessage && !filteredRequests.length" class="request-empty">
+    <span class="empty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M6 4h9l3 3v13H6zM9 11h6M9 15h6M15 4v3h3" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <h3>{{ (isHistoryPage ? 'requests.emptyHistoryTitle' : 'requests.emptyActiveTitle') | translate }}</h3>
+    <p>{{ (isHistoryPage ? 'requests.emptyHistoryDescription' : 'requests.emptyActiveDescription') | translate }}</p>
+    <div class="empty-actions">
+      <a class="header-action" routerLink="/service-requests/new">{{ 'requests.newRequest' | translate }}</a>
+      <a class="request-secondary-action" *ngIf="!isHistoryPage"
+        routerLink="/service-requests/history">{{ 'requests.viewHistory' | translate }}</a>
+    </div>
   </section>
 
-  <ng-container *ngIf="!isLoading && requests.length">
-    <nav class="status-tabs" [attr.aria-label]="'requests.filterLabel' | translate">
-      <button type="button" *ngFor="let filter of statusFilters" [class.active]="statusFilter === filter.value" (click)="statusFilter = filter.value">{{ filter.label | translate }} <span>{{ getFilterCount(filter.value) }}</span></button>
-    </nav>
-
+  <div *ngIf="!isLoading && filteredRequests.length">
     <div class="request-layout">
       <div class="request-list">
         <p *ngIf="!filteredRequests.length" class="filter-empty">{{ 'requests.noStatusResults' | translate }}</p>
-        <app-card class="lifecycle-card" *ngFor="let request of filteredRequests" [class.selected]="selectedRequest?.id === request.id" [attr.data-status]="getStatus(request).toLowerCase()" (click)="selectRequest(request)">
+        <app-card class="lifecycle-card" *ngFor="let request of filteredRequests"
+          [class.selected]="selectedRequest?.id === request.id" [attr.data-status]="getStatus(request).toLowerCase()"
+          role="button" tabindex="0" (click)="selectRequest(request)"
+          (keydown.enter)="selectRequest(request)"
+          (keydown.space)="selectRequest(request); $event.preventDefault()">
           <div class="status-rail" aria-hidden="true"><span [class.reached]="getStatusStep(request) >= 1"></span><span [class.reached]="getStatusStep(request) >= 2"></span><span [class.reached]="getStatusStep(request) >= 3"></span></div>
           <div class="request-card-content">
             <div class="request-heading"><div><p class="request-kicker">{{ 'requests.careRequest' | translate }}</p><h3>{{ getServiceName(request) || ('requests.unknownService' | translate) }}</h3></div><app-badge [tone]="getStatusTone(request)">{{ getStatus(request) | translate }}</app-badge></div>
@@ -49,5 +87,5 @@
         <section class="request-history" *ngIf="selectedRequest.statusHistory?.length"><h4>{{ 'requests.statusTimeline' | translate }}</h4><ol><li *ngFor="let event of selectedRequest.statusHistory"><div><strong>{{ event.newStatus | translate }}</strong><small>{{ event.changedAt | date:'short' }} · {{ event.actorRole | translate }}</small></div><p *ngIf="event.note">{{ event.note }}</p></li></ol></section>
       </app-card>
     </div>
-  </ng-container>
+  </div>
 </section>

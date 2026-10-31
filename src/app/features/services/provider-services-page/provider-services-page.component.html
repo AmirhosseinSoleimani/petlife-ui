@@ -5,6 +5,9 @@
     [description]="pageDescription"
   ></app-page-header>
 
+  <a *ngIf="!providerId" class="request-flow-back" routerLink="/service-requests/new">{{ 'requests.backToTypes' | translate }}</a>
+  <p *ngIf="isEmergencyRequest" class="request-emergency-warning" role="note">{{ 'requests.emergencyCatalogWarning' | translate }}</p>
+
   <ol class="discovery-progress" [attr.aria-label]="'services.discoveryProgress' | translate">
     <li [class.active]="!selectedPetId" [class.complete]="!!selectedPetId"><span>1</span>{{ 'services.stepPet' | translate }}</li>
     <li [class.active]="!!selectedPetId && !selectedCategoryId" [class.complete]="!!selectedCategoryId"><span>2</span>{{ 'services.stepCategory' | translate }}</li>
@@ -22,14 +25,14 @@
   <section *ngIf="selectedPetId" class="discovery-step">
     <div><p class="step-kicker">{{ 'services.stepTwo' | translate }}</p><h2>{{ 'services.selectCategoryTitle' | translate }}</h2><p>{{ 'services.selectCategoryHelp' | translate }} <strong>{{ selectedPet?.petName }}</strong>.</p></div>
     <div *ngIf="isLoadingCategories" class="state">{{ 'services.loadingCategories' | translate }}</div>
-    <div *ngIf="!isLoadingCategories && categories.length" class="category-grid">
-      <button type="button" *ngFor="let category of categories" [class.selected]="selectedCategoryId === category.id" [attr.aria-pressed]="selectedCategoryId === category.id" (click)="selectCategory(category.id)">
+    <div *ngIf="!isLoadingCategories && visibleCategories.length" class="category-grid">
+      <button type="button" *ngFor="let category of visibleCategories" [class.selected]="selectedCategoryId === category.id" [attr.aria-pressed]="selectedCategoryId === category.id" (click)="selectCategory(category.id)">
         <span class="category-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="getCategoryIconPath(category)"/></svg></span>
         <span *ngIf="selectedCategoryId === category.id" class="category-selected"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 10 3 3 7-7"/></svg>{{ 'common.selected' | translate }}</span>
         <strong>{{ category.name }}</strong><small>{{ category.description }}</small>
       </button>
     </div>
-    <div *ngIf="!isLoadingCategories && !categories.length" class="catalog-empty"><h3>{{ 'services.noCategoriesTitle' | translate }}</h3><p>{{ 'services.noCategoriesDescription' | translate }}</p></div>
+    <div *ngIf="!isLoadingCategories && !visibleCategories.length" class="catalog-empty"><h3>{{ (isEmergencyRequest ? 'requests.noEmergencyCategories' : 'services.noCategoriesTitle') | translate }}</h3><p>{{ (isEmergencyRequest ? 'requests.noEmergencyCategoriesHelp' : 'services.noCategoriesDescription') | translate }}</p></div>
   </section>
 
   <section *ngIf="selectedCategoryId" class="discovery-step results-step">

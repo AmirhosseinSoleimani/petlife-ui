@@ -23,6 +23,7 @@ import { UserPreferencesService } from '../../../core/preferences/user-preferenc
   styleUrls: ['./provider-services-page.component.scss']
 })
 export class ProviderServicesPageComponent implements OnInit {
+  readonly isEmergencyRequest: boolean;
   pets: Pet[] = [];
   categories: ServiceCategory[] = [];
   services: ProviderService[] = [];
@@ -50,7 +51,9 @@ export class ProviderServicesPageComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly i18nService: I18nService,
     private readonly preferencesService: UserPreferencesService
-  ) {}
+  ) {
+    this.isEmergencyRequest = this.route.snapshot.data['requestKind'] === 'emergency';
+  }
 
   ngOnInit(): void {
     this.providerId = this.route.snapshot.paramMap.get('providerId');
@@ -119,17 +122,36 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   get visibleServices(): ProviderService[] {
-    if (!this.providerId) {
-      return this.services;
-    }
+    const services = this.isEmergencyRequest
+      ? this.services.filter(service => this.isEmergencyService(service)) : this.services;
+    if (!this.providerId) return services;
+    return services.filter(service =>
+      this.getServiceProviderIds(service).some(id => this.selectedProviderIds.has(id)));
+  }
 
-    return this.services.filter((service) =>
-      this.getServiceProviderIds(service).some((id) => this.selectedProviderIds.has(id)));
+  get visibleCategories(): ServiceCategory[] {
+    return this.isEmergencyRequest
+      ? this.categories.filter(category => this.isEmergencyCategory(category))
+      : this.categories;
+  }
+
+  private isEmergencyCategory(category: ServiceCategory): boolean {
+    return /emergency|urgent|after.?hours|veterinar|vet|medical|clinic/i.test(
+      [category.key, category.name, category.description].filter(Boolean).join(' '));
+  }
+
+  private isEmergencyService(service: ProviderService): boolean {
+    return service.providerAcceptingRequests !== false &&
+      (service.providerTypes || []).some(type => /veterinar|vet|clinic/i.test(type)) ||
+      service.providerAcceptingRequests !== false &&
+      /emergency|urgent|after.?hours|veterinar|vet|medical|clinic/i.test(
+        [service.serviceName, service.name, service.serviceCategoryName, service.category]
+          .filter(Boolean).join(' '));
   }
 
   get pageTitle(): string {
     if (!this.providerId) {
-      return 'services.title';
+      return this.isEmergencyRequest ? 'requests.emergencyServicesTitle' : 'requests.careServicesTitle';
     }
 
     return this.selectedProviderName
@@ -138,12 +160,13 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   get pageDescription(): string {
-    return this.providerId ? 'services.providerServicesSubtitle' : 'services.subtitle';
+    return this.providerId ? 'services.providerServicesSubtitle' :
+      this.isEmergencyRequest ? 'requests.emergencyServicesDescription' : 'services.subtitle';
   }
 
   loadPets(): void {
     this.isLoadingPets = true;
-    this.apiService.get<ApiResponse<Pet[]>>('/pets').subscribe({
+    this.apiService.get<ApiResponse<Pet[]>>('/v1/pets').subscribe({
       next: (response) => {
         this.pets = response.data || [];
         this.isLoadingPets = false;
@@ -175,7 +198,8 @@ export class ProviderServicesPageComponent implements OnInit {
     this.isLoadingCategories = true;
     this.apiService.get<ApiResponse<ServiceCategory[]>>(`/service-categories?petId=${petId}`).subscribe({
       next: (response) => {
-        this.categories = response.data || [];
+        this.categories = response?.success && Array.isArray(response.data) ? response.data : [];
+        if (!response?.success) this.errorMessage = 'services.loadCategoriesError';
         this.isLoadingCategories = false;
       },
       error: () => {
@@ -186,9 +210,8 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   selectCategory(categoryId: string): void {
-    if (!this.selectedPetId) {
-      return;
-    }
+    if (!this.selectedPetId || (this.isEmergencyRequest &&
+        !this.visibleCategories.some(category => category.id === categoryId))) return;
 
     this.selectedCategoryId = categoryId;
     this.loadServices();

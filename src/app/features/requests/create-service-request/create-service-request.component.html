@@ -1,5 +1,5 @@
 <section class="request-page guided-request-page">
-  <app-page-header eyebrow="requestForm.eyebrow" title="requestForm.contextTitle" description="requestForm.contextSubtitle" backLink="/services" backLabel="requestForm.backToServices"></app-page-header>
+  <app-page-header eyebrow="requestForm.eyebrow" title="requestForm.contextTitle" description="requestForm.contextSubtitle" backLink="/service-requests/new" backLabel="requests.backToTypes"></app-page-header>
 
   <div *ngIf="isLoading" class="state">{{ 'requestForm.loading' | translate }}</div>
   <p *ngIf="errorMessage && !selectedService" class="error page-message">{{ errorMessage | translate }}</p>
