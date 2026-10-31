@@ -10,9 +10,10 @@ import { PetTransferToken, PetTransferTokenSummary } from '../../../core/models/
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
-/** Pets accepts exactly a 64-character hexadecimal recipient-issued code. */
+/** New numeric codes are 8 digits; previously issued 64-hex codes remain valid. */
 export function validTransferCode(value: string): boolean {
-  return /^[a-f0-9]{64}$/i.test(value.trim());
+  const code = value.trim();
+  return /^[0-9]{8}$/.test(code) || /^[a-f0-9]{64}$/i.test(code);
 }
 
 function isGuid(value: string): boolean {
@@ -66,7 +67,7 @@ export class PetTransferComponent implements OnInit {
 
   get isExpiryValid(): boolean {
     const minutes = Number(this.expiryMinutes);
-    return Number.isInteger(minutes) && minutes >= 5 && minutes <= 1440;
+    return Number.isInteger(minutes) && minutes >= 5 && minutes <= 60;
   }
 
   get isCodeValid(): boolean {
@@ -195,7 +196,9 @@ export class PetTransferComponent implements OnInit {
   }
 
   onCodeChanged(value: string | number | boolean | null): void {
-    this.transferCode = typeof value === 'string' ? value : '';
+    this.transferCode = typeof value === 'string'
+      ? value.replace(/[\s-]/g, '').slice(0, 64)
+      : '';
     this.transferCompleted = false;
     this.completedPetName = '';
     this.errorMessage = '';

@@ -7,7 +7,7 @@ import { PetTransferComponent, validTransferCode } from './pet-transfer.componen
 
 describe('Pet transfer v1 API contract', () => {
   const id = '123e4567-e89b-12d3-a456-426614174000';
-  const code = 'a'.repeat(64);
+  const code = '00123456';
   const token = { id, transferCode: code, expiresAt: '2026-11-01T12:00:00Z' };
   const summary = { id, expiresAt: token.expiresAt, isUsed: false,
     isRevoked: false, isExpired: false, createdAt: '2026-10-31T12:00:00Z' };
@@ -24,6 +24,9 @@ describe('Pet transfer v1 API contract', () => {
   it('rejects unsupported transfer code formats', () => {
     expect(validTransferCode('abc')).toBeFalse();
     expect(validTransferCode('g'.repeat(64))).toBeFalse();
+    expect(validTransferCode('1234567')).toBeFalse();
+    expect(validTransferCode('123456789')).toBeFalse();
+    expect(validTransferCode('a'.repeat(64))).toBeTrue();
     expect(validTransferCode(code)).toBeTrue();
     expect(validTransferCode(' ' + code + ' ')).toBeTrue();
   });

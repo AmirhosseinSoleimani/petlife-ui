@@ -14,7 +14,7 @@
           <p>{{ 'petTransfer.receiveDescription' | translate }}</p></div>
       </div>
       <app-input name="expiryMinutes" label="petTransfer.expiryMinutes"
-        helper="petTransfer.expiryHelp" type="number" min="5" max="1440"
+        helper="petTransfer.expiryHelp" type="number" min="5" max="60"
         [(ngModel)]="expiryMinutes"></app-input>
       <app-button type="button" [loading]="isCreating" [disabled]="isCreating || !isExpiryValid"
         (buttonClick)="createToken()">{{ 'petTransfer.createCode' | translate }}</app-button>
