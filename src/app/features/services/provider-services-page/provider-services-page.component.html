@@ -49,6 +49,17 @@
         (selectedIdChange)="selectedGeographyId = $event"
         (selectedAreaChange)="onGeographySelected($event)"
       ></app-geography-selector>
+<label class="location-filter">
+        <span>State</span>
+        <select [(ngModel)]="locationState" [ngModelOptions]="{standalone:true}" aria-label="Filter by state">
+          <option value="">All states</option>
+          <option *ngFor="let state of ['ACT','NSW','NT','QLD','SA','TAS','VIC','WA']" [value]="state">{{state}}</option>
+        </select>
+      </label>
+      <label class="location-filter"><span>City</span><input [(ngModel)]="locationCity" [ngModelOptions]="{standalone:true}" maxlength="100" placeholder="City"></label>
+      <label class="location-filter"><span>Suburb</span><input [(ngModel)]="locationSuburb" [ngModelOptions]="{standalone:true}" maxlength="100" placeholder="Suburb"></label>
+      <label class="location-filter"><span>Postcode</span><input [(ngModel)]="locationPostcode" [ngModelOptions]="{standalone:true}" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="4-digit postcode"></label>
+      <label class="location-filter"><span>Sort</span><select [(ngModel)]="sortBy" [ngModelOptions]="{standalone:true}" aria-label="Sort providers"><option value="nearest">Nearest first</option><option value="rating">Highest rated first</option></select></label>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="acceptingRequestsOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.acceptingRequests' | translate }}</label>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="openNowOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.openNow' | translate }}</label>
       <label class="filter-check"><input type="checkbox" [(ngModel)]="afterHoursOnly" [ngModelOptions]="{standalone:true}"> {{ 'services.afterHours' | translate }}</label>
@@ -81,6 +92,12 @@
         <div class="service-card-head"><span class="service-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="getServiceIconPath(service)"/></svg></span><app-badge tone="info">{{ service.serviceCategoryName || service.category }}</app-badge></div>
         <div class="service-identity"><h3>{{ getServiceName(service) }}</h3><p><span>{{ 'services.byProvider' | translate }}</span> {{ getProviderName(service) }}</p></div>
         <p class="service-description">{{ service.description || ('services.descriptionFallback' | translate) }}</p>
+        <div class="provider-review-summary" *ngIf="ratings[service.providerProfileId || ''] as rating" aria-label="Provider reviews">
+          <strong *ngIf="rating.averageRating != null">★ {{rating.averageRating | number:'1.1-2'}} / 5</strong>
+          <span>{{rating.ratingCount}} published ratings</span>
+          <p *ngFor="let review of rating.reviews" class="review-excerpt">{{review.rating}}★ · {{review.comment}}</p>
+          <a *ngIf="rating.ratingCount" [routerLink]="[]" [queryParams]="{providerId: service.providerProfileId}" aria-label="View provider rating">{{'services.reviews' | translate}}</a>
+        </div>
 
         <dl class="service-decision-data">
           <div><dt>{{ 'services.providerType' | translate }}</dt><dd>{{ service.providerTypes?.join(', ') || ('common.notAvailable' | translate) }}</dd></div>

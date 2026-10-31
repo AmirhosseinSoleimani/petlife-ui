@@ -1,10 +1,13 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
+import { IdentityProfile } from '../../../core/models/auth.models';
 import {
   DeliveryMode,
   GeographyArea,
@@ -45,6 +48,15 @@ export class ProviderServicesPageComponent implements OnInit {
   acceptingRequestsOnly = true;
   openNowOnly = false;
   afterHoursOnly = false;
+  locationState = '';
+  locationCity = '';
+  locationSuburb = '';
+  locationPostcode = '';
+  originPostcode = '';
+  originState = '';
+  originSuburb = '';
+  sortBy: 'nearest' | 'rating' = 'nearest';
+  ratings: Record<string, {averageRating: number | null; ratingCount: number; reviews: Array<{rating: number | null; comment: string | null}>}> = {};
 
   constructor(
     private readonly apiService: ApiService,
@@ -63,6 +75,16 @@ export class ProviderServicesPageComponent implements OnInit {
       this.loadSelectedProvider(this.providerId);
     }
 
+    this.apiService.get<ApiResponse<IdentityProfile>>('/v1/identity/profile').subscribe({
+      next: response => {
+        const profile = response.data;
+        if (!profile) return;
+        this.originPostcode = profile.postcode || '';
+        this.originState = profile.state || '';
+        this.originSuburb = profile.suburb || '';
+      },
+      error: () => undefined
+    });
     this.preferencesService.load().subscribe(() => this.loadPets());
   }
 
@@ -107,7 +129,8 @@ export class ProviderServicesPageComponent implements OnInit {
       this.selectedGeographyId ||
       this.acceptingRequestsOnly ||
       this.openNowOnly ||
-      this.afterHoursOnly
+      this.afterHoursOnly || this.locationState || this.locationCity ||
+      this.locationSuburb || this.locationPostcode
     );
   }
 
@@ -118,14 +141,24 @@ export class ProviderServicesPageComponent implements OnInit {
     this.acceptingRequestsOnly = false;
     this.openNowOnly = false;
     this.afterHoursOnly = false;
+    this.locationState = '';
+    this.locationCity = '';
+    this.locationSuburb = '';
+    this.locationPostcode = '';
+    this.sortBy = 'nearest';
     this.applyFilters();
   }
 
   get visibleServices(): ProviderService[] {
     const services = this.isEmergencyRequest
       ? this.services.filter(service => this.isEmergencyService(service)) : this.services;
-    if (!this.providerId) return services;
-    return services.filter(service =>
+    const sorted = [...services].sort((a,b) => this.sortBy === 'rating'
+      ? (this.ratings[b.providerProfileId || '']?.averageRating ?? -1) -
+        (this.ratings[a.providerProfileId || '']?.averageRating ?? -1) ||
+        (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
+      : (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+    if (!this.providerId) return sorted;
+    return sorted.filter(service =>
       this.getServiceProviderIds(service).some(id => this.selectedProviderIds.has(id)));
   }
 
@@ -235,6 +268,7 @@ export class ProviderServicesPageComponent implements OnInit {
     this.apiService.get<ApiResponse<ProviderService[]>>(`/provider-services?${params.toString()}`).subscribe({
       next: (response) => {
         this.services = response.data || [];
+        this.loadRatings(this.services);
         this.isLoadingServices = false;
         this.recordProductEvent('ProviderSearch', 'ServiceCategory', this.selectedCategoryId);
 
@@ -286,7 +320,38 @@ export class ProviderServicesPageComponent implements OnInit {
     if (this.acceptingRequestsOnly) params.set('acceptingRequests', 'true');
     if (this.openNowOnly) params.set('openNow', 'true');
     if (this.afterHoursOnly) params.set('afterHours', 'true');
+    if (this.locationState.trim()) params.set('state', this.locationState.trim());
+    if (this.locationCity.trim()) params.set('city', this.locationCity.trim());
+    if (this.locationSuburb.trim()) params.set('suburb', this.locationSuburb.trim());
+    if (this.locationPostcode.trim()) params.set('postcode', this.locationPostcode.trim());
+    const origin = this.selectedGeography || null;
+    const originPostcode = origin?.postcode || this.originPostcode;
+    if (originPostcode) params.set('originPostcode', originPostcode);
+    const originState = origin?.state || this.originState;
+    if (originState) params.set('originState', originState);
+    const originSuburb = origin?.suburb || this.originSuburb;
+    if (originSuburb) params.set('originSuburb', originSuburb);
     return params;
+  }
+
+  private loadRatings(items: ProviderService[]): void {
+    const ids = [...new Set(items.map(s => s.providerProfileId).filter((id): id is string => !!id))].slice(0, 100);
+    if (!ids.length) return;
+    forkJoin(ids.map(id => forkJoin({
+      rating: this.apiService.get<{averageRating: number | null; ratingCount: number} | null>(
+        `/provider-reviews/v1/providers/${id}/rating`).pipe(catchError(() => of(null))),
+      reviews: this.apiService.get<{items: Array<{rating: number | null; comment: string | null}>}>(
+        `/provider-reviews/v1/providers/${id}/reviews?size=3`).pipe(catchError(() => of({items: []})))
+    }).pipe(map(result => ({id, ...result}))))).subscribe({
+      next: results => results.forEach(x => {
+        this.ratings[x.id] = {
+          averageRating: x.rating?.averageRating ?? null,
+          ratingCount: x.rating?.ratingCount ?? 0,
+          reviews: (x.reviews?.items || []).filter(review => !!review.comment)
+        };
+      }),
+      error: () => undefined
+    });
   }
 
   private recordProductEvent(eventType: string, entityType?: string, entityId?: string | null): void {

@@ -157,6 +157,9 @@ export interface ProviderService {
   providerWorkingHours?: ProviderWorkingHour[];
   providerExpertise?: ProviderExpertise[];
   distanceKm?: number | null;
+  providerCity?: string;
+  averageRating?: number | null;
+  ratingCount?: number;
   isTemporarilyClosed?: boolean;
   temporaryClosedUntil?: string | null;
   availabilityWindows?: ProviderServiceAvailabilityWindow[];
