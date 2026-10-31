@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ApiService } from '../../../core/api/api.service';
-import { AdminUser, PagedResult } from '../../../core/models/admin.models';
+import { AdminRole, AdminUser, PagedResult } from '../../../core/models/admin.models';
 import { ApiResponse } from '../../../core/models/api-response.model';
 
 @Component({
@@ -11,6 +11,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 })
 export class AdminUsersComponent implements OnInit {
   users: AdminUser[] = [];
+  availableRoles: AdminRole[] = [];
   selectedUser: AdminUser | null = null;
   suspendUser: AdminUser | null = null;
   suspensionReason = '';
@@ -29,7 +30,13 @@ export class AdminUsersComponent implements OnInit {
   constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
-    this.load();
+    this.apiService.get<ApiResponse<AdminRole[]>>('/v1/identity/management/roles').subscribe({
+      next: response => {
+        this.availableRoles = response.data || [];
+        this.load(true);
+      },
+      error: () => this.load(true)
+    });
   }
 
   get hasFilters(): boolean {
@@ -45,15 +52,22 @@ export class AdminUsersComponent implements OnInit {
     this.errorMessage = '';
     const params = new URLSearchParams();
     if (this.search.trim()) params.set('search', this.search.trim());
-    // Users search accepts RoleId (GUID), not the legacy role name.
-    // Role name filtering is applied to the returned page until a role is selected by ID.
+    if (this.role) {
+      const roleId = this.availableRoles.find(r => r.name.toLowerCase() === this.role.toLowerCase())?.id;
+      if (roleId) params.set('roleId', roleId);
+      else {
+        this.errorMessage = 'Unable to resolve the selected role. Reload the page.';
+        this.isLoading = false;
+        return;
+      }
+    }
     if (this.status) params.set('status', this.status);
     params.set('page', String(this.page));
     params.set('pageSize', String(this.pageSize));
 
     this.apiService.get<ApiResponse<PagedResult<AdminUser>>>(`/v1/identity/management/users/search?${params.toString()}`).subscribe({
       next: (response) => {
-        this.users = (response.data?.items || []).filter(user => !this.role || user.role.toLowerCase() === this.role.toLowerCase());
+        this.users = response.data?.items || [];
         this.totalPages = response.data?.totalPages || 0;
         this.totalCount = response.data?.totalCount || 0;
         this.isLoading = false;
