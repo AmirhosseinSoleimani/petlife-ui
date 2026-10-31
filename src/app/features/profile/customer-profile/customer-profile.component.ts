@@ -130,7 +130,9 @@ export class CustomerProfileComponent implements OnInit {
         }
         this.profile = response.data;
         this.form = { firstName: response.data.firstName, lastName: response.data.lastName };
-        this.addressSupported = hasAddressContract(response.data);
+        // Allow entering details even while the backend is being upgraded.
+        // A missing address contract is reported only if saving fails.
+        this.addressSupported = true;
         this.addressForm = addressFromProfile(response.data);
         this.savedAddress = { ...this.addressForm };
       },
@@ -193,23 +195,15 @@ export class CustomerProfileComponent implements OnInit {
     ).subscribe({
       next: response => {
         this.isSavingAddress = false;
-        if (response && response.success === false) {
-          this.addressError = response.message || 'profile.addressSaveError';
+        if (!response || response.success !== true || !response.data ||
+            !hasAddressContract(response.data)) {
+          this.addressError = 'profile.addressSaveError';
           return;
         }
-        const saved: IdentityAddressForm = response?.data && hasAddressContract(response.data)
-          ? addressFromProfile(response.data)
-          : {
-              address: payload.address ?? '',
-              suburb: payload.suburb ?? '',
-              postcode: payload.postcode ?? '',
-              city: payload.city ?? '',
-              state: payload.state ?? '',
-              country: payload.country ?? ''
-            };
+        const saved: IdentityAddressForm = addressFromProfile(response.data);
         this.savedAddress = { ...saved };
         this.addressForm = { ...saved };
-        this.profile = { ...this.profile!, ...payload, ...(response?.data ?? {}) };
+        this.profile = { ...this.profile!, ...response.data };
         this.addressSuccess = 'profile.addressSaveSuccess';
       },
       error: error => {
