@@ -1,0 +1,11 @@
+.roles-layout { display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:1.5rem;align-items:start }
+.roles-list,.permissions {padding:1.5rem;border:1px solid var(--border-color,#ddd);border-radius:12px}
+.roles-list>button {display:flex;justify-content:space-between;width:100%;padding:.8rem;margin:.3rem 0;text-align:left}
+.roles-list>button.selected {outline:2px solid currentColor}
+.roles-list input {width:100%;padding:.6rem;margin:.5rem 0}
+.actions {display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.actions button {padding:.65rem}
+.operation-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.5rem}
+.operation-list label {display:flex;align-items:center;gap:.7rem;padding:.75rem;border:1px solid var(--border-color,#ddd);border-radius:8px}
+.operation-list small,.roles-list small {display:block;opacity:.7;overflow-wrap:anywhere}
+@media(max-width:760px){.roles-layout {grid-template-columns:1fr}}

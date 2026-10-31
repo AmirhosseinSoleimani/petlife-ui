@@ -9,6 +9,7 @@ import { AdminExpenseCategoriesComponent } from './features/admin/admin-expense-
 import { AdminGeographyComponent } from './features/admin/admin-geography/admin-geography.component';
 import { AdminServiceCatalogComponent } from './features/admin/admin-service-catalog/admin-service-catalog.component';
 import { AdminTaxonomyComponent } from './features/admin/admin-taxonomy/admin-taxonomy.component';
+import { AdminRolesComponent } from './features/admin/admin-roles/admin-roles.component';
 import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
 import { AdminProviderVerificationComponent } from './features/admin/admin-provider-verification/admin-provider-verification.component';
 import { AdminOperationsComponent } from './features/admin/admin-operations/admin-operations.component';
@@ -82,6 +83,7 @@ const routes: Routes = [
       { path: 'service-requests/new/:serviceId', component: CreateServiceRequestComponent },
       { path: 'service-requests/history', component: MyRequestsComponent, data: { view: 'history' } },
       { path: 'service-requests/my', component: MyRequestsComponent },
+      { path: 'admin/roles', component: AdminRolesComponent, canActivate: [AdminGuard] },
       { path: 'admin/users', component: AdminUsersComponent, canActivate: [AdminGuard] },
       { path: 'admin/provider-verification', component: AdminProviderVerificationComponent, canActivate: [AdminGuard] },
       { path: 'admin/operations', component: AdminOperationsComponent, canActivate: [AdminGuard] },

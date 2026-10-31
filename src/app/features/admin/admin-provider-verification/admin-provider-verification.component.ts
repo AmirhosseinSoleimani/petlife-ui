@@ -30,30 +30,28 @@ export class AdminProviderVerificationComponent implements OnInit {
   loadQueue(): void {
     this.isLoading = true; this.errorMessage = '';
     const query = this.statusFilter ? `?status=${encodeURIComponent(this.statusFilter)}` : '';
-    this.api.get<ApiResponse<ProviderDocument[]>>(`/admin/provider-verification/documents${query}`).subscribe({
-      next: response => { this.documents = response.data || []; this.isLoading = false; },
+    this.api.get<ProviderDocument[]>(`/admin/provider-verification/documents${query}`).subscribe({
+      next: response => { this.documents = Array.isArray(response) ? response : []; if (this.selected) this.refreshSelected(this.selected.providerUserId); this.isLoading = false; },
       error: () => { this.errorMessage = 'Unable to load the verification queue.'; this.isLoading = false; }
     });
   }
 
   openProvider(document: ProviderDocument): void {
     this.errorMessage = '';
-    this.api.get<ApiResponse<ProviderVerification>>(`/admin/provider-verification/providers/${document.providerUserId}`).subscribe({
-      next: response => {
-        this.selected = response.data || null;
-        this.verificationStatus = this.selected?.verificationStatus || 'UnderReview';
-        this.reviewReason = '';
-        this.verificationReason = '';
-      },
-      error: () => this.errorMessage = 'Unable to load provider verification details.'
-    });
+    // The current Providers host exposes document queue/review and profile status writes,
+    // but no GET provider-verification detail endpoint. Use the selected queue item.
+    this.selected = { providerUserId: document.providerUserId, providerProfileId: '', businessName: document.providerUserId, verificationStatus: 'Pending', documents: this.documents.filter(item => item.providerUserId === document.providerUserId), badges: [] };
+    this.verificationStatus = this.selected.verificationStatus;
+    this.reviewReason = '';
+    this.verificationReason = '';
+
   }
 
   review(document: ProviderDocument): void {
     if (this.requiresReason(this.reviewStatus) && !this.reviewReason.trim()) { this.errorMessage = 'A review reason is required for this status.'; return; }
     this.isSaving = true; this.errorMessage = ''; this.successMessage = '';
-    this.api.put<ApiResponse<ProviderDocument>>(`/admin/provider-verification/documents/${document.id}/review`, { status: this.reviewStatus, reason: this.reviewReason.trim() || null }).subscribe({
-      next: () => { this.successMessage = 'Document review saved.'; this.reviewReason = ''; this.refreshSelected(document.providerUserId); this.loadQueue(); },
+    this.api.put<void>(`/admin/provider-verification/documents/${document.id}/review`, { decision: this.reviewStatus, reason: this.reviewReason.trim() || null }).subscribe({
+      next: () => { this.successMessage = 'Document review saved.'; this.reviewReason = ''; this.loadQueue(); },
       error: err => { this.errorMessage = this.apiMessage(err, 'Unable to save the document review.'); this.isSaving = false; },
       complete: () => this.isSaving = false
     });
@@ -63,8 +61,8 @@ export class AdminProviderVerificationComponent implements OnInit {
     if (!this.selected) return;
     if (this.requiresReason(this.verificationStatus) && !this.verificationReason.trim()) { this.errorMessage = 'A reason is required for this verification status.'; return; }
     this.isSaving = true; this.errorMessage = ''; this.successMessage = '';
-    this.api.put<ApiResponse<ProviderVerification>>(`/admin/provider-verification/providers/${this.selected.providerUserId}/status`, { status: this.verificationStatus, reason: this.verificationReason.trim() || null }).subscribe({
-      next: response => { this.selected = response.data || this.selected; this.successMessage = 'Provider verification status updated.'; this.verificationReason = ''; },
+    this.api.put<void>(`/admin/provider-verification/profiles/${this.selected.providerUserId}/status`, { decision: this.verificationStatus, reason: this.verificationReason.trim() || null }).subscribe({
+      next: () => { if (this.selected) this.selected.verificationStatus = this.verificationStatus; this.successMessage = 'Provider verification status updated.'; this.verificationReason = ''; },
       error: err => { this.errorMessage = this.apiMessage(err, 'Unable to update provider verification.'); this.isSaving = false; },
       complete: () => this.isSaving = false
     });
@@ -87,7 +85,9 @@ export class AdminProviderVerificationComponent implements OnInit {
   }
 
   private refreshSelected(providerUserId: string): void {
-    this.api.get<ApiResponse<ProviderVerification>>(`/admin/provider-verification/providers/${providerUserId}`).subscribe({ next: r => this.selected = r.data || this.selected });
+    if (this.selected?.providerUserId === providerUserId) {
+      this.selected = { ...this.selected, documents: this.documents.filter(item => item.providerUserId === providerUserId) };
+    }
   }
   private apiMessage(error: any, fallback: string): string { return error?.error?.errors?.join(' ') || error?.error?.message || fallback; }
 }
