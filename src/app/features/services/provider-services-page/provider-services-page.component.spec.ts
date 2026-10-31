@@ -1,4 +1,4 @@
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ProviderService } from '../../../core/models/marketplace.models';
 import { ApiService } from '../../../core/api/api.service';
@@ -10,11 +10,12 @@ import {
 
 describe('Provider-first customer discovery', () => {
   function create(kind: 'care' | 'emergency' = 'care') {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['get']);
+    const api = jasmine.createSpyObj<ApiService>('ApiService', ['get', 'post']);
     api.get.and.returnValue(of({ success: true, data: [] }));
     const route = { snapshot: { data: { requestKind: kind }, paramMap: { get: () => null } } } as unknown as ActivatedRoute;
     const i18n = jasmine.createSpyObj<I18nService>('I18nService', ['translate']);
-    return { component: new ProviderServicesPageComponent(api, route, i18n, {} as UserPreferencesService), api };
+    const router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    return { component: new ProviderServicesPageComponent(api, route, router, i18n, {} as UserPreferencesService), api, router };
   }
 
   const offers: ProviderService[] = [
@@ -113,6 +114,18 @@ describe('Provider-first customer discovery', () => {
     expect(component.availabilityResult).toBeNull();
     expect(component.selectedSlotUtc).toBeNull();
     expect(component.availabilityLoading).toBeFalse();
+  });
+
+  it('never submits without an exact quote and available appointment', () => {
+    const { component, api } = create();
+    component.selectedPetId = 'pet-1';
+    component.services = offers;
+    component.openProviderDetails(groupProviderOfferings(offers)[0]);
+    component.toggleOffering('bath', true);
+    component.toggleOffering('walk', true);
+    component.submitSelectedServices();
+    expect(api.post).not.toHaveBeenCalled();
+    expect(component.submissionError).toContain('Verify exact prices');
   });
 
   it('preserves emergency-only filtering', () => {
