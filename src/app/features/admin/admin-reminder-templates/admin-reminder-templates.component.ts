@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { PetTaxonomy } from '../../../core/models/customer-core.models';
+import { PetTaxonomy, PetTaxonomySpeciesDto, mapPetTaxonomySpecies } from '../../../core/models/customer-core.models';
 import { RECURRENCE_TYPES, ReminderTemplate, ReminderTemplatePayload } from '../../../core/models/phase1-care.models';
 import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
@@ -25,7 +25,7 @@ export class AdminReminderTemplatesComponent implements OnInit {
   load(): void {
     this.isLoading = true;
     this.apiService.get<ApiResponse<ReminderTemplate[]>>('/v1/reminders/admin/templates').subscribe({ next: r => { if (!r?.success || !Array.isArray(r.data)) { this.errorMessage = 'reminderTemplates.loadError'; this.isLoading = false; return; } this.templates = r.data; this.isLoading = false; }, error: () => { this.errorMessage = 'reminderTemplates.loadError'; this.isLoading = false; } });
-    this.apiService.get<ApiResponse<PetTaxonomy>>('/admin/pet-taxonomy').subscribe({ next: r => this.taxonomy = r.data || { species: [] }, error: () => this.taxonomy = { species: [] } });
+    this.apiService.get<ApiResponse<PetTaxonomySpeciesDto[]>>('/v1/admin/pets/species').subscribe({ next: r => this.taxonomy = { species: mapPetTaxonomySpecies(r.data || []) }, error: () => this.taxonomy = { species: [] } });
   }
 
   toggleSpecies(id: string, checked: boolean): void {
