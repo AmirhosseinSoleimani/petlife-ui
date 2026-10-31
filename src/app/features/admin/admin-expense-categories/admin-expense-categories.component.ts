@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { PetTaxonomy } from '../../../core/models/customer-core.models';
+import { PetTaxonomy, PetTaxonomySpeciesDto, mapPetTaxonomySpecies } from '../../../core/models/customer-core.models';
 import { ExpenseCategory, ExpenseCategoryPayload } from '../../../core/models/phase1-care.models';
 import { AppDialogService } from '../../../shared/services/app-dialog.service';
 
@@ -18,7 +18,7 @@ export class AdminExpenseCategoriesComponent implements OnInit {
   load(): void {
     this.isLoading = true;
     this.apiService.get<ApiResponse<ExpenseCategory[]>>('/admin/expense-categories').subscribe({ next:r=>{this.categories=r.data||[];this.isLoading=false;}, error:()=>{this.errorMessage='expenseCategories.loadError';this.isLoading=false;} });
-    this.apiService.get<ApiResponse<PetTaxonomy>>('/admin/pet-taxonomy').subscribe({ next:r=>this.taxonomy=r.data||{species:[]}, error:()=>this.taxonomy={species:[]} });
+    this.apiService.get<ApiResponse<PetTaxonomySpeciesDto[]>>('/v1/admin/pets/species').subscribe({ next: r => this.taxonomy = { species: mapPetTaxonomySpecies(r.data || []) }, error: () => this.taxonomy = { species: [] } });
   }
   toggleSpecies(id:string, checked:boolean):void { const set=new Set(this.form.speciesIds); checked?set.add(id):set.delete(id); this.form.speciesIds=Array.from(set); }
   hasSpecies(id:string):boolean{return this.form.speciesIds.includes(id);}
