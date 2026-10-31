@@ -6,6 +6,8 @@ import { ApiResponse } from '../models/api-response.model';
 import {
   AiChatRequest,
   AiChatResponse,
+  AiGeneralAskRequest,
+  AiGeneralAskResponse,
   AiConversation,
   AiConversationSummary
 } from '../models/ai.models';
@@ -14,6 +16,13 @@ import {
 export class AiService {
   constructor(private readonly apiService: ApiService) {}
 
+  /** The production Users JWT has no role claim; use the general-ask endpoint,
+   * which verifies the current Users profile instead of requiring a JWT role. */
+  ask(request: AiGeneralAskRequest): Observable<AiGeneralAskResponse> {
+    return this.apiService.post<AiGeneralAskResponse>('/ai/ask', request);
+  }
+
+  // Keep the legacy helper for callers that explicitly depend on its contract.
   chat(request: AiChatRequest): Observable<AiChatResponse> {
     return this.apiService.post<AiChatResponse>('/ai/chat', request);
   }
