@@ -76,6 +76,45 @@ describe('Provider-first customer discovery', () => {
     expect(component.estimatedTotal).toBe(65);
   });
 
+  it('rejects a quote from the same provider when service order differs', () => {
+    const { component } = create();
+    component.selectedPetId = 'pet-1';
+    component.services = offers;
+    component.openProviderDetails(groupProviderOfferings(offers)[0]);
+    component.toggleOffering('bath', true);
+    component.toggleOffering('walk', true);
+    component.serverQuote = {
+      petId: 'pet-1',
+      providerProfileId: 'provider-1',
+      services: [
+        { offeringId: 'walk' },
+        { offeringId: 'bath' }
+      ]
+    } as any;
+    expect(component.quoteMatchesSelection).toBeFalse();
+    component.serverQuote = {
+      petId: 'pet-1',
+      providerProfileId: 'provider-1',
+      services: [
+        { offeringId: 'bath' },
+        { offeringId: 'walk' }
+      ]
+    } as any;
+    expect(component.quoteMatchesSelection).toBeTrue();
+  });
+
+  it('invalidates selected slot and stale availability on date change', () => {
+    const { component } = create();
+    component.availabilityResult = { slots: [] } as any;
+    component.selectedSlotUtc = '2026-11-02T10:00:00Z';
+    component.availabilityLoading = true;
+    component.availabilityDate = '2026-11-03';
+    component.onAvailabilityDateChanged();
+    expect(component.availabilityResult).toBeNull();
+    expect(component.selectedSlotUtc).toBeNull();
+    expect(component.availabilityLoading).toBeFalse();
+  });
+
   it('preserves emergency-only filtering', () => {
     const { component } = create('emergency');
     component.services = [

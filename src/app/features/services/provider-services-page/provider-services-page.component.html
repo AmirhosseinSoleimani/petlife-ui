@@ -173,7 +173,7 @@
           <h3>Check available appointment times</h3>
           <label class="location-filter"><span>Provider local appointment date</span>
             <input type="date" [(ngModel)]="availabilityDate" [ngModelOptions]="{standalone:true}"
-              (ngModelChange)="availabilityResult = null; selectedSlotUtc = null"></label>
+              (ngModelChange)="onAvailabilityDateChanged()"></label>
           <button type="button" class="provider-details-cta"
             [disabled]="availabilityLoading || !availabilityDate" (click)="checkAvailability()">
             {{ availabilityLoading ? 'Checking schedule...' : 'Find available times' }}

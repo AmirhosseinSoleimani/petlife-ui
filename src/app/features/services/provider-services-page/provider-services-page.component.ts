@@ -412,8 +412,10 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     if (!quote || !this.selectedPetId || quote.petId !== this.selectedPetId ||
         quote.providerProfileId !== this.selectedProviderKey ||
         quote.services.length !== this.selectedOfferingIds.length) return false;
-    const expected = new Set(this.selectedOfferingIds);
-    return quote.services.every(s => expected.has(s.offeringId));
+    // Providers' authoritative quote is ordered. Comparing only sets could
+    // accept a stale quote after the customer reorders sequential services.
+    return quote.services.every((service, index) =>
+      service.offeringId === this.selectedOfferingIds[index]);
   }
 
   calculateServerQuote(): void {
@@ -444,6 +446,17 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
         this.quoteError = apiErrorMessage(error, 'Unable to calculate the current provider quote.');
       }
     });
+  }
+
+  onAvailabilityDateChanged(): void {
+    // A response for the previous day must not repopulate available slots
+    // after the customer changes the date while the request is in flight.
+    this.availabilityRequest?.unsubscribe();
+    this.availabilityRevision++;
+    this.availabilityResult = null;
+    this.selectedSlotUtc = null;
+    this.availabilityLoading = false;
+    this.availabilityError = '';
   }
 
   checkAvailability(): void {
