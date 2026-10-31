@@ -240,5 +240,22 @@
   "dashboard.upcomingCare": "مراقبت‌های امروز و پیش‌رو",
   "dashboard.upcomingCareDescription": "یادآورهای فعال، شامل موارد امروز و عقب‌افتاده.",
   "dashboard.noUpcomingCare": "یادآور مراقبتی فعالی وجود ندارد",
-  "dashboard.upcomingReminders": "یادآورهای فعال"
+  "dashboard.upcomingReminders": "یادآورهای فعال",
+  "petTransfer.latestCode": "آخرین کد ایجادشده",
+  "petTransfer.refreshStatus": "به‌روزرسانی وضعیت",
+  "petTransfer.statusLoading": "در حال بررسی وضعیت کد...",
+  "petTransfer.latestOnlyNotice": "فقط شناسه آخرین کد ساخته‌شده در این نشست مرورگر نگه‌داری می‌شود. API فعلی Pets فهرست کدهای قبلی را ارائه نمی‌دهد.",
+  "petTransfer.statusError": "بررسی وضعیت کد انتقال ممکن نشد.",
+  "petTransfer.codeFormatHelp": "کد ۶۴ کاراکتری دریافت‌شده از صاحب حساب مقصد را وارد کنید.",
+  "petTransfer.codeInvalid": "کد انتقال باید دقیقاً ۶۴ کاراکتر هگزادسیمال داشته باشد.",
+  "petTransfer.confirmDialogTitle": "تأیید انتقال قطعی مالکیت",
+  "petTransfer.confirmDialogText": "این عملیات بلافاصله حیوان را به صاحب کد منتقل می‌کند. نام دریافت‌کننده در API قابل بررسی نیست. فقط در صورت اطمینان از شخصی که کد را داده ادامه دهید.",
+  "petTransfer.noPreviewNotice": "API فعلی Pets امکان نمایش هویت دریافت‌کننده را ندارد. پیش از انتقال، شخص و کد را خارج از برنامه بررسی کنید.",
+  "petTransfer.serviceUnavailable": "انتقال مالکیت هنوز در این سرور فعال نیست. تنظیمات سرویس مستقل Pets را بررسی کنید.",
+  "petTransfer.endpointUnavailable": "مسیر انتقال در این سرور در دسترس نیست. استقرار Gateway سرویس Pets را بررسی کنید.",
+  "petTransfer.codeCopied": "کد انتقال کپی شد.",
+  "petTransfer.copyFailed": "کپی کد ممکن نشد. کد را به‌صورت دستی انتخاب و کپی کنید.",
+  "petTransfer.description": "حیوان را با کد یک‌بارمصرف و امن صاحب حساب مقصد منتقل کنید.",
+  "petTransfer.sendDescription": "حیوان را انتخاب کنید و کد حساب مقصد را وارد کنید. پس از تأیید دریافت‌کننده، انتقال را نهایی کنید.",
+  "petTransfer.warningText": "پس از تأیید، حیوان به حساب سازنده کد منتقل می‌شود و شما دیگر مالک آن نخواهید بود."
 }

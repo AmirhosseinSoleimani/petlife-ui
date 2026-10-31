@@ -240,5 +240,22 @@
   "dashboard.upcomingCare": "Today & upcoming care",
   "dashboard.upcomingCareDescription": "Active reminders, including items due today or overdue.",
   "dashboard.noUpcomingCare": "No active care reminders",
-  "dashboard.upcomingReminders": "Active reminders"
+  "dashboard.upcomingReminders": "Active reminders",
+  "petTransfer.latestCode": "Latest issued code",
+  "petTransfer.refreshStatus": "Refresh status",
+  "petTransfer.statusLoading": "Checking code status...",
+  "petTransfer.latestOnlyNotice": "Only your most recently created code is tracked in this browser session. Older codes cannot be listed by the current Pets API.",
+  "petTransfer.statusError": "Unable to check your transfer code status.",
+  "petTransfer.codeFormatHelp": "Enter the 64-character code provided by the receiving pet owner.",
+  "petTransfer.codeInvalid": "The transfer code must contain exactly 64 hexadecimal characters.",
+  "petTransfer.confirmDialogTitle": "Confirm permanent ownership transfer",
+  "petTransfer.confirmDialogText": "This action immediately transfers your pet to the holder of the code. The recipient name cannot be previewed. Only proceed if you trust the person who gave you this code.",
+  "petTransfer.noPreviewNotice": "The receiving account cannot be previewed by the current Pets API. Verify the person and code outside the app before transferring.",
+  "petTransfer.serviceUnavailable": "Pet transfer is not active on this server yet. Ask the administrator to verify the independent Pets service.",
+  "petTransfer.endpointUnavailable": "The transfer endpoint is not available on this server. Check the Pets Gateway deployment.",
+  "petTransfer.codeCopied": "Transfer code copied.",
+  "petTransfer.copyFailed": "Unable to copy the code. Select and copy it manually.",
+  "petTransfer.description": "Transfer a pet to another customer using their one-time secure code.",
+  "petTransfer.sendDescription": "Choose your pet and enter the receiving customer's code. Confirm ownership transfer only after verifying the recipient.",
+  "petTransfer.warningText": "After confirmation, this pet belongs to the account that created the code. You will lose control of the pet."
 }
