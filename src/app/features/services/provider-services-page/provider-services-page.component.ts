@@ -22,6 +22,46 @@ import {
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
+export interface ProviderDiscoveryCard {
+  id: string;
+  name: string;
+  offerings: ProviderService[];
+  representative: ProviderService;
+  categoryKeys: string[];
+}
+
+/** Categories are inferred from the services already returned for the selected pet. */
+export function discoveryCategoryKey(service: ProviderService): string {
+  return service.serviceCategoryId || service.serviceDefinitionId ||
+    (service.serviceCategoryName || service.category || service.serviceName || service.name || service.id)
+      .trim().toLowerCase();
+}
+
+export function discoveryCategoryName(service: ProviderService): string {
+  const label = service.serviceCategoryName || service.category || service.serviceName || service.name || 'Service';
+  return label.replace(/^\[DEMO(?: AU)?\]\s*/i, '').trim();
+}
+
+export function groupProviderOfferings(offerings: ProviderService[]): ProviderDiscoveryCard[] {
+  const groups = new Map<string, ProviderDiscoveryCard>();
+  for (const offering of offerings) {
+    // ProviderProfileId is the authoritative business identity, not an offering id.
+    const id = offering.providerProfileId || offering.providerId || offering.providerUserId || offering.id;
+    let group = groups.get(id);
+    if (!group) {
+      group = {
+        id, name: offering.providerBusinessName || offering.businessName || offering.providerName || 'Provider',
+        offerings: [], representative: offering, categoryKeys: []
+      };
+      groups.set(id, group);
+    }
+    group.offerings.push(offering);
+    const category = discoveryCategoryKey(offering);
+    if (!group.categoryKeys.includes(category)) group.categoryKeys.push(category);
+  }
+  return Array.from(groups.values());
+}
+
 export interface ProviderReviewView {
   source: 'demo' | 'verified' | 'loading' | 'unavailable';
   averageRating: number | null;
@@ -99,6 +139,12 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   originState = '';
   originSuburb = '';
   sortBy: 'nearest' | 'rating' = 'nearest';
+  providerNameSearch = '';
+  providerAddressSearch = '';
+  minimumRating = 0;
+  selectedProviderKey: string | null = null;
+  selectedOfferingIds: string[] = [];
+  readonly minimumRatingOptions = [0, 3, 4, 4.5, 5];
   ratings: Record<string, ProviderReviewView> = {};
   private categoriesRequest?: Subscription;
   private servicesRequest?: Subscription;
@@ -137,7 +183,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
           this.originState = response.data.state || '';
           this.originSuburb = response.data.suburb || '';
           // A late profile read must not override a manually chosen location.
-          if (!this.selectedGeography && this.selectedCategoryId) this.loadServices();
+          if (!this.selectedGeography && this.selectedPetId) this.loadServices();
         }
         this.isLoadingProfile = false;
       },
@@ -177,7 +223,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     if (!this.selectedGeography) return;
     this.selectedGeography = null;
     this.selectedGeographyId = null;
-    this.applyFilters();
+    this.loadServices();
   }
 
   ratingFor(service: ProviderService): ProviderReviewView {
@@ -212,8 +258,9 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   get hasSearchFilters(): boolean {
-    return !!(this.selectedGeography || this.locationState || this.locationCity ||
-      this.locationSuburb || this.locationPostcode || !this.acceptingRequestsOnly);
+    return !!(this.providerNameSearch || this.providerAddressSearch || this.minimumRating ||
+      this.locationState || this.locationCity || this.locationSuburb ||
+      this.locationPostcode || !this.acceptingRequestsOnly || this.selectedCategoryId);
   }
 
   clearFilters(): void {
@@ -221,21 +268,96 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     this.locationCity = '';
     this.locationSuburb = '';
     this.locationPostcode = '';
+    this.providerNameSearch = '';
+    this.providerAddressSearch = '';
+    this.minimumRating = 0;
+    this.selectedCategoryId = null;
     this.acceptingRequestsOnly = true;
     this.applyFilters();
   }
 
+  /** Every filter operates on the fetched pet-compatible results; chips never issue HTTP calls. */
   get visibleServices(): ProviderService[] {
-    const filtered = this.isEmergencyRequest ? this.services.filter(s => this.isEmergencyService(s)) : this.services;
+    const filtered = this.isEmergencyRequest
+      ? this.services.filter(s => this.isEmergencyService(s)) : this.services;
     const scoped = this.providerId ? filtered.filter(s =>
       this.getServiceProviderIds(s).some(id => this.selectedProviderIds.has(id))) : filtered;
     return sortDiscoveryResults(scoped, this.ratings, this.sortBy);
   }
 
   get visibleCategories(): ServiceCategory[] {
-    return this.isEmergencyRequest
-      ? this.categories.filter(category => this.isEmergencyCategory(category))
-      : this.categories;
+    const names = new Map<string, string>();
+    for (const service of this.visibleServices) {
+      const key = discoveryCategoryKey(service);
+      if (!names.has(key)) names.set(key, discoveryCategoryName(service));
+    }
+    return Array.from(names, ([id, name]) => ({id, name}));
+  }
+
+  get visibleProviders(): ProviderDiscoveryCard[] {
+    const q = this.providerNameSearch.trim().toLowerCase();
+    const address = this.providerAddressSearch.trim().toLowerCase();
+    const st = this.locationState.trim().toLowerCase();
+    const city = this.locationCity.trim().toLowerCase();
+    const suburb = this.locationSuburb.trim().toLowerCase();
+    const postcode = this.locationPostcode.trim();
+    return groupProviderOfferings(this.visibleServices).filter(provider => {
+      const offering = provider.representative;
+      const rating = usableRating(this.ratings[provider.id]);
+      const locality = [
+        offering.providerSuburb, offering.providerCity, offering.providerState, offering.providerPostcode
+      ].join(' ').toLowerCase();
+      return (!q || provider.name.toLowerCase().includes(q)) &&
+        (!address || locality.includes(address)) &&
+        (!st || (offering.providerState || '').toLowerCase() === st) &&
+        (!city || [(offering.providerCity || ''), (offering.providerSuburb || '')]
+          .some(part => part.toLowerCase().includes(city))) &&
+        (!suburb || (offering.providerSuburb || '').toLowerCase().includes(suburb)) &&
+        (!postcode || offering.providerPostcode === postcode) &&
+        (!this.minimumRating || rating >= this.minimumRating) &&
+        (!this.acceptingRequestsOnly || offering.providerAcceptingRequests !== false) &&
+        (!this.selectedCategoryId || provider.categoryKeys.includes(this.selectedCategoryId));
+    });
+  }
+
+  get selectedProvider(): ProviderDiscoveryCard | null {
+    return this.selectedProviderKey
+      ? groupProviderOfferings(this.visibleServices).find(p => p.id === this.selectedProviderKey) || null
+      : null;
+  }
+
+  get selectedOfferings(): ProviderService[] {
+    return (this.selectedProvider?.offerings || []).filter(s => this.selectedOfferingIds.includes(s.id));
+  }
+
+  get estimatedTotal(): number {
+    return this.selectedOfferings.reduce((sum, service) => sum + (service.price || 0), 0);
+  }
+
+  get totalMinutes(): number {
+    return this.selectedOfferings.reduce((sum, service) => sum + (service.durationMinutes || 0), 0);
+  }
+
+  get isExactTotal(): boolean {
+    return this.selectedOfferings.length > 0 && this.selectedOfferings.every(s =>
+      (s.pricingType === 'Fixed' || !s.pricingType) &&
+      typeof s.price === 'number' && Number.isFinite(s.price) && s.price >= 0 && !s.priceMax);
+  }
+
+  openProviderDetails(provider: ProviderDiscoveryCard): void {
+    this.selectedProviderKey = provider.id;
+    this.selectedOfferingIds = [];
+  }
+
+  closeProviderDetails(): void {
+    this.selectedProviderKey = null;
+    this.selectedOfferingIds = [];
+  }
+
+  toggleOffering(offeringId: string, checked: boolean): void {
+    this.selectedOfferingIds = checked
+      ? [...new Set([...this.selectedOfferingIds, offeringId])]
+      : this.selectedOfferingIds.filter(id => id !== offeringId);
   }
 
   private isEmergencyCategory(category: ServiceCategory): boolean {
@@ -289,56 +411,34 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   selectPet(petId: string | null): void {
-    this.categoriesRequest?.unsubscribe();
     this.servicesRequest?.unsubscribe();
     this.ratingsRequest?.unsubscribe();
     this.recommendationsRequest?.unsubscribe();
-    this.categoriesRevision++;
     this.serviceRevision++;
-    this.isLoadingCategories = false;
-    this.isLoadingServices = false;
     this.selectedPetId = petId;
     this.selectedCategoryId = null;
-    this.categories = [];
+    this.selectedProviderKey = null;
+    this.selectedOfferingIds = [];
     this.services = [];
     this.ratings = {};
-    this.recommendations = [];
-    this.selectedRecommendationDefinitionId = null;
     this.errorMessage = '';
-    if (!petId) return;
-
-    const revision = this.categoriesRevision;
-    this.isLoadingCategories = true;
-    this.categoriesRequest = this.apiService.get<ApiResponse<ServiceCategory[]>>(
-      `/service-categories?petId=${encodeURIComponent(petId)}`).subscribe({
-      next: response => {
-        if (revision !== this.categoriesRevision) return;
-        this.categories = response?.success && Array.isArray(response.data) ? response.data : [];
-        if (!response?.success) this.errorMessage = 'services.loadCategoriesError';
-        this.isLoadingCategories = false;
-      },
-      error: error => {
-        if (revision !== this.categoriesRevision) return;
-        this.errorMessage = this.discoveryError(error, 'services.loadCategoriesError');
-        this.isLoadingCategories = false;
-      }
-    });
+    if (petId) this.loadServices();
   }
 
-  selectCategory(categoryId: string): void {
-    if (!this.selectedPetId || !this.visibleCategories.some(category => category.id === categoryId)) return;
+  selectCategory(categoryId: string | null): void {
+    if (categoryId && !this.visibleCategories.some(item => item.id === categoryId)) return;
     this.selectedCategoryId = categoryId;
-    this.loadServices();
+    this.closeProviderDetails();
   }
 
   applyFilters(): void {
-    if (this.selectedCategoryId) this.loadServices();
+    // Local filtering only. A new Pet or changed origin explicitly refreshes data.
   }
 
   onGeographySelected(area: GeographyArea | null): void {
     this.selectedGeography = area;
     this.selectedGeographyId = area?.id || null;
-    this.applyFilters();
+    if (this.selectedPetId) this.loadServices();
   }
 
   onSortChanged(sort: 'nearest' | 'rating'): void {
@@ -346,7 +446,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   private discoveryError(error: unknown, fallback: string): string {
-    return error instanceof HttpErrorResponse && error.status === 401
+    return error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)
       ? 'services.sessionUnavailable'
       : apiErrorMessage(error, fallback);
   }
@@ -359,7 +459,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     this.services = [];
     this.ratings = {};
     this.recommendations = [];
-    if (!this.selectedPetId || !this.selectedCategoryId) {
+    if (!this.selectedPetId) {
       this.isLoadingServices = false;
       return;
     }
@@ -393,20 +493,13 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   private buildSearchParams(): URLSearchParams | null {
-    const postcode = this.locationPostcode.trim();
-    if (postcode && !/^[0-9]{4}$/.test(postcode)) return null;
     const params = new URLSearchParams();
     if (this.selectedPetId) params.set('petId', this.selectedPetId);
-    if (this.selectedCategoryId) params.set('categoryId', this.selectedCategoryId);
-    if (this.acceptingRequestsOnly) params.set('acceptingRequests', 'true');
+
     const origin = this.selectedGeography;
     if (origin?.postcode || this.originPostcode) params.set('originPostcode', (origin?.postcode || this.originPostcode).trim());
     if (origin?.state || this.originState) params.set('originState', (origin?.state || this.originState).trim());
     if (origin?.suburb || this.originSuburb) params.set('originSuburb', (origin?.suburb || this.originSuburb).trim());
-    if (this.locationState.trim()) params.set('state', this.locationState.trim());
-    if (this.locationCity.trim()) params.set('city', this.locationCity.trim());
-    if (this.locationSuburb.trim()) params.set('suburb', this.locationSuburb.trim());
-    if (postcode) params.set('postcode', postcode);
     return params;
   }
 
