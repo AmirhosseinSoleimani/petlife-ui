@@ -516,14 +516,21 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
       return;
     }
     const first = this.selectedOfferings[0];
+    // Always use a genuine selected/locality GUID. A postcode or inferred
+    // provider identity is not a substitute for a verified geography authority.
+    const geographyId = this.selectedGeographyId ||
+      first?.provider?.primaryGeographyAreaId || null;
+    if (!geographyId) {
+      this.submissionError = 'Choose a search location before submitting the request.';
+      return;
+    }
     const payload = {
       petId: this.selectedPetId,
       providerServiceId: this.selectedOfferingIds[0],
       providerProfileId: this.selectedProvider.id,
       providerServiceIds: [...this.selectedOfferingIds],
       requestedDate: this.availabilityDate,
-      serviceGeographyAreaId: this.selectedGeographyId ||
-        first?.provider?.primaryGeographyAreaId || null,
+      serviceGeographyAreaId: geographyId,
       consentSharePetProfile: false,
       consentShareHealthSummary: false,
       consentShareContactDetails: false
