@@ -6,7 +6,7 @@
     <section class="queue">
       <p class="state" *ngIf="isLoading">{{ 'adminVerification.loadingQueue' | translate }}</p>
       <button type="button" class="queue-item" *ngFor="let item of documents" [class.selected]="selected?.providerUserId === item.providerUserId" (click)="openProvider(item)">
-        <span><strong>{{ item.documentType | translate }}</strong><small>{{ item.originalFileName }}</small><small>{{ 'adminVerification.uploaded' | translate }} {{ item.createdAt | date:'short' }}</small></span><app-badge [tone]="statusTone(item.status)">{{ item.status | translate }}</app-badge>
+        <span><strong>{{ item.documentType | translate }}</strong><small>Document ID: {{ item.id }}</small></span><app-badge [tone]="statusTone(item.status)">{{ item.status | translate }}</app-badge>
       </button>
       <p class="state" *ngIf="!isLoading && !documents.length">{{ 'adminVerification.emptyQueue' | translate }}</p>
     </section>
@@ -15,7 +15,7 @@
       <div class="badge-row"><app-badge tone="success" *ngFor="let badge of selected.badges">{{ badge.label }}</app-badge></div>
       <section class="verification-control"><h3>{{ 'adminVerification.providerVerification' | translate }}</h3><select [(ngModel)]="verificationStatus"><option *ngFor="let status of verificationStatuses" [value]="status">{{ status | translate }}</option></select><textarea rows="2" [placeholder]="'adminVerification.verificationReasonPlaceholder' | translate" [(ngModel)]="verificationReason"></textarea><app-button type="button" [loading]="isSaving" (buttonClick)="updateVerification()">{{ 'adminVerification.saveProviderStatus' | translate }}</app-button></section>
       <section class="document-review" *ngFor="let item of selected.documents">
-        <div class="document-head"><div><h3>{{ item.documentType | translate }}</h3><p>{{ item.originalFileName }}</p><small *ngIf="item.expiryDate">{{ 'adminVerification.expires' | translate }} {{ item.expiryDate | date:'mediumDate' }}</small></div><app-badge [tone]="statusTone(item.status)">{{ item.status | translate }}</app-badge></div>
+        <div class="document-head"><div><h3>{{ item.documentType | translate }}</h3><p>Document ID: {{ item.id }}</p><small *ngIf="item.expiryDate">{{ 'adminVerification.expires' | translate }} {{ item.expiryDate | date:'mediumDate' }}</small></div><app-badge [tone]="statusTone(item.status)">{{ item.status | translate }}</app-badge></div>
         <p class="reason" *ngIf="item.rejectionReason">{{ item.rejectionReason }}</p>
         <div class="review-history" *ngIf="item.reviews?.length"><strong>{{ 'adminVerification.reviewHistory' | translate }}</strong><p *ngFor="let history of item.reviews">{{ history.createdAt | date:'short' }} · {{ history.previousStatus | translate }} → {{ history.newStatus | translate }}<span *ngIf="history.reason"> · {{ history.reason }}</span></p></div>
         <button type="button" class="download" (click)="download(item)">{{ 'adminVerification.downloadPrivateFile' | translate }}</button>
