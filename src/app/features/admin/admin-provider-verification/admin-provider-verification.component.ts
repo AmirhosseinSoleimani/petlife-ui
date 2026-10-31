@@ -9,6 +9,14 @@ import { ProviderDocument, ProviderVerification } from '../../../core/models/mar
   templateUrl: './admin-provider-verification.component.html',
   styleUrls: ['./admin-provider-verification.component.scss']
 })
+interface ProviderDocumentWire {
+  id: string;
+  providerProfileId: string;
+  type: string;
+  status: string;
+  expiryDate?: string | null;
+}
+
 export class AdminProviderVerificationComponent implements OnInit {
   documents: ProviderDocument[] = [];
   selected: ProviderVerification | null = null;
@@ -30,8 +38,8 @@ export class AdminProviderVerificationComponent implements OnInit {
   loadQueue(): void {
     this.isLoading = true; this.errorMessage = '';
     const query = this.statusFilter ? `?status=${encodeURIComponent(this.statusFilter)}` : '';
-    this.api.get<ProviderDocument[]>(`/admin/provider-verification/documents${query}`).subscribe({
-      next: response => { this.documents = Array.isArray(response) ? response : []; if (this.selected) this.refreshSelected(this.selected.providerUserId); this.isLoading = false; },
+    this.api.get<ProviderDocumentWire[]>(`/admin/provider-verification/documents${query}`).subscribe({
+      next: response => { this.documents = Array.isArray(response) ? response.map(doc => ({ id: doc.id, providerUserId: doc.providerProfileId, documentType: doc.type, status: doc.status, expiryDate: doc.expiryDate, originalFileName: doc.type, sizeBytes: 0, createdAt: '' })) : []; if (this.selected) this.refreshSelected(this.selected.providerUserId); this.isLoading = false; },
       error: () => { this.errorMessage = 'Unable to load the verification queue.'; this.isLoading = false; }
     });
   }
@@ -40,7 +48,7 @@ export class AdminProviderVerificationComponent implements OnInit {
     this.errorMessage = '';
     // The current Providers host exposes document queue/review and profile status writes,
     // but no GET provider-verification detail endpoint. Use the selected queue item.
-    this.selected = { providerUserId: document.providerUserId, providerProfileId: '', businessName: document.providerUserId, verificationStatus: 'Pending', documents: this.documents.filter(item => item.providerUserId === document.providerUserId), badges: [] };
+    this.selected = { providerUserId: document.providerUserId, providerProfileId: document.providerUserId, businessName: document.providerUserId, verificationStatus: 'Pending', documents: this.documents.filter(item => item.providerUserId === document.providerUserId), badges: [] };
     this.verificationStatus = this.selected.verificationStatus;
     this.reviewReason = '';
     this.verificationReason = '';
@@ -61,7 +69,7 @@ export class AdminProviderVerificationComponent implements OnInit {
     if (!this.selected) return;
     if (this.requiresReason(this.verificationStatus) && !this.verificationReason.trim()) { this.errorMessage = 'A reason is required for this verification status.'; return; }
     this.isSaving = true; this.errorMessage = ''; this.successMessage = '';
-    this.api.put<void>(`/admin/provider-verification/profiles/${this.selected.providerUserId}/status`, { decision: this.verificationStatus, reason: this.verificationReason.trim() || null }).subscribe({
+    this.api.put<void>(`/admin/provider-verification/profiles/${this.selected.providerProfileId}/status`, { decision: this.verificationStatus, reason: this.verificationReason.trim() || null }).subscribe({
       next: () => { if (this.selected) this.selected.verificationStatus = this.verificationStatus; this.successMessage = 'Provider verification status updated.'; this.verificationReason = ''; },
       error: err => { this.errorMessage = this.apiMessage(err, 'Unable to update provider verification.'); this.isSaving = false; },
       complete: () => this.isSaving = false
