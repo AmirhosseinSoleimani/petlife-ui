@@ -314,7 +314,7 @@
     </a>
     <a class="metric-card amber" routerLink="/reminders">
       <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22a2.8 2.8 0 0 0 2.6-1.8H9.4A2.8 2.8 0 0 0 12 22Zm7-5-1.8-2.1V10a5.2 5.2 0 0 0-4-5.1V3a1.2 1.2 0 0 0-2.4 0v1.9a5.2 5.2 0 0 0-4 5.1v4.9L5 17v1h14v-1Z"/></svg></span>
-      <strong>{{ isLoadingReminders ? '…' : remindersLoadFailed ? '—' : reminders.length }}</strong>
+      <strong>{{ isLoadingReminders ? '…' : remindersLoadFailed ? '—' : activeReminderCount }}</strong>
       <span>{{ 'dashboard.upcomingReminders' | translate }}</span>
     </a>
     <a class="metric-card blue" [routerLink]="pets.length ? ['/pets', pets[0].id, 'health-records'] : ['/pets']">
@@ -355,9 +355,11 @@
         </div>
         <div class="care-list" *ngIf="!isLoadingReminders && upcomingCare.length">
           <article *ngFor="let reminder of upcomingCare">
-            <span class="date-tile"><strong>{{ reminder.dueDate | date:'d' }}</strong><small>{{ reminder.dueDate | date:'MMM' }}</small></span>
+            <span class="date-tile"><strong>{{ (reminder.snoozeUntil || reminder.dueDate) | date:'d' }}</strong><small>{{ (reminder.snoozeUntil || reminder.dueDate) | date:'MMM' }}</small></span>
             <div><h4>{{ reminder.title }}</h4><p>{{ getPetName(reminder.petId) || (reminder.reminderType | translate) }}</p></div>
-            <app-badge tone="warning">{{ (reminder.status || 'Upcoming') | translate }}</app-badge>
+            <app-badge [tone]="reminderTone(reminder)">
+                {{ ('reminders.bucket.' + (reminder.computedState || 'upcoming').toLowerCase()) | translate }}
+              </app-badge>
           </article>
         </div>
       </app-card>
