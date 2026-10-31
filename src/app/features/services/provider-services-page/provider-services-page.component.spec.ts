@@ -4,94 +4,97 @@ import { ProviderService } from '../../../core/models/marketplace.models';
 import { ApiService } from '../../../core/api/api.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
-import { ProviderServicesPageComponent, sortDiscoveryResults, ProviderReviewView } from './provider-services-page.component';
+import {
+  ProviderServicesPageComponent, groupProviderOfferings, sortDiscoveryResults, ProviderReviewView
+} from './provider-services-page.component';
 
-describe('Request type service discovery', () => {
-  function create(kind: 'emergency' | 'care') {
+describe('Provider-first customer discovery', () => {
+  function create(kind: 'care' | 'emergency' = 'care') {
     const api = jasmine.createSpyObj<ApiService>('ApiService', ['get']);
+    api.get.and.returnValue(of({ success: true, data: [] }));
     const route = { snapshot: { data: { requestKind: kind }, paramMap: { get: () => null } } } as unknown as ActivatedRoute;
     const i18n = jasmine.createSpyObj<I18nService>('I18nService', ['translate']);
-    return new ProviderServicesPageComponent(api, route, i18n, {} as UserPreferencesService);
+    return { component: new ProviderServicesPageComponent(api, route, i18n, {} as UserPreferencesService), api };
   }
 
-  it('shows only veterinary-related categories for emergency selection', () => {
-    const component = create('emergency');
-    component.categories = [
-      { id: 'vet', name: 'Veterinary care' },
-      { id: 'groom', name: 'Grooming' }
-    ];
-    expect(component.visibleCategories.map(x => x.id)).toEqual(['vet']);
-    component.selectedPetId = 'pet';
-    component.selectCategory('groom');
-    expect(component.selectedCategoryId).toBeNull();
+  const offers: ProviderService[] = [
+    { id: 'bath', providerProfileId: 'provider-1', providerBusinessName: 'Happy Paws',
+      serviceDefinitionId: 'groom', serviceName: 'Bath', price: 65, durationMinutes: 60,
+      pricingType: 'Fixed', providerState: 'NSW', providerSuburb: 'Bondi', providerAcceptingRequests: true },
+    { id: 'walk', providerProfileId: 'provider-1', providerBusinessName: 'Happy Paws',
+      serviceDefinitionId: 'walk', serviceName: 'Walking', price: 35, durationMinutes: 30,
+      pricingType: 'Fixed', providerState: 'NSW', providerSuburb: 'Bondi', providerAcceptingRequests: true },
+    { id: 'sit', providerProfileId: 'provider-2', providerBusinessName: 'Other Pet Care',
+      serviceDefinitionId: 'sit', serviceName: 'Sitting', price: 80, durationMinutes: 120,
+      pricingType: 'Fixed', providerState: 'VIC', providerAcceptingRequests: true }
+  ];
+
+  it('groups multiple service offerings under a single price-free provider card', () => {
+    const grouped = groupProviderOfferings(offers);
+    expect(grouped.length).toBe(2);
+    expect(grouped[0].offerings.length).toBe(2);
+    expect(grouped[0].categoryKeys).toEqual(['groom','walk']);
   });
 
-  it('does not market non-vet listings as emergency care', () => {
-    const component = create('emergency');
+  it('loads all offerings on pet selection without calling a separate categories API', () => {
+    const { component, api } = create();
+    component.selectPet('pet-guid');
+    expect(api.get).toHaveBeenCalledTimes(1);
+    const url = api.get.calls.mostRecent().args[0];
+    expect(url).toContain('/provider-services?petId=pet-guid');
+    expect(url).not.toContain('categoryId');
+    expect(url).not.toContain('/service-categories');
+  });
+
+  it('filters category, name, suburb, state and rating locally without HTTP requests', () => {
+    const { component, api } = create();
+    component.selectedPetId = 'pet-guid';
+    component.services = offers;
+    component.ratings = {
+      'provider-1': {source:'demo',averageRating:4.9,ratingCount:5,reviews:[],reviewsAvailable:true},
+      'provider-2': {source:'verified',averageRating:3.5,ratingCount:2,reviews:[],reviewsAvailable:true}
+    };
+    component.selectCategory('walk');
+    component.providerNameSearch = 'happy';
+    component.providerAddressSearch = 'bondi';
+    component.locationState = 'NSW';
+    component.minimumRating = 4.5;
+    expect(component.visibleProviders.map(p=>p.id)).toEqual(['provider-1']);
+    expect(api.get).not.toHaveBeenCalled();
+  });
+
+  it('calculates the sum and combined duration of selected offerings only as a UI quote', () => {
+    const { component } = create();
+    component.services = offers;
+    component.openProviderDetails(groupProviderOfferings(offers)[0]);
+    component.toggleOffering('bath', true);
+    component.toggleOffering('walk', true);
+    expect(component.estimatedTotal).toBe(100);
+    expect(component.totalMinutes).toBe(90);
+    expect(component.isExactTotal).toBeTrue();
+    component.toggleOffering('walk', false);
+    expect(component.estimatedTotal).toBe(65);
+  });
+
+  it('preserves emergency-only filtering', () => {
+    const { component } = create('emergency');
     component.services = [
-      { id: 'vet', name: 'Emergency veterinary care', providerAcceptingRequests: true },
-      { id: 'groom', name: 'Grooming', providerAcceptingRequests: true },
-      { id: 'closed', name: 'Emergency veterinary care', providerAcceptingRequests: false }
+      {id:'vet',providerProfileId:'vet-provider',serviceName:'Emergency Vet',providerAcceptingRequests:true},
+      {id:'groom',providerProfileId:'groom-provider',serviceName:'Grooming',providerAcceptingRequests:true}
     ];
-    expect(component.visibleServices.map(x => x.id)).toEqual(['vet']);
+    expect(component.visibleProviders.map(x=>x.id)).toEqual(['vet-provider']);
   });
 
-  it('shows normal categories on a regular care request', () => {
-    const component = create('care');
-    component.categories = [{ id: 'groom', name: 'Grooming' }];
-    expect(component.visibleCategories.length).toBe(1);
-  });
-  it('sorts unknown distances last and never treats missing ratings as zero stars', () => {
-    const services: ProviderService[] = [
-      { id: 'missing', providerProfileId: 'missing' },
-      { id: 'far', providerProfileId: 'far', distanceKm: 20 },
-      { id: 'near', providerProfileId: 'near', distanceKm: 2 }
+  it('keeps missing ratings and distance behind known values', () => {
+    const rows: ProviderService[] = [
+      {id:'unknown',providerProfileId:'unknown'},
+      {id:'far',providerProfileId:'far',distanceKm:20},
+      {id:'near',providerProfileId:'near',distanceKm:2}
     ];
     const reviews: Record<string, ProviderReviewView> = {
-      far: { source: 'demo', averageRating: 4.5, ratingCount: 10, reviews: [], reviewsAvailable: true }
+      far: {source:'demo',averageRating:4.5,ratingCount:5,reviews:[],reviewsAvailable:true}
     };
-    expect(sortDiscoveryResults(services, reviews, 'nearest').map(item => item.id))
-      .toEqual(['near', 'far', 'missing']);
-    expect(sortDiscoveryResults(services, reviews, 'rating')[0].id).toBe('far');
-    expect(sortDiscoveryResults(services, reviews, 'rating')[2].id).toBe('missing');
+    expect(sortDiscoveryResults(rows,reviews,'nearest').map(x=>x.id)).toEqual(['near','far','unknown']);
+    expect(sortDiscoveryResults(rows,reviews,'rating')[0].id).toBe('far');
   });
-
-  it('only sends supported provider discovery filters', () => {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['get']);
-    api.get.and.returnValue(of({ success: true, data: [] }));
-    const route = { snapshot: { data: { requestKind: 'care' }, paramMap: { get: () => null } } } as unknown as ActivatedRoute;
-    const component = new ProviderServicesPageComponent(
-      api, route, jasmine.createSpyObj<I18nService>('I18nService', ['translate']),
-      {} as UserPreferencesService);
-    component.selectedPetId = 'pet-guid';
-    component.categories = [{ id: 'category-guid', name: 'Vet' }];
-    component.originPostcode = '2000';
-    component.originState = 'NSW';
-    component.locationState = 'VIC';
-    component.selectCategory('category-guid');
-    const url = api.get.calls.mostRecent().args[0];
-    expect(url).toContain('originPostcode=2000');
-    expect(url).toContain('state=VIC');
-    for (const unsupported of ['deliveryMode', 'openNow', 'afterHours', 'latitude', 'longitude', 'radiusKm']) {
-      expect(url).not.toContain(unsupported);
-    }
-  });
-
-  it('uses the selected origin separately from result filters', () => {
-    const api = jasmine.createSpyObj<ApiService>('ApiService', ['get']);
-    api.get.and.returnValue(of({ success: true, data: [] }));
-    const route = { snapshot: { data: { requestKind: 'care' }, paramMap: { get: () => null } } } as unknown as ActivatedRoute;
-    const component = new ProviderServicesPageComponent(
-      api, route, jasmine.createSpyObj<I18nService>('I18nService', ['translate']),
-      {} as UserPreferencesService);
-    component.selectedPetId = 'pet-guid';
-    component.categories = [{ id: 'category-guid', name: 'Vet' }];
-    component.selectCategory('category-guid');
-    component.onGeographySelected({ id: 'location', city: 'Sydney', suburb: 'Sydney',
-      state: 'NSW', postcode: '2000', country: 'Australia', sortOrder: 0, isActive: true });
-    const url = api.get.calls.mostRecent().args[0];
-    expect(url).toContain('originPostcode=2000');
-    expect(url).not.toContain('&postcode=2000');
-  });
-
 });
