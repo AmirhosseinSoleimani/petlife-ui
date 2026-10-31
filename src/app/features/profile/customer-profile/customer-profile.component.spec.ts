@@ -82,13 +82,14 @@ describe('Customer profile / Users identity contract', () => {
       expect(api.put).not.toHaveBeenCalled();
     });
 
-    it('disables writes for old backend profiles', () => {
+    it('permits drafting address when the backend response still omits address fields', () => {
       const { component, api } = setup();
       api.get.and.returnValue(of({ success: true, data: identity }));
       component.loadProfile();
       component.addressForm.address = 'test';
       component.saveAddress();
-      expect(component.addressSupported).toBeFalse();
+      expect(component.addressSupported).toBeTrue();
+      expect(component.canSaveAddress).toBeTrue();
       expect(api.put).not.toHaveBeenCalled();
     });
 
@@ -102,7 +103,9 @@ describe('Customer profile / Users identity contract', () => {
     it('saves the exact six-field payload, allowing explicit clearing with null', () => {
       const { component, api } = setup();
       api.get.and.returnValue(of({ success: true, data: stored }));
-      api.put.and.returnValue(of(null));
+      api.put.and.returnValue(of({ success: true, data: {
+        ...stored, address: '42 New Street', postcode: null
+      } }));
       component.loadProfile();
       component.addressForm.address = ' 42 New Street ';
       component.addressForm.postcode = '';
@@ -113,6 +116,18 @@ describe('Customer profile / Users identity contract', () => {
       });
       expect(component.addressSuccess).toBe('profile.addressSaveSuccess');
       expect(component.canSaveAddress).toBeFalse();
+    });
+
+    it('does not claim successful persistence if server returns a null body', () => {
+      const { component, api } = setup();
+      api.get.and.returnValue(of({ success: true, data: identity }));
+      api.put.and.returnValue(of(null));
+      component.loadProfile();
+      component.addressForm.address = 'Draft street';
+      component.saveAddress();
+      expect(component.addressError).toBe('profile.addressSaveError');
+      expect(component.addressSuccess).toBe('');
+      expect(component.addressForm.address).toBe('Draft street');
     });
 
     it('keeps the dirty form and reports errors when the API fails', () => {
