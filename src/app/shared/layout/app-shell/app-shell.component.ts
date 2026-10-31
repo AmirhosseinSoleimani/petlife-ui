@@ -52,6 +52,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   private readonly adminNavItems: NavItem[] = [
     { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'dashboard', enabled: true },
+    { labelKey: 'Roles & permissions', path: '/admin/roles', icon: 'services', enabled: true },
     { labelKey: 'nav.adminUsers', path: '/admin/users', icon: 'providers', enabled: true },
     { labelKey: 'nav.providerVerification', path: '/admin/provider-verification', icon: 'providers', enabled: true },
     { labelKey: 'nav.marketplaceOperations', path: '/admin/operations', icon: 'requests', enabled: true },

@@ -45,14 +45,15 @@ export class AdminUsersComponent implements OnInit {
     this.errorMessage = '';
     const params = new URLSearchParams();
     if (this.search.trim()) params.set('search', this.search.trim());
-    if (this.role) params.set('role', this.role);
+    // Users search accepts RoleId (GUID), not the legacy role name.
+    // Role name filtering is applied to the returned page until a role is selected by ID.
     if (this.status) params.set('status', this.status);
     params.set('page', String(this.page));
     params.set('pageSize', String(this.pageSize));
 
-    this.apiService.get<ApiResponse<PagedResult<AdminUser>>>(`/admin/users?${params.toString()}`).subscribe({
+    this.apiService.get<ApiResponse<PagedResult<AdminUser>>>(`/v1/identity/management/users/search?${params.toString()}`).subscribe({
       next: (response) => {
-        this.users = response.data?.items || [];
+        this.users = (response.data?.items || []).filter(user => !this.role || user.role.toLowerCase() === this.role.toLowerCase());
         this.totalPages = response.data?.totalPages || 0;
         this.totalCount = response.data?.totalCount || 0;
         this.isLoading = false;
@@ -74,7 +75,7 @@ export class AdminUsersComponent implements OnInit {
   viewUser(user: AdminUser): void {
     this.selectedUser = user;
     this.isDetailLoading = true;
-    this.apiService.get<ApiResponse<AdminUser>>(`/admin/users/${user.id}`).subscribe({
+    this.apiService.get<ApiResponse<AdminUser>>(`/v1/identity/management/users/${user.id}/profile`).subscribe({
       next: (response) => {
         if (response.data) {
           this.selectedUser = response.data;
@@ -134,7 +135,7 @@ export class AdminUsersComponent implements OnInit {
   private updateStatus(user: AdminUser, status: 'Active' | 'Suspended', reason: string, closeSuspendOnSuccess = false): void {
     this.actionUserId = user.id;
     this.errorMessage = '';
-    this.apiService.put<ApiResponse<AdminUser>>(`/admin/users/${user.id}/status`, { status, reason }).subscribe({
+    this.apiService.put<ApiResponse<AdminUser>>(`/v1/identity/management/users/${user.id}/status`, { status }).subscribe({
       next: (response) => {
         if (response.data) {
           Object.assign(user, response.data);

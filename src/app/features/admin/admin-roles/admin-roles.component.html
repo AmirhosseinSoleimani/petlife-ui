@@ -1,0 +1,36 @@
+<section class="page admin-page admin-roles-page">
+  <app-page-header eyebrow="Administration" title="Roles & permissions"
+    description="Manage RBAC roles and their allowed operations. Server authorization is enforced for every change."></app-page-header>
+  <p *ngIf="error" class="notice error" role="alert">{{ error }}</p>
+  <p *ngIf="success" class="notice success" role="status">{{ success }}</p>
+  <p *ngIf="loading" role="status">Loading roles and permissions…</p>
+  <div class="roles-layout" *ngIf="!loading">
+    <section class="roles-list" aria-label="Roles">
+      <h2>Roles</h2>
+      <button type="button" *ngFor="let role of roles"
+        [class.selected]="selected?.id === role.id" (click)="select(role)">
+        {{ role.name }} <small>{{ role.isActive ? 'Active' : 'Inactive' }}</small>
+      </button>
+      <label for="role-name">Role name</label>
+      <input id="role-name" [(ngModel)]="name" maxlength="100" />
+      <div class="actions">
+        <button type="button" [disabled]="busy || !name.trim()" (click)="create()">Create role</button>
+        <button type="button" *ngIf="selected" [disabled]="busy || !name.trim()" (click)="rename()">Rename selected</button>
+        <button type="button" *ngIf="selected && selected.key.toLowerCase() !== 'admin'"
+          [disabled]="busy" (click)="setActive(!selected.isActive)">{{ selected.isActive ? 'Deactivate' : 'Activate' }}</button>
+      </div>
+    </section>
+    <section class="permissions" aria-label="Role permissions">
+      <h2>{{ selected ? selected.name + ' permissions' : 'Choose a role' }}</h2>
+      <p *ngIf="selected?.key?.toLowerCase() === 'admin'">Built-in administrator permissions cannot be modified.</p>
+      <div *ngIf="selected" class="operation-list">
+        <label *ngFor="let operation of operations">
+          <input type="checkbox" [checked]="granted.has(operation.id)"
+            [disabled]="busy || !operation.isActive || selected.key.toLowerCase() === 'admin'"
+            (change)="toggle(operation)" />
+          <span><strong>{{ operation.name }}</strong><small>{{ operation.key }}</small></span>
+        </label>
+      </div>
+    </section>
+  </div>
+</section>

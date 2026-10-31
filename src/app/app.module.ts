@@ -11,6 +11,7 @@ import { AdminExpenseCategoriesComponent } from './features/admin/admin-expense-
 import { AdminGeographyComponent } from './features/admin/admin-geography/admin-geography.component';
 import { AdminServiceCatalogComponent } from './features/admin/admin-service-catalog/admin-service-catalog.component';
 import { AdminTaxonomyComponent } from './features/admin/admin-taxonomy/admin-taxonomy.component';
+import { AdminRolesComponent } from './features/admin/admin-roles/admin-roles.component';
 import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
 import { AdminProviderVerificationComponent } from './features/admin/admin-provider-verification/admin-provider-verification.component';
 import { AdminOperationsComponent } from './features/admin/admin-operations/admin-operations.component';
@@ -64,7 +65,7 @@ import { AppLoadingStateComponent } from './shared/components/app-loading-state/
     DashboardComponent, NotificationsPageComponent, CustomerProfileComponent, PetsPageComponent, PetTransferComponent, PetHealthRecordsComponent, PetHealthTimelineComponent, PetSharingComponent, PetExpensesComponent, PublicPetShareComponent,
     RemindersPageComponent, EmergencyVetsPageComponent, ProvidersPageComponent, ProviderProfileComponent,
     ProviderServicesManagementComponent, ProviderServiceAreasComponent, ProviderDocumentsComponent, ProviderRequestsComponent, ProviderServicesPageComponent,
-    CreateServiceRequestComponent, MyRequestsComponent, RequestTypeChooserComponent, FeedbackPageComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
+    CreateServiceRequestComponent, MyRequestsComponent, RequestTypeChooserComponent, FeedbackPageComponent, AdminRolesComponent, AdminUsersComponent, AdminProviderVerificationComponent, AdminOperationsComponent, AdminPetsComponent, AdminTaxonomyComponent, AdminGeographyComponent, AdminServiceCatalogComponent, AdminReminderTemplatesComponent, AdminExpenseCategoriesComponent,
     AppButtonComponent, AppCardComponent, AppInputComponent, AppModalComponent, AppConfirmDialogComponent, AppFileUploadComponent, AppBadgeComponent,
     AppPageHeaderComponent, WorkspacePreferencesComponent, GeographySelectorComponent, AppLoadingStateComponent, TranslatePipe
   ],

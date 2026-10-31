@@ -20,9 +20,12 @@ export interface AdminUser {
   state?: string | null;
   city?: string | null;
   marketingConsent?: boolean | null;
-  petCount: number;
-  createdAt: string;
+  petCount?: number;
+  createdAt?: string;
 }
+
+export interface AdminRole { id: string; key: string; name: string; isActive: boolean; }
+export interface AdminOperation { id: string; key: string; name: string; isActive: boolean; }
 
 export interface AdminPet {
   id: string;
