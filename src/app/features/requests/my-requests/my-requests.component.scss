@@ -99,3 +99,24 @@
   .overview-stat { padding: var(--space-lg); min-height: 96px; }
   .request-empty { padding: var(--space-xl); }
 }
+
+/* Server-backed proforma. Reuses existing design tokens and does not imply payment. */
+.request-proforma-preview {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 14px;
+  padding:12px; border:1px solid var(--color-border);
+  border-radius:var(--radius-md); margin-block:12px;
+}
+.request-proforma-preview span { font-weight:700; }
+.request-proforma-preview strong { color:var(--color-primary-dark); font-variant-numeric:tabular-nums; }
+.request-proforma-preview small { color:var(--color-muted); }
+.request-proforma { display:grid; gap:12px; padding:16px; border:1px solid var(--color-border); border-radius:var(--radius-lg); }
+.request-proforma-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 12px; }
+.request-proforma-heading h4,.request-proforma-note { margin:0; }
+.request-proforma-heading span,.request-proforma-note { color:var(--color-muted); font-size:.875rem; line-height:1.5; }
+.request-proforma-lines { min-width:0; overflow-x:auto; }
+.request-proforma table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.request-proforma th,.request-proforma td { padding:10px 8px; text-align:start; border-bottom:1px solid var(--color-border); }
+.request-proforma th { font-weight:700; }
+.request-proforma td:last-child,.request-proforma th:last-child { text-align:end; white-space:nowrap; }
+.request-proforma-total { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px 14px; }
+.request-proforma-total strong { color:var(--color-primary-dark); font-variant-numeric:tabular-nums; }

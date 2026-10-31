@@ -262,7 +262,25 @@ export interface ServiceRequestPayload {
   consentShareContactDetails: boolean;
 }
 
+export interface RequestProformaLine {
+  offeringId: string;
+  serviceName: string;
+  unitPrice: number;
+  durationMinutes: number;
+}
+
+export interface RequestProforma {
+  providerProfileId: string;
+  currency: string;
+  services: RequestProformaLine[];
+  servicesTotal: number;
+  totalDurationMinutes: number;
+  pricedAtUtc: string;
+}
+
 export interface ServiceRequest {
+  /** Server-side price snapshot, if the Request contains an approved bundle. */
+  proforma?: RequestProforma | null;
   id: string;
   status?: string;
   requestMessage?: string;

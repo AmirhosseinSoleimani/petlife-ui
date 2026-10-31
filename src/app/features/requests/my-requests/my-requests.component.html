@@ -70,6 +70,11 @@
               <span><small>{{ 'requests.providerLabel' | translate }}</small><strong>{{ getProviderName(request) || ('requests.unknownProvider' | translate) }}</strong></span>
               <span><small>{{ 'requests.requestedDate' | translate }}</small><strong>{{ getRequestDate(request) ? (getRequestDate(request) | date:'mediumDate') : ('common.notAvailable' | translate) }}</strong></span>
             </div>
+            <div class="request-proforma-preview" *ngIf="hasProforma(request) && request.proforma as quote">
+              <span>Initial proforma</span>
+              <strong>{{ quote.servicesTotal | currency:quote.currency:'code' }}</strong>
+              <small>{{ quote.services.length }} services · {{ quote.totalDurationMinutes }} minutes</small>
+            </div>
             <p class="request-message">{{ request.requestMessage || ('requests.noMessage' | translate) }}</p>
             <button type="button" class="details-link">{{ 'requests.viewDetails' | translate }}</button>
           </div>
@@ -80,6 +85,33 @@
         <div class="detail-status"><p>{{ 'requests.currentStatus' | translate }}</p><app-badge [tone]="getStatusTone(selectedRequest)">{{ getStatus(selectedRequest) | translate }}</app-badge></div>
         <h3>{{ getServiceName(selectedRequest) || ('requests.unknownService' | translate) }}</h3>
         <dl><div><dt>{{ 'requests.petLabel' | translate }}</dt><dd>{{ getPetName(selectedRequest) || ('requests.unknownPet' | translate) }}</dd></div><div><dt>{{ 'requests.providerLabel' | translate }}</dt><dd>{{ getProviderName(selectedRequest) || ('requests.unknownProvider' | translate) }}</dd></div><div><dt>{{ 'requests.requestedDate' | translate }}</dt><dd>{{ getRequestDate(selectedRequest) ? (getRequestDate(selectedRequest) | date:'mediumDate') : ('common.notAvailable' | translate) }}</dd></div></dl>
+        <section class="request-proforma" *ngIf="hasProforma(selectedRequest) && selectedRequest.proforma as quote"
+          aria-labelledby="request-proforma-title">
+          <div class="request-proforma-heading">
+            <h4 id="request-proforma-title">Initial proforma</h4>
+            <span>Request estimate · not a payment receipt</span>
+          </div>
+          <div class="request-proforma-lines">
+            <table>
+              <thead><tr><th scope="col">Service</th><th scope="col">Duration</th><th scope="col">Price</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let line of quote.services">
+                  <td>{{ line.serviceName }}</td>
+                  <td>{{ line.durationMinutes }} min</td>
+                  <td>{{ line.unitPrice | currency:quote.currency:'code' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="request-proforma-total">
+            <span>Total · {{ quote.totalDurationMinutes }} minutes</span>
+            <strong>{{ quote.servicesTotal | currency:quote.currency:'code' }}</strong>
+          </div>
+          <p class="request-proforma-note">
+            Prices were recorded when this request was created.
+            They do not indicate payment. Changes require a fresh confirmed quote.
+          </p>
+        </section>
         <div class="detail-message"><span>{{ 'requests.messageLabel' | translate }}</span><p>{{ selectedRequest.requestMessage || ('requests.noMessage' | translate) }}</p></div>
         <div class="detail-message" *ngIf="selectedRequest.providerResponseMessage"><span>{{ 'requests.providerResponse' | translate }}</span><p>{{ selectedRequest.providerResponseMessage }}</p></div>
         <section class="booking-proposal" *ngIf="selectedRequest.bookingStatus === 'Proposed' && selectedRequest.proposedServiceAt"><h4>{{ 'requests.providerProposedTime' | translate }}</h4><strong>{{ selectedRequest.proposedServiceAt | date:'medium' }}</strong><p>{{ 'requests.confirmTimeHelp' | translate }}</p><app-button type="button" [loading]="isUpdating" (buttonClick)="confirmBooking(selectedRequest)">{{ 'requests.confirmBookingTime' | translate }}</app-button></section>

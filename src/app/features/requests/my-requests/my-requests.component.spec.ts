@@ -34,6 +34,25 @@ describe('Customer Requests navigation', () => {
     expect(component.filteredRequests.map(x => x.id)).toEqual(['c']);
   });
 
+  it('shows only server-provided proforma totals and services', () => {
+    const { component } = setup('active');
+    const request = {
+      id: 'bundle-1', status: 'Requested',
+      proforma: {
+        providerProfileId: 'provider-1', currency: 'AUD',
+        services: [
+          { offeringId: 'a', serviceName: 'Bath', unitPrice: 65, durationMinutes: 60 },
+          { offeringId: 'b', serviceName: 'Walk', unitPrice: 35, durationMinutes: 30 }
+        ],
+        servicesTotal: 100, totalDurationMinutes: 90, pricedAtUtc: '2026-10-30T10:00:00Z'
+      }
+    };
+    expect(component.hasProforma(request)).toBeTrue();
+    expect(component.getServiceName(request)).toContain('2 services');
+    expect(component.hasProforma({ id: 'legacy-1', status: 'Requested' })).toBeFalse();
+    expect(component.getServiceName({ id: 'legacy-1', serviceName: 'Grooming' })).toBe('Grooming');
+  });
+
   it('keeps an unsuccessful API response from looking like an empty history', () => {
     const { component, api } = setup('active');
     api.get.and.returnValue(of({ success: false, data: [] }));

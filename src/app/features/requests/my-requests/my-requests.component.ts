@@ -43,6 +43,12 @@ export class MyRequestsComponent implements OnInit {
   }
 
   getServiceName(request: ServiceRequest): string {
+    if (request.proforma?.services?.length) {
+      const services = request.proforma.services;
+      return services.length === 1
+        ? services[0].serviceName
+        : `${services.length} services · ${services[0].serviceName} + ${services[1].serviceName}${services.length > 2 ? ' …' : ''}`;
+    }
     return request.serviceName
       || request.providerServiceName
       || request.providerService?.serviceName
@@ -62,7 +68,15 @@ export class MyRequestsComponent implements OnInit {
   }
 
   getRequestDate(request: ServiceRequest): string {
-    return request.requestedDate || request.scheduledDate || request.createdAt || '';
+    return request.scheduledDate || request.requestedDate || request.createdAt || '';
+  }
+
+  hasProforma(request: ServiceRequest): boolean {
+    // Never synthesize an invoice from a service card's current catalog price.
+    return !!(request.proforma &&
+      request.proforma.services?.length &&
+      Number.isFinite(request.proforma.servicesTotal) &&
+      request.proforma.currency);
   }
 
   getStatus(request: ServiceRequest): string {
