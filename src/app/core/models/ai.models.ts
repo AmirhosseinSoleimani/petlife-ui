@@ -35,3 +35,17 @@ export interface AiConversation {
   title: string;
   messages: AiConversationMessage[];
 }
+
+/** The active Gemini general-ask contract. A conversation ID is returned only
+ * when the independent AI general-history store is enabled. */
+export interface AiGeneralAskRequest {
+  message: string;
+  conversationId: string | null;
+}
+
+export interface AiGeneralAskData {
+  answer: string;
+  conversationId?: string | null;
+}
+
+export type AiGeneralAskResponse = ApiResponse<AiGeneralAskData>;
