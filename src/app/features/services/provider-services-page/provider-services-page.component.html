@@ -193,9 +193,16 @@
               This time is not reserved yet.</p>
           </div>
         </section>
+        <button type="button" class="provider-details-cta"
+          *ngIf="selectedOfferingIds.length > 1"
+          [disabled]="isSubmittingRequest || !quoteMatchesSelection || serverQuote?.priceStatus !== 'Exact' || !selectedSlotUtc"
+          (click)="submitSelectedServices()">
+          {{ isSubmittingRequest ? 'Submitting request...' : 'Submit selected services request' }}
+        </button>
+        <p *ngIf="submissionError" class="error" role="alert">{{ submissionError }}</p>
         <p class="booking-contract-warning" *ngIf="selectedOfferings.length">
-          This quote is not a reservation or invoice. Multi-service booking, live capacity checks and
-          proforma issuance require the Bookings transaction workflow. No booking has been created.</p>
+          A request is not a confirmed reservation. The provider must accept and confirm an available appointment;
+          your initial proforma will appear in Active Requests only after successful submission.</p>
         <a *ngIf="selectedOfferings.length === 1 && isExactTotal"
           class="provider-single-service-cta"
           [routerLink]="['/service-requests/new',selectedOfferings[0].id]"

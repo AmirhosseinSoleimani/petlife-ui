@@ -21,6 +21,9 @@ import {
 } from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
+import { Router } from '@angular/router';
+import { bookingWriteHeaders } from '../../../core/api/booking-write-headers';
+import { ServiceRequest } from '../../../core/models/marketplace.models';
 
 export interface ProviderDiscoveryCard {
   id: string;
@@ -173,6 +176,9 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   selectedSlotUtc: string | null = null;
   private availabilityRevision = 0;
   private availabilityRequest?: Subscription;
+  isSubmittingRequest = false;
+  submissionError = '';
+  private submissionKey: string | null = null;
   readonly minimumRatingOptions = [0, 3, 4, 4.5, 5];
   ratings: Record<string, ProviderReviewView> = {};
   private categoriesRequest?: Subscription;
@@ -190,6 +196,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   constructor(
     private readonly apiService: ApiService,
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly i18nService: I18nService,
     private readonly preferencesService: UserPreferencesService
   ) {
@@ -394,6 +401,8 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   private invalidateQuote(): void {
+    this.submissionKey = null;
+    this.submissionError = '';
     this.availabilityRequest?.unsubscribe();
     this.availabilityRevision++;
     this.availabilityResult = null;
@@ -489,6 +498,56 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
         if (revision !== this.availabilityRevision) return;
         this.availabilityLoading = false;
         this.availabilityError = apiErrorMessage(error, 'Unable to load available times.');
+      }
+    });
+  }
+
+  submitSelectedServices(): void {
+    if (this.isSubmittingRequest || !this.quoteMatchesSelection ||
+        !this.serverQuote || this.serverQuote.priceStatus !== 'Exact' ||
+        !this.serverQuote.services.length || this.serverQuote.exactTotal == null ||
+        !this.selectedPetId || !this.selectedProvider ||
+        !this.selectedSlotUtc || !this.availabilityResult?.slots.some(s => s.startsAtUtc === this.selectedSlotUtc)) {
+      this.submissionError = 'Verify exact prices and select an available appointment first.';
+      return;
+    }
+    if (this.selectedOfferingIds.length < 2) {
+      this.submissionError = 'For one service, use the existing request form.';
+      return;
+    }
+    const first = this.selectedOfferings[0];
+    const payload = {
+      petId: this.selectedPetId,
+      providerServiceId: this.selectedOfferingIds[0],
+      providerProfileId: this.selectedProvider.id,
+      providerServiceIds: [...this.selectedOfferingIds],
+      requestedDate: this.availabilityDate,
+      serviceGeographyAreaId: this.selectedGeographyId ||
+        first?.provider?.primaryGeographyAreaId || null,
+      consentSharePetProfile: false,
+      consentShareHealthSummary: false,
+      consentShareContactDetails: false
+    };
+    try {
+      if (!this.submissionKey) this.submissionKey = bookingWriteHeaders()['X-Idempotency-Key'];
+    } catch {
+      this.submissionError = 'A secure connection is required to submit a request.';
+      return;
+    }
+    this.isSubmittingRequest = true;
+    this.submissionError = '';
+    this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload,
+      bookingWriteHeaders(undefined, this.submissionKey)).subscribe({
+      next: response => {
+        this.isSubmittingRequest = false;
+        if (response?.success && response.data?.id) {
+          this.submissionKey = null;
+          this.router.navigate(['/service-requests/my']);
+        } else this.submissionError = response?.message || 'The request was not saved.';
+      },
+      error: error => {
+        this.isSubmittingRequest = false;
+        this.submissionError = apiErrorMessage(error, 'Could not save this request.');
       }
     });
   }

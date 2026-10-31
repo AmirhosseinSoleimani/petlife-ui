@@ -15,6 +15,7 @@ import {
   ServiceRequestPayload
 } from '../../../core/models/marketplace.models';
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
+import { bookingWriteHeaders } from '../../../core/api/booking-write-headers';
 
 @Component({
   selector: 'app-create-service-request',
@@ -200,8 +201,11 @@ export class CreateServiceRequestComponent implements OnInit {
       consentShareContactDetails: !!this.form.consentShareContactDetails
     };
 
-    this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload).subscribe({
-      next: () => this.router.navigate(['/service-requests/my']),
+    this.apiService.post<ApiResponse<ServiceRequest>>('/service-requests', payload, bookingWriteHeaders()).subscribe({
+      next: response => {
+        if (response?.success && response.data?.id) this.router.navigate(['/service-requests/my']);
+        else { this.errorMessage = response?.message || 'Request was not saved.'; this.isSubmitting = false; }
+      },
       error: (error) => {
         this.errorMessage = apiErrorMessage(error, 'requestForm.compatibilityError');
         this.isSubmitting = false;

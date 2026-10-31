@@ -248,6 +248,8 @@ export interface ServiceAreaPayload {
 }
 
 export interface ServiceRequestPayload {
+  providerProfileId?: string | null;
+  providerServiceIds?: string[];
   petId: string | null;
   providerServiceId: string | null;
   requestMessage?: string;
@@ -279,6 +281,8 @@ export interface RequestProforma {
 }
 
 export interface ServiceRequest {
+  version?: number;
+  bookingVersion?: number;
   /** Server-side price snapshot, if the Request contains an approved bundle. */
   proforma?: RequestProforma | null;
   id: string;

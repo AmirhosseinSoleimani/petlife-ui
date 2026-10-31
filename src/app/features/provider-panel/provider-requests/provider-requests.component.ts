@@ -5,6 +5,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ProviderLeadDashboard, ServiceRequest } from '../../../core/models/marketplace.models';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
+import { bookingWriteHeaders } from '../../../core/api/booking-write-headers';
 
 type RequestFilter = 'all' | 'requested' | 'responding' | 'accepted' | 'completed' | 'rejected';
 
@@ -123,9 +124,17 @@ export class ProviderRequestsComponent implements OnInit {
 
   private updateRequest(endpoint: string, body: unknown, message: string, closeReject = false, refreshDashboard = true): void {
     this.isUpdating = true; this.errorMessage = ''; if (message) this.successMessage = '';
-    this.apiService.put<ApiResponse<ServiceRequest>>(endpoint, body).subscribe({
+    let headers: Record<string, string>;
+    try { headers = bookingWriteHeaders(this.selectedRequest || undefined); }
+    catch { this.errorMessage = 'Refresh the request before updating it.'; this.isUpdating = false; return; }
+    this.apiService.put<ApiResponse<ServiceRequest>>(endpoint, body, headers).subscribe({
       next: response => {
-        if (response.data) this.selectedRequest = response.data;
+        if (!response?.success || !response.data) {
+          this.errorMessage = response?.message || 'Request update failed.';
+          this.isUpdating = false;
+          return;
+        }
+        this.selectedRequest = response.data;
         if (message) this.successMessage = message;
         if (closeReject) { this.isRejectDialogOpen = false; this.rejectionReason = ''; }
         this.loadRequests(); if (refreshDashboard) this.loadDashboard();

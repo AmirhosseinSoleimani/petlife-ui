@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ServiceRequest } from '../../../core/models/marketplace.models';
+import { bookingWriteHeaders } from '../../../core/api/booking-write-headers';
 
 @Component({
   selector: 'app-my-requests',
@@ -137,9 +138,17 @@ export class MyRequestsComponent implements OnInit {
 
   confirmBooking(request: ServiceRequest): void {
     this.isUpdating = true; this.errorMessage = ''; this.successMessage = '';
-    this.apiService.put<ApiResponse<ServiceRequest>>(`/service-requests/${request.id}/booking/confirm`, { confirm: true }).subscribe({
+    let headers: Record<string, string>;
+    try { headers = bookingWriteHeaders(request); }
+    catch { this.errorMessage = 'Refresh the request before confirming the booking.'; this.isUpdating = false; return; }
+    this.apiService.put<ApiResponse<ServiceRequest>>(`/service-requests/${request.id}/booking/confirm`, { confirm: true }, headers).subscribe({
       next: response => {
-        this.selectedRequest = response.data || request;
+        if (!response?.success || !response.data) {
+          this.errorMessage = response?.message || 'Booking confirmation failed.';
+          this.isUpdating = false;
+          return;
+        }
+        this.selectedRequest = response.data;
         this.successMessage = 'requests.bookingConfirmedSuccess';
         this.loadRequests();
       },
