@@ -62,6 +62,11 @@ export function groupProviderOfferings(offerings: ProviderService[]): ProviderDi
   return Array.from(groups.values());
 }
 
+export interface ProviderAvailableSlot { startsAtUtc:string; endsAtUtc:string; providerLocalStart:string; }
+export interface ProviderAvailability {
+  providerProfileId:string; localDate:string; providerTimeZone:string;
+  totalDurationMinutes:number; slots:ProviderAvailableSlot[]; checkedAtUtc:string;
+}
 export interface ProviderServerQuote {
   petId: string;
   providerProfileId: string;
@@ -161,6 +166,13 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   quoteError = '';
   private quoteRequest?: Subscription;
   private quoteRevision = 0;
+  availabilityDate = '';
+  availabilityResult: ProviderAvailability | null = null;
+  availabilityLoading = false;
+  availabilityError = '';
+  selectedSlotUtc: string | null = null;
+  private availabilityRevision = 0;
+  private availabilityRequest?: Subscription;
   readonly minimumRatingOptions = [0, 3, 4, 4.5, 5];
   ratings: Record<string, ProviderReviewView> = {};
   private categoriesRequest?: Subscription;
@@ -382,6 +394,12 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   }
 
   private invalidateQuote(): void {
+    this.availabilityRequest?.unsubscribe();
+    this.availabilityRevision++;
+    this.availabilityResult = null;
+    this.selectedSlotUtc = null;
+    this.availabilityLoading = false;
+    this.availabilityError = '';
     this.quoteRequest?.unsubscribe();
     this.quoteRevision++;
     this.serverQuote = null;
@@ -424,6 +442,40 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
         if (revision !== this.quoteRevision) return;
         this.isLoadingQuote = false;
         this.quoteError = apiErrorMessage(error, 'Unable to calculate the current provider quote.');
+      }
+    });
+  }
+
+  checkAvailability(): void {
+    this.availabilityRequest?.unsubscribe();
+    const revision = ++this.availabilityRevision;
+    this.availabilityResult = null;
+    this.selectedSlotUtc = null;
+    this.availabilityError = '';
+    const provider = this.selectedProvider;
+    if (!this.quoteMatchesSelection || !this.selectedPetId || !provider ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(this.availabilityDate)) {
+      this.availabilityError = 'Verify service prices and choose a date first.';
+      return;
+    }
+    this.availabilityLoading = true;
+    this.availabilityRequest = this.apiService.post<ApiResponse<ProviderAvailability>>(
+      '/provider-services/availability', {
+        petId: this.selectedPetId,
+        providerProfileId: provider.id,
+        offeringIds: [...this.selectedOfferingIds],
+        localDate: this.availabilityDate
+      }).subscribe({
+      next: response => {
+        if (revision !== this.availabilityRevision) return;
+        this.availabilityLoading = false;
+        if (response?.success && response.data) this.availabilityResult = response.data;
+        else this.availabilityError = response?.message || 'Unable to load available times.';
+      },
+      error: error => {
+        if (revision !== this.availabilityRevision) return;
+        this.availabilityLoading = false;
+        this.availabilityError = apiErrorMessage(error, 'Unable to load available times.');
       }
     });
   }
