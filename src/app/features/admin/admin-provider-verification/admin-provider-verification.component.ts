@@ -4,11 +4,6 @@ import { ApiService } from '../../../core/api/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { ProviderDocument, ProviderVerification } from '../../../core/models/marketplace.models';
 
-@Component({
-  selector: 'app-admin-provider-verification',
-  templateUrl: './admin-provider-verification.component.html',
-  styleUrls: ['./admin-provider-verification.component.scss']
-})
 interface ProviderDocumentWire {
   id: string;
   providerProfileId: string;
@@ -17,6 +12,11 @@ interface ProviderDocumentWire {
   expiryDate?: string | null;
 }
 
+@Component({
+  selector: 'app-admin-provider-verification',
+  templateUrl: './admin-provider-verification.component.html',
+  styleUrls: ['./admin-provider-verification.component.scss']
+})
 export class AdminProviderVerificationComponent implements OnInit {
   documents: ProviderDocument[] = [];
   selected: ProviderVerification | null = null;
