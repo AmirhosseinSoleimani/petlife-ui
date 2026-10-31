@@ -266,3 +266,31 @@
   .managed-discovery-filters .location-filter { flex: 1 1 100%; min-width: 0; }
   .category-chip { min-width: 0; max-width: 100%; }
 }
+
+
+/* Provider-first discovery: cards are informational; pricing belongs to offering details. */
+.provider-search-container { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
+.provider-search-container .filters-heading { grid-column: 1 / -1; }
+.category-filter-section { display:grid;gap:12px; }
+.category-filter-section h3,.provider-result-count {margin:0;}
+.provider-discovery-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;}
+.provider-discovery-card {min-width:0;}
+.provider-discovery-heading {display:flex;align-items:center;gap:12px;}
+.provider-discovery-heading h3 {margin:0;overflow-wrap:anywhere;}
+.provider-discovery-heading small {display:block;color:var(--app-muted);margin-top:6px;}
+.provider-category-tags {display:flex;gap:6px;flex-wrap:wrap;margin:12px 0;}
+.provider-category-tags span {background:var(--app-surface-soft);padding:5px 9px;border-radius:99px;font-size:.82rem;}
+.provider-distance {color:var(--app-muted);font-size:.875rem;margin-block:10px;}
+.provider-details-cta,.provider-single-service-cta {display:block;text-align:center;padding:12px 16px;min-height:44px;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:var(--accent-contrast);font:inherit;font-weight:700;text-decoration:none;cursor:pointer;}
+.provider-details-cta:focus-visible,.provider-single-service-cta:focus-visible {outline:3px solid var(--accent-ring);outline-offset:3px;}
+.provider-detail-panel {display:grid;gap:16px;}
+.provider-offering-choices {display:grid;gap:10px;}
+.provider-offering-choice {display:flex;align-items:center;gap:12px;border:1px solid var(--app-border);padding:16px;border-radius:12px;cursor:pointer;}
+.provider-offering-choice input {width:20px;height:20px;flex-shrink:0;}
+.offering-summary {flex:1;min-width:0;display:grid;gap:5px;}
+.offering-summary small {color:var(--app-muted);}
+.offering-price {white-space:nowrap;}
+.provider-quote-summary {display:grid;gap:10px;background:var(--app-surface-soft);border-radius:12px;padding:16px;}
+.provider-quote-summary h3,.provider-quote-summary p {margin:0;}
+.booking-contract-warning {color:var(--app-muted);line-height:1.5;}
+@media(max-width:640px) {.provider-offering-choice {align-items:flex-start;flex-wrap:wrap;}.provider-discovery-grid{grid-template-columns:1fr;}}
