@@ -120,6 +120,10 @@ export interface ServiceDefinition {
 }
 
 export interface ProviderService {
+  isDemo?: boolean;
+  demoAverageRating?: number | null;
+  demoRatingCount?: number;
+  demoReviews?: Array<{rating: number; comment: string}>;
   id: string;
   providerId?: string;
   providerProfileId?: string;

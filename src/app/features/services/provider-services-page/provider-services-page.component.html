@@ -92,11 +92,12 @@
         <div class="service-card-head"><span class="service-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="getServiceIconPath(service)"/></svg></span><app-badge tone="info">{{ service.serviceCategoryName || service.category }}</app-badge></div>
         <div class="service-identity"><h3>{{ getServiceName(service) }}</h3><p><span>{{ 'services.byProvider' | translate }}</span> {{ getProviderName(service) }}</p></div>
         <p class="service-description">{{ service.description || ('services.descriptionFallback' | translate) }}</p>
-        <div class="provider-review-summary" *ngIf="ratings[service.providerProfileId || ''] as rating" aria-label="Provider reviews">
+        <div class="provider-review-summary" *ngIf="ratings[service.providerProfileId || ''] as rating" [attr.aria-label]="service.isDemo ? 'Synthetic demo ratings' : 'Provider reviews'">
+          <strong *ngIf="service.isDemo">DEMO — synthetic ratings, not verified reviews</strong>
           <strong *ngIf="rating.averageRating != null">★ {{rating.averageRating | number:'1.1-2'}} / 5</strong>
           <span>{{rating.ratingCount}} published ratings</span>
           <p *ngFor="let review of rating.reviews" class="review-excerpt">{{review.rating}}★ · {{review.comment}}</p>
-          <a *ngIf="rating.ratingCount" [routerLink]="[]" [queryParams]="{providerId: service.providerProfileId}" aria-label="View provider rating">{{'services.reviews' | translate}}</a>
+          <a *ngIf="rating.ratingCount && !service.isDemo" [routerLink]="[]" [queryParams]="{providerId: service.providerProfileId}" aria-label="View provider rating">{{'services.reviews' | translate}}</a>
         </div>
 
         <dl class="service-decision-data">

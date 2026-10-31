@@ -335,13 +335,22 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   private loadRatings(items: ProviderService[]): void {
-    const ids = [...new Set(items.map(s => s.providerProfileId).filter((id): id is string => !!id))].slice(0, 100);
+    for (const service of items.filter(s => s.isDemo && !!s.providerProfileId)) {
+      const id = service.providerProfileId!;
+      this.ratings[id] = {
+        averageRating: service.demoAverageRating ?? null,
+        ratingCount: service.demoRatingCount ?? 0,
+        reviews: (service.demoReviews ?? []).map(r => ({rating: r.rating, comment: r.comment}))
+      };
+    }
+    const ids = [...new Set(items.filter(s => !s.isDemo)
+      .map(s => s.providerProfileId).filter((id): id is string => !!id))].slice(0, 100);
     if (!ids.length) return;
     forkJoin(ids.map(id => forkJoin({
       rating: this.apiService.get<{averageRating: number | null; ratingCount: number} | null>(
-        `/provider-reviews/v1/providers/${id}/rating`).pipe(catchError(() => of(null))),
+        `/api/provider-reviews/v1/providers/${id}/rating`).pipe(catchError(() => of(null))),
       reviews: this.apiService.get<{items: Array<{rating: number | null; comment: string | null}>}>(
-        `/provider-reviews/v1/providers/${id}/reviews?size=3`).pipe(catchError(() => of({items: []})))
+        `/api/provider-reviews/v1/providers/${id}/reviews?size=3`).pipe(catchError(() => of({items: []})))
     }).pipe(map(result => ({id, ...result}))))).subscribe({
       next: results => results.forEach(x => {
         this.ratings[x.id] = {
