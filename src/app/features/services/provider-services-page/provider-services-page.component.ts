@@ -62,6 +62,18 @@ export function groupProviderOfferings(offerings: ProviderService[]): ProviderDi
   return Array.from(groups.values());
 }
 
+export interface ProviderServerQuote {
+  petId: string;
+  providerProfileId: string;
+  services: Array<{offeringId:string;serviceName:string;pricingType:string;amount:number|null;currency:string;durationMinutes:number}>;
+  currency: string;
+  totalDurationMinutes: number;
+  priceStatus: 'Exact' | 'MinimumOnly' | 'RequiresQuote';
+  exactTotal: number | null;
+  indicativeMinimum: number | null;
+  calculatedAtUtc: string;
+}
+
 export interface ProviderReviewView {
   source: 'demo' | 'verified' | 'loading' | 'unavailable';
   averageRating: number | null;
@@ -144,6 +156,11 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   minimumRating = 0;
   selectedProviderKey: string | null = null;
   selectedOfferingIds: string[] = [];
+  serverQuote: ProviderServerQuote | null = null;
+  isLoadingQuote = false;
+  quoteError = '';
+  private quoteRequest?: Subscription;
+  private quoteRevision = 0;
   readonly minimumRatingOptions = [0, 3, 4, 4.5, 5];
   ratings: Record<string, ProviderReviewView> = {};
   private categoriesRequest?: Subscription;
@@ -203,6 +220,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     this.profileRequest?.unsubscribe();
     this.petsRequest?.unsubscribe();
     this.preferencesRequest?.unsubscribe();
+    this.quoteRequest?.unsubscribe();
     this.requestSubscriptions.unsubscribe();
   }
 
@@ -347,17 +365,67 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   openProviderDetails(provider: ProviderDiscoveryCard): void {
     this.selectedProviderKey = provider.id;
     this.selectedOfferingIds = [];
+    this.invalidateQuote();
   }
 
   closeProviderDetails(): void {
     this.selectedProviderKey = null;
     this.selectedOfferingIds = [];
+    this.invalidateQuote();
   }
 
   toggleOffering(offeringId: string, checked: boolean): void {
     this.selectedOfferingIds = checked
       ? [...new Set([...this.selectedOfferingIds, offeringId])]
       : this.selectedOfferingIds.filter(id => id !== offeringId);
+    this.invalidateQuote();
+  }
+
+  private invalidateQuote(): void {
+    this.quoteRequest?.unsubscribe();
+    this.quoteRevision++;
+    this.serverQuote = null;
+    this.isLoadingQuote = false;
+    this.quoteError = '';
+  }
+
+  get quoteMatchesSelection(): boolean {
+    const quote = this.serverQuote;
+    if (!quote || !this.selectedPetId || quote.petId !== this.selectedPetId ||
+        quote.providerProfileId !== this.selectedProviderKey ||
+        quote.services.length !== this.selectedOfferingIds.length) return false;
+    const expected = new Set(this.selectedOfferingIds);
+    return quote.services.every(s => expected.has(s.offeringId));
+  }
+
+  calculateServerQuote(): void {
+    this.invalidateQuote();
+    const provider = this.selectedProvider;
+    if (!this.selectedPetId || !provider || !this.selectedOfferingIds.length ||
+        this.selectedOfferingIds.length > 10) {
+      this.quoteError = 'Choose between 1 and 10 services.';
+      return;
+    }
+    const revision = this.quoteRevision;
+    this.isLoadingQuote = true;
+    this.quoteRequest = this.apiService.post<ApiResponse<ProviderServerQuote>>(
+      '/provider-services/quote', {
+        petId: this.selectedPetId,
+        providerProfileId: provider.id,
+        offeringIds: [...this.selectedOfferingIds]
+      }).subscribe({
+      next: response => {
+        if (revision !== this.quoteRevision) return;
+        this.isLoadingQuote = false;
+        if (response?.success && response.data) this.serverQuote = response.data;
+        else this.quoteError = response?.message || 'Unable to calculate the current provider quote.';
+      },
+      error: error => {
+        if (revision !== this.quoteRevision) return;
+        this.isLoadingQuote = false;
+        this.quoteError = apiErrorMessage(error, 'Unable to calculate the current provider quote.');
+      }
+    });
   }
 
   private isEmergencyCategory(category: ServiceCategory): boolean {
@@ -419,6 +487,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     this.selectedCategoryId = null;
     this.selectedProviderKey = null;
     this.selectedOfferingIds = [];
+    this.invalidateQuote();
     this.services = [];
     this.ratings = {};
     this.errorMessage = '';
@@ -459,6 +528,7 @@ export class ProviderServicesPageComponent implements OnInit, OnDestroy {
     this.services = [];
     this.ratings = {};
     this.recommendations = [];
+    this.closeProviderDetails();
     if (!this.selectedPetId) {
       this.isLoadingServices = false;
       return;
