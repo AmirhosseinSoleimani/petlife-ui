@@ -169,6 +169,30 @@
               Final price requires a personal quote from this provider.</p>
           </div>
         </div>
+        <section *ngIf="quoteMatchesSelection" class="provider-quote-server">
+          <h3>Check available appointment times</h3>
+          <label class="location-filter"><span>Provider local appointment date</span>
+            <input type="date" [(ngModel)]="availabilityDate" [ngModelOptions]="{standalone:true}"
+              (ngModelChange)="availabilityResult = null; selectedSlotUtc = null"></label>
+          <button type="button" class="provider-details-cta"
+            [disabled]="availabilityLoading || !availabilityDate" (click)="checkAvailability()">
+            {{ availabilityLoading ? 'Checking schedule...' : 'Find available times' }}
+          </button>
+          <p *ngIf="availabilityError" class="error" role="alert">{{ availabilityError }}</p>
+          <div *ngIf="availabilityResult as availability">
+            <p>Provider time zone: {{ availability.providerTimeZone }}</p>
+            <p *ngIf="!availability.slots.length">No available times for these selected services on this date.</p>
+            <div class="category-chip-list" role="group" aria-label="Current available appointment times">
+              <button type="button" class="category-chip"
+                *ngFor="let slot of availability.slots"
+                [class.selected]="selectedSlotUtc === slot.startsAtUtc"
+                [attr.aria-pressed]="selectedSlotUtc === slot.startsAtUtc"
+                (click)="selectedSlotUtc = slot.startsAtUtc">{{ slot.providerLocalStart }}</button>
+            </div>
+            <p *ngIf="selectedSlotUtc">Selected: {{ selectedSlotUtc | date:'medium':'UTC' }} UTC.
+              This time is not reserved yet.</p>
+          </div>
+        </section>
         <p class="booking-contract-warning" *ngIf="selectedOfferings.length">
           This quote is not a reservation or invoice. Multi-service booking, live capacity checks and
           proforma issuance require the Bookings transaction workflow. No booking has been created.</p>
