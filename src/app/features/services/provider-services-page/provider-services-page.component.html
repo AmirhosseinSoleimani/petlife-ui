@@ -149,9 +149,29 @@
           Indicative subtotal: {{ estimatedTotal | currency:'AUD':'code' }}.
           Some services require a quote or have variable pricing.</p>
         <p *ngIf="!selectedOfferings.length">Choose at least one service.</p>
+        <div *ngIf="selectedOfferings.length" class="provider-quote-server">
+          <button type="button" class="provider-details-cta"
+            [disabled]="isLoadingQuote || selectedOfferingIds.length > 10"
+            (click)="calculateServerQuote()">
+            {{ isLoadingQuote ? 'Checking current service prices...' : 'Verify selected prices with provider API' }}
+          </button>
+          <p *ngIf="quoteError" role="alert" class="error">{{ quoteError }}</p>
+          <div *ngIf="quoteMatchesSelection && serverQuote as quote" aria-live="polite">
+            <strong>Provider API quote · {{ quote.priceStatus }}</strong>
+            <p>{{ quote.services.length }} services · {{ quote.totalDurationMinutes }} minutes</p>
+            <p *ngIf="quote.priceStatus === 'Exact'">
+              <strong>Server-confirmed current total:
+                {{ quote.exactTotal | currency:quote.currency:'code' }}</strong></p>
+            <p *ngIf="quote.priceStatus === 'MinimumOnly'">
+              Current minimum: {{ quote.indicativeMinimum | currency:quote.currency:'code' }}.
+              Final amount may be higher.</p>
+            <p *ngIf="quote.priceStatus === 'RequiresQuote'">
+              Final price requires a personal quote from this provider.</p>
+          </div>
+        </div>
         <p class="booking-contract-warning" *ngIf="selectedOfferings.length">
-          Multi-service booking, live availability, server-confirmed total and proforma invoice
-          are not yet supported by the current booking API. No booking has been created.</p>
+          This quote is not a reservation or invoice. Multi-service booking, live capacity checks and
+          proforma issuance require the Bookings transaction workflow. No booking has been created.</p>
         <a *ngIf="selectedOfferings.length === 1 && isExactTotal"
           class="provider-single-service-cta"
           [routerLink]="['/service-requests/new',selectedOfferings[0].id]"
