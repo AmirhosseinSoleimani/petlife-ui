@@ -65,15 +65,16 @@ export class AiAssistantComponent {
     this.errorKey = '';
     this.isLoading = true;
 
-    this.aiService.chat({ conversationId: this.conversationId, message: question }).subscribe({
+    this.aiService.ask({ conversationId: this.conversationId, message: question }).subscribe({
       next: (response) => {
         if (!response.success || !response.data) {
           this.errorKey = 'ai.responseError';
+          this.isLoading = false;
           return;
         }
 
-        this.conversationId = response.data.conversationId;
-        this.messages.push({ role: 'assistant', content: response.data.message });
+        this.conversationId = response.data.conversationId ?? null;
+        this.messages.push({ role: 'assistant', content: response.data.answer });
       },
       error: (error: HttpErrorResponse) => {
         const backendMessage = error.error?.message || '';
