@@ -13,8 +13,11 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./geography-selector.component.scss']
 })
 export class GeographySelectorComponent implements OnInit, OnDestroy {
-  /** No authoritative Geography route exists in the current microservice Gateway. */
-  readonly geographyAvailable = environment.geographyApiEnabled;
+  // Provider discovery owns an operational, read-only Australian location API.
+  // Keep legacy Geography consumers disabled until their separate API is verified.
+  get geographyAvailable(): boolean {
+    return this.endpoint === '/providers/locations' || environment.geographyApiEnabled;
+  }
   @Input() endpoint = '/geography';
   @Input() label = 'Managed geography';
   @Input() placeholder = 'geographySelector.postcodeFirst';
@@ -141,13 +144,14 @@ export class GeographySelectorComponent implements OnInit, OnDestroy {
 
   private buildUrl(search: string): string {
     const normalized = search.trim();
-    if (/^\d{4}$/.test(normalized)) {
+    if (this.endpoint !== '/providers/locations' && /^\d{4}$/.test(normalized)) {
       return `/geography/by-postcode/${encodeURIComponent(normalized)}`;
     }
 
     const params = new URLSearchParams();
     if (normalized) params.set('search', normalized);
-    if (this.state.trim()) params.set('state', this.state.trim());
+    if (this.state.trim()) params.set('state', this.state.trim().toUpperCase());
+    if (this.endpoint === '/providers/locations') params.set('limit', '30');
     const query = params.toString();
     return query ? `${this.endpoint}?${query}` : this.endpoint;
   }

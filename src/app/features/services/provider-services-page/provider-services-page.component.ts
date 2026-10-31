@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, from, of, Subscription } from 'rxjs';
+import { catchError, map, mergeMap } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiService } from '../../../core/api/api.service';
+import { apiErrorMessage } from '../../../core/api/api-error.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Pet } from '../../../core/models/customer-core.models';
@@ -20,12 +22,53 @@ import {
 import { AppInputOption } from '../../../shared/components/app-input/app-input.component';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 
+export interface ProviderReviewView {
+  source: 'demo' | 'verified' | 'loading' | 'unavailable';
+  averageRating: number | null;
+  ratingCount: number | null;
+  reviews: Array<{ rating: number | null; comment: string }>;
+  reviewsAvailable: boolean;
+}
+
+const NO_REVIEWS: ProviderReviewView = {
+  source: 'unavailable', averageRating: null, ratingCount: null, reviews: [], reviewsAvailable: false
+};
+
+export function knownDistance(distance: number | null | undefined): number {
+  return distance != null && Number.isFinite(distance) && distance >= 0 ? distance : Number.POSITIVE_INFINITY;
+}
+
+export function usableRating(rating: ProviderReviewView | undefined): number {
+  return rating?.averageRating != null && rating.ratingCount != null && rating.ratingCount > 0 &&
+    Number.isFinite(rating.averageRating) && rating.averageRating >= 1 && rating.averageRating <= 5
+    ? rating.averageRating : Number.NEGATIVE_INFINITY;
+}
+
+/** Sorting is intentionally limited to the provider results returned by the API. */
+export function sortDiscoveryResults(items: ProviderService[], reviews: Record<string, ProviderReviewView>,
+  mode: 'nearest' | 'rating'): ProviderService[] {
+  return [...items].sort((a, b) => {
+    const aDistance = knownDistance(a.distanceKm);
+    const bDistance = knownDistance(b.distanceKm);
+    const aRating = usableRating(reviews[a.providerProfileId || a.id]);
+    const bRating = usableRating(reviews[b.providerProfileId || b.id]);
+    const distanceOrder = aDistance - bDistance;
+    const ratingOrder = bRating - aRating;
+    const primary = mode === 'rating' ? ratingOrder : distanceOrder;
+    const secondary = mode === 'rating' ? distanceOrder : ratingOrder;
+    const safe = (value: number) => Number.isNaN(value) ? 0 : value;
+    return safe(primary) || safe(secondary) ||
+      (a.providerBusinessName || a.serviceName || a.id)
+        .localeCompare(b.providerBusinessName || b.serviceName || b.id);
+  });
+}
+
 @Component({
   selector: 'app-provider-services-page',
   templateUrl: './provider-services-page.component.html',
   styleUrls: ['./provider-services-page.component.scss']
 })
-export class ProviderServicesPageComponent implements OnInit {
+export class ProviderServicesPageComponent implements OnInit, OnDestroy {
   readonly isEmergencyRequest: boolean;
   pets: Pet[] = [];
   categories: ServiceCategory[] = [];
@@ -42,12 +85,12 @@ export class ProviderServicesPageComponent implements OnInit {
   isLoadingCategories = false;
   isLoadingServices = false;
   errorMessage = '';
-  deliveryMode: DeliveryMode | '' = '';
   selectedGeographyId: string | null = null;
   selectedGeography: GeographyArea | null = null;
+  savedProfile: IdentityProfile | null = null;
+  isLoadingProfile = true;
   acceptingRequestsOnly = true;
-  openNowOnly = false;
-  afterHoursOnly = false;
+  readonly australianStates = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'];
   locationState = '';
   locationCity = '';
   locationSuburb = '';
@@ -56,7 +99,18 @@ export class ProviderServicesPageComponent implements OnInit {
   originState = '';
   originSuburb = '';
   sortBy: 'nearest' | 'rating' = 'nearest';
-  ratings: Record<string, {averageRating: number | null; ratingCount: number; reviews: Array<{rating: number | null; comment: string | null}>}> = {};
+  ratings: Record<string, ProviderReviewView> = {};
+  private categoriesRequest?: Subscription;
+  private servicesRequest?: Subscription;
+  private ratingsRequest?: Subscription;
+  private recommendationsRequest?: Subscription;
+  private profileRequest?: Subscription;
+  private petsRequest?: Subscription;
+  private preferencesRequest?: Subscription;
+  private readonly requestSubscriptions = new Subscription();
+  private categoriesRevision = 0;
+  private serviceRevision = 0;
+  private reviewsApiUnavailable = false;
 
   constructor(
     private readonly apiService: ApiService,
@@ -75,26 +129,60 @@ export class ProviderServicesPageComponent implements OnInit {
       this.loadSelectedProvider(this.providerId);
     }
 
-    this.apiService.get<ApiResponse<IdentityProfile>>('/v1/identity/profile').subscribe({
+    this.profileRequest = this.apiService.get<ApiResponse<IdentityProfile>>('/v1/identity/profile').subscribe({
       next: response => {
-        const profile = response.data;
-        if (!profile) return;
-        this.originPostcode = profile.postcode || '';
-        this.originState = profile.state || '';
-        this.originSuburb = profile.suburb || '';
+        if (response?.success && response.data) {
+          this.savedProfile = response.data;
+          this.originPostcode = response.data.postcode || '';
+          this.originState = response.data.state || '';
+          this.originSuburb = response.data.suburb || '';
+          // A late profile read must not override a manually chosen location.
+          if (!this.selectedGeography && this.selectedCategoryId) this.loadServices();
+        }
+        this.isLoadingProfile = false;
       },
-      error: () => undefined
+      error: () => { this.isLoadingProfile = false; }
     });
-    this.preferencesService.load().subscribe(() => this.loadPets());
+    this.preferencesRequest = this.preferencesService.load().subscribe({
+      next: () => this.loadPets(),
+      error: () => this.loadPets()
+    });
   }
 
-  readonly deliveryModeOptions: AppInputOption[] = [
-    { label: 'All delivery modes', value: '' },
-    { label: 'deliveryMode.atProvider', value: 'AtProviderLocation' },
-    { label: 'deliveryMode.atCustomer', value: 'AtCustomerLocation' },
-    { label: 'deliveryMode.online', value: 'Online' },
-    { label: 'deliveryMode.hybrid', value: 'Hybrid' }
-  ];
+  ngOnDestroy(): void {
+    this.categoriesRequest?.unsubscribe();
+    this.servicesRequest?.unsubscribe();
+    this.ratingsRequest?.unsubscribe();
+    this.recommendationsRequest?.unsubscribe();
+    this.profileRequest?.unsubscribe();
+    this.petsRequest?.unsubscribe();
+    this.preferencesRequest?.unsubscribe();
+    this.requestSubscriptions.unsubscribe();
+  }
+
+  get originLabel(): string {
+    const origin = this.selectedGeography || this.savedProfile;
+    if (!origin) return this.i18nService.translate('services.originMissing');
+    const address = this.selectedGeography ? '' : (this.savedProfile?.address || '');
+    const parts = [address, origin.suburb, origin.city, origin.state, origin.postcode]
+      .filter((part, index, values) => !!part && values.indexOf(part) === index);
+    return parts.join(', ') || this.i18nService.translate('services.originMissing');
+  }
+
+  get hasProfileOrigin(): boolean {
+    return !!this.savedProfile && !!(this.savedProfile.postcode || this.savedProfile.suburb);
+  }
+
+  useProfileOrigin(): void {
+    if (!this.selectedGeography) return;
+    this.selectedGeography = null;
+    this.selectedGeographyId = null;
+    this.applyFilters();
+  }
+
+  ratingFor(service: ProviderService): ProviderReviewView {
+    return this.ratings[service.providerProfileId || service.id] || NO_REVIEWS;
+  }
 
   get petOptions(): AppInputOption[] {
     return this.pets.map((pet) => ({
@@ -124,42 +212,24 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   get hasSearchFilters(): boolean {
-    return !!(
-      this.deliveryMode ||
-      this.selectedGeographyId ||
-      this.acceptingRequestsOnly ||
-      this.openNowOnly ||
-      this.afterHoursOnly || this.locationState || this.locationCity ||
-      this.locationSuburb || this.locationPostcode
-    );
+    return !!(this.selectedGeography || this.locationState || this.locationCity ||
+      this.locationSuburb || this.locationPostcode || !this.acceptingRequestsOnly);
   }
 
   clearFilters(): void {
-    this.deliveryMode = '';
-    this.selectedGeographyId = null;
-    this.selectedGeography = null;
-    this.acceptingRequestsOnly = false;
-    this.openNowOnly = false;
-    this.afterHoursOnly = false;
     this.locationState = '';
     this.locationCity = '';
     this.locationSuburb = '';
     this.locationPostcode = '';
-    this.sortBy = 'nearest';
+    this.acceptingRequestsOnly = true;
     this.applyFilters();
   }
 
   get visibleServices(): ProviderService[] {
-    const services = this.isEmergencyRequest
-      ? this.services.filter(service => this.isEmergencyService(service)) : this.services;
-    const sorted = [...services].sort((a,b) => this.sortBy === 'rating'
-      ? (this.ratings[b.providerProfileId || '']?.averageRating ?? -1) -
-        (this.ratings[a.providerProfileId || '']?.averageRating ?? -1) ||
-        (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
-      : (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
-    if (!this.providerId) return sorted;
-    return sorted.filter(service =>
-      this.getServiceProviderIds(service).some(id => this.selectedProviderIds.has(id)));
+    const filtered = this.isEmergencyRequest ? this.services.filter(s => this.isEmergencyService(s)) : this.services;
+    const scoped = this.providerId ? filtered.filter(s =>
+      this.getServiceProviderIds(s).some(id => this.selectedProviderIds.has(id))) : filtered;
+    return sortDiscoveryResults(scoped, this.ratings, this.sortBy);
   }
 
   get visibleCategories(): ServiceCategory[] {
@@ -199,13 +269,16 @@ export class ProviderServicesPageComponent implements OnInit {
 
   loadPets(): void {
     this.isLoadingPets = true;
-    this.apiService.get<ApiResponse<Pet[]>>('/v1/pets').subscribe({
+    this.petsRequest?.unsubscribe();
+    this.petsRequest = this.apiService.get<ApiResponse<Pet[]>>('/v1/pets').subscribe({
       next: (response) => {
         this.pets = response.data || [];
         this.isLoadingPets = false;
         const defaultPetId = this.preferencesService.current.defaultPetId;
-        if (!this.selectedPetId && defaultPetId && this.pets.some((pet) => pet.id === defaultPetId)) {
-          this.selectPet(defaultPetId);
+        if (!this.selectedPetId && this.pets.length) {
+          const initialPet = this.pets.some(pet => pet.id === defaultPetId)
+            ? defaultPetId : this.pets[0].id;
+          this.selectPet(initialPet);
         }
       },
       error: () => {
@@ -216,36 +289,44 @@ export class ProviderServicesPageComponent implements OnInit {
   }
 
   selectPet(petId: string | null): void {
+    this.categoriesRequest?.unsubscribe();
+    this.servicesRequest?.unsubscribe();
+    this.ratingsRequest?.unsubscribe();
+    this.recommendationsRequest?.unsubscribe();
+    this.categoriesRevision++;
+    this.serviceRevision++;
+    this.isLoadingCategories = false;
+    this.isLoadingServices = false;
     this.selectedPetId = petId;
     this.selectedCategoryId = null;
     this.categories = [];
     this.services = [];
+    this.ratings = {};
     this.recommendations = [];
     this.selectedRecommendationDefinitionId = null;
     this.errorMessage = '';
+    if (!petId) return;
 
-    if (!petId) {
-      return;
-    }
-
+    const revision = this.categoriesRevision;
     this.isLoadingCategories = true;
-    this.apiService.get<ApiResponse<ServiceCategory[]>>(`/service-categories?petId=${petId}`).subscribe({
-      next: (response) => {
+    this.categoriesRequest = this.apiService.get<ApiResponse<ServiceCategory[]>>(
+      `/service-categories?petId=${encodeURIComponent(petId)}`).subscribe({
+      next: response => {
+        if (revision !== this.categoriesRevision) return;
         this.categories = response?.success && Array.isArray(response.data) ? response.data : [];
         if (!response?.success) this.errorMessage = 'services.loadCategoriesError';
         this.isLoadingCategories = false;
       },
-      error: () => {
-        this.errorMessage = 'services.loadCategoriesError';
+      error: error => {
+        if (revision !== this.categoriesRevision) return;
+        this.errorMessage = this.discoveryError(error, 'services.loadCategoriesError');
         this.isLoadingCategories = false;
       }
     });
   }
 
   selectCategory(categoryId: string): void {
-    if (!this.selectedPetId || (this.isEmergencyRequest &&
-        !this.visibleCategories.some(category => category.id === categoryId))) return;
-
+    if (!this.selectedPetId || !this.visibleCategories.some(category => category.id === categoryId)) return;
     this.selectedCategoryId = categoryId;
     this.loadServices();
   }
@@ -257,109 +338,112 @@ export class ProviderServicesPageComponent implements OnInit {
   onGeographySelected(area: GeographyArea | null): void {
     this.selectedGeography = area;
     this.selectedGeographyId = area?.id || null;
+    this.applyFilters();
+  }
+
+  onSortChanged(sort: 'nearest' | 'rating'): void {
+    this.sortBy = sort;
+  }
+
+  private discoveryError(error: unknown, fallback: string): string {
+    return error instanceof HttpErrorResponse && error.status === 401
+      ? 'services.sessionUnavailable'
+      : apiErrorMessage(error, fallback);
   }
 
   private loadServices(): void {
-    if (!this.selectedPetId || !this.selectedCategoryId) return;
+    this.servicesRequest?.unsubscribe();
+    this.ratingsRequest?.unsubscribe();
+    this.recommendationsRequest?.unsubscribe();
+    const revision = ++this.serviceRevision;
     this.services = [];
-    this.errorMessage = '';
-    this.isLoadingServices = true;
-    const params = this.buildSearchParams();
-    this.apiService.get<ApiResponse<ProviderService[]>>(`/provider-services?${params.toString()}`).subscribe({
-      next: (response) => {
-        this.services = response.data || [];
-        this.loadRatings(this.services);
-        this.isLoadingServices = false;
-        this.recordProductEvent('ProviderSearch', 'ServiceCategory', this.selectedCategoryId);
-
-        if (!this.providerId) {
-          const firstDefinition = this.recommendationDefinitionOptions[0]?.value as string | undefined;
-          this.selectedRecommendationDefinitionId = firstDefinition || null;
-          this.loadRecommendations();
-        }
-      },
-      error: () => {
-        this.errorMessage = 'services.loadError';
-        this.isLoadingServices = false;
-      }
-    });
-  }
-
-  selectRecommendationDefinition(serviceDefinitionId: string | null): void {
-    this.selectedRecommendationDefinitionId = serviceDefinitionId;
-    this.loadRecommendations();
-  }
-
-  private loadRecommendations(): void {
-    if (this.providerId || !this.selectedPetId || !this.selectedCategoryId || !this.selectedRecommendationDefinitionId) {
-      this.recommendations = [];
+    this.ratings = {};
+    this.recommendations = [];
+    if (!this.selectedPetId || !this.selectedCategoryId) {
+      this.isLoadingServices = false;
       return;
     }
-
+    this.errorMessage = '';
     const params = this.buildSearchParams();
-    params.set('serviceDefinitionId', this.selectedRecommendationDefinitionId);
-    this.isLoadingRecommendations = true;
-    this.apiService.get<ApiResponse<ProviderRecommendation[]>>(`/provider-recommendations?${params.toString()}`).subscribe({
-      next: (response) => {
-        this.recommendations = (response.data || []).slice(0, 3);
-        this.isLoadingRecommendations = false;
+    if (!params) {
+      this.isLoadingServices = false;
+      this.errorMessage = 'services.invalidPostcode';
+      return;
+    }
+    this.isLoadingServices = true;
+    this.servicesRequest = this.apiService.get<ApiResponse<ProviderService[]>>(
+      `/provider-services?${params.toString()}`).subscribe({
+      next: response => {
+        if (revision !== this.serviceRevision) return;
+        if (!response?.success || !Array.isArray(response.data)) {
+          this.errorMessage = 'services.loadError';
+          this.isLoadingServices = false;
+          return;
+        }
+        this.services = response.data.filter(service => service.isActive !== false);
+        this.isLoadingServices = false;
+        this.loadRatings(this.services, revision);
       },
-      error: () => {
-        this.recommendations = [];
-        this.isLoadingRecommendations = false;
+      error: error => {
+        if (revision !== this.serviceRevision) return;
+        this.errorMessage = this.discoveryError(error, 'services.loadError');
+        this.isLoadingServices = false;
       }
     });
   }
 
-  private buildSearchParams(): URLSearchParams {
+  private buildSearchParams(): URLSearchParams | null {
+    const postcode = this.locationPostcode.trim();
+    if (postcode && !/^[0-9]{4}$/.test(postcode)) return null;
     const params = new URLSearchParams();
     if (this.selectedPetId) params.set('petId', this.selectedPetId);
     if (this.selectedCategoryId) params.set('categoryId', this.selectedCategoryId);
-    if (this.deliveryMode) params.set('deliveryMode', this.deliveryMode);
-    if (this.selectedGeographyId) params.set('geographyAreaId', this.selectedGeographyId);
     if (this.acceptingRequestsOnly) params.set('acceptingRequests', 'true');
-    if (this.openNowOnly) params.set('openNow', 'true');
-    if (this.afterHoursOnly) params.set('afterHours', 'true');
+    const origin = this.selectedGeography;
+    if (origin?.postcode || this.originPostcode) params.set('originPostcode', (origin?.postcode || this.originPostcode).trim());
+    if (origin?.state || this.originState) params.set('originState', (origin?.state || this.originState).trim());
+    if (origin?.suburb || this.originSuburb) params.set('originSuburb', (origin?.suburb || this.originSuburb).trim());
     if (this.locationState.trim()) params.set('state', this.locationState.trim());
     if (this.locationCity.trim()) params.set('city', this.locationCity.trim());
     if (this.locationSuburb.trim()) params.set('suburb', this.locationSuburb.trim());
-    if (this.locationPostcode.trim()) params.set('postcode', this.locationPostcode.trim());
-    const origin = this.selectedGeography || null;
-    const originPostcode = origin?.postcode || this.originPostcode;
-    if (originPostcode) params.set('originPostcode', originPostcode);
-    const originState = origin?.state || this.originState;
-    if (originState) params.set('originState', originState);
-    const originSuburb = origin?.suburb || this.originSuburb;
-    if (originSuburb) params.set('originSuburb', originSuburb);
+    if (postcode) params.set('postcode', postcode);
     return params;
   }
 
-  private loadRatings(items: ProviderService[]): void {
-    for (const service of items.filter(s => s.isDemo && !!s.providerProfileId)) {
-      const id = service.providerProfileId!;
-      this.ratings[id] = {
+  private loadRatings(items: ProviderService[], revision: number): void {
+    for (const service of items.filter(item => item.isDemo)) {
+      this.ratings[service.providerProfileId || service.id] = {
+        source: 'demo',
         averageRating: service.demoAverageRating ?? null,
         ratingCount: service.demoRatingCount ?? 0,
-        reviews: (service.demoReviews ?? []).map(r => ({rating: r.rating, comment: r.comment}))
+        reviews: (service.demoReviews || []).slice(0, 3).map(review =>
+          ({ rating: review.rating, comment: review.comment })),
+        reviewsAvailable: true
       };
     }
-    const ids = [...new Set(items.filter(s => !s.isDemo)
-      .map(s => s.providerProfileId).filter((id): id is string => !!id))].slice(0, 100);
-    if (!ids.length) return;
-    forkJoin(ids.map(id => forkJoin({
-      rating: this.apiService.get<{averageRating: number | null; ratingCount: number} | null>(
-        `/api/provider-reviews/v1/providers/${id}/rating`).pipe(catchError(() => of(null))),
-      reviews: this.apiService.get<{items: Array<{rating: number | null; comment: string | null}>}>(
-        `/api/provider-reviews/v1/providers/${id}/reviews?size=3`).pipe(catchError(() => of({items: []})))
-    }).pipe(map(result => ({id, ...result}))))).subscribe({
-      next: results => results.forEach(x => {
-        this.ratings[x.id] = {
-          averageRating: x.rating?.averageRating ?? null,
-          ratingCount: x.rating?.ratingCount ?? 0,
-          reviews: (x.reviews?.items || []).filter(review => !!review.comment)
-        };
-      }),
-      error: () => undefined
+    // A single stream with concurrency=2 avoids one request burst per provider.
+    const ids = [...new Set(items.filter(item => !item.isDemo).map(item => item.providerProfileId)
+      .filter((id): id is string => !!id))].slice(0, 24);
+    if (!ids.length || this.reviewsApiUnavailable) return;
+    for (const id of ids) this.ratings[id] = { ...NO_REVIEWS, source: 'loading' };
+    this.ratingsRequest = from(ids).pipe(
+      mergeMap(id => forkJoin({
+        rating: this.apiService.get<{ averageRating: number | null; ratingCount: number } | null>(
+          `/api/provider-reviews/v1/providers/${id}/rating`).pipe(catchError(() => of(null))),
+        reviews: this.apiService.get<{ items: Array<{ rating: number | null; comment: string | null }> }>(
+          `/api/provider-reviews/v1/providers/${id}/reviews?size=3`).pipe(catchError(() => of(null)))
+      }).pipe(map(result => ({ id, ...result }))), 2)
+    ).subscribe(({ id, rating, reviews }) => {
+      if (revision !== this.serviceRevision) return;
+      if (rating === null && reviews === null) this.reviewsApiUnavailable = true;
+      this.ratings[id] = {
+        source: rating || reviews ? 'verified' : 'unavailable',
+        averageRating: rating?.averageRating ?? null,
+        ratingCount: rating?.ratingCount ?? null,
+        reviews: (reviews?.items || []).filter((review): review is {rating:number|null;comment:string} =>
+          typeof review?.comment === 'string' && !!review.comment.trim()).slice(0, 3),
+        reviewsAvailable: !!(rating || reviews)
+      };
     });
   }
 

@@ -29,11 +29,14 @@
         <small>{{ 'geographySelector.postcode' | translate }}</small>
         <input
           type="search"
-          inputmode="numeric"
+          inputmode="search"
           [value]="searchTerm"
           [placeholder]="placeholder | translate"
           [disabled]="disabled || !geographyAvailable"
-          autocomplete="postal-code"
+          autocomplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          [attr.aria-expanded]="isOpen"
           (focus)="open()"
           (input)="onSearch($any($event.target).value)"
         />
